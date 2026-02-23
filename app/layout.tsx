@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Header } from "@/components/ui/Header";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "QuestLink - ゲーム仲間を見つけよう",
@@ -15,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className="antialiased min-h-screen" style={{ backgroundColor: "var(--bg-base)", color: "var(--text-primary)" }}>
-        <Header />
-        <main className="min-h-[calc(100vh-64px)]">{children}</main>
+        <Providers>
+          <Header />
+          <main className="min-h-[calc(100vh-64px)]">{children}</main>
+        </Providers>
       </body>
     </html>
   );
