@@ -1,0 +1,183 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RoomStatus {
+  waiting
+  playing
+  closed
+}
+
+model User {
+  id          String   @id @default(uuid()) @db.Uuid
+  googleId    String   @unique @map("google_id") @db.VarChar(255)
+  username    String   @unique @db.VarChar(50)
+  iconUrl     String?  @map("icon_url")
+  bio         String?
+  avgRating   Decimal  @default(0.00) @map("avg_rating") @db.Decimal(3, 2)
+  ratingCount Int      @default(0) @map("rating_count")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  hostedRooms     Room[]             @relation("RoomHost")
+  participations  RoomParticipant[]
+  sentRatings     Rating[]           @relation("Reviewer")
+  receivedRatings Rating[]           @relation("Reviewee")
+  chatMessages    ChatMessage[]
+  playStyleTags   UserPlayStyleTag[]
+  games           UserGame[]
+
+  @@map("users")
+}
+
+model Room {
+  id          String     @id @default(uuid()) @db.Uuid
+  hostId      String     @map("host_id") @db.Uuid
+  title       String     @db.VarChar(100)
+  gameId      String     @map("game_id") @db.Uuid
+  maxPlayers  Int        @map("max_players") @db.SmallInt
+  description String?
+  status      RoomStatus @default(waiting)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+  closedAt    DateTime?  @map("closed_at") @db.Timestamptz
+
+  host          User               @relation("RoomHost", fields: [hostId], references: [id])
+  game          Game               @relation(fields: [gameId], references: [id])
+  participants  RoomParticipant[]
+  chatMessages  ChatMessage[]
+  ratings       Rating[]
+  playStyleTags RoomPlayStyleTag[]
+
+  @@index([status])
+  @@index([hostId])
+  @@index([gameId])
+  @@index([createdAt(sort: Desc)])
+  @@map("rooms")
+}
+
+model RoomParticipant {
+  id       String    @id @default(uuid()) @db.Uuid
+  roomId   String    @map("room_id") @db.Uuid
+  userId   String    @map("user_id") @db.Uuid
+  isHost   Boolean   @default(false) @map("is_host")
+  joinedAt DateTime  @default(now()) @map("joined_at") @db.Timestamptz
+  leftAt   DateTime? @map("left_at") @db.Timestamptz
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId, joinedAt])
+  @@index([roomId])
+  @@index([userId])
+  @@map("room_participants")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  roomId    String   @map("room_id") @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  content   String
+  isSystem  Boolean  @default(false) @map("is_system")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  room Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([roomId, createdAt(sort: Desc)])
+  @@map("chat_messages")
+}
+
+model Rating {
+  id         String   @id @default(uuid()) @db.Uuid
+  roomId     String   @map("room_id") @db.Uuid
+  reviewerId String   @map("reviewer_id") @db.Uuid
+  revieweeId String   @map("reviewee_id") @db.Uuid
+  score      Int      @db.SmallInt
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz
+
+  room     Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  reviewer User @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee User @relation("Reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, reviewerId, revieweeId])
+  @@index([revieweeId])
+  @@index([roomId, reviewerId])
+  @@map("ratings")
+}
+
+model PlayStyleTag {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @unique @db.VarChar(50)
+  slug         String   @unique @db.VarChar(50)
+  displayOrder Int      @default(0) @map("display_order") @db.SmallInt
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  userTags UserPlayStyleTag[]
+  roomTags RoomPlayStyleTag[]
+
+  @@index([isActive, displayOrder])
+  @@map("play_style_tags")
+}
+
+model UserPlayStyleTag {
+  userId    String   @map("user_id") @db.Uuid
+  tagId     String   @map("tag_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag  PlayStyleTag @relation(fields: [tagId], references: [id])
+
+  @@id([userId, tagId])
+  @@index([tagId])
+  @@map("user_play_style_tags")
+}
+
+model RoomPlayStyleTag {
+  roomId    String   @map("room_id") @db.Uuid
+  tagId     String   @map("tag_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  room Room         @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  tag  PlayStyleTag @relation(fields: [tagId], references: [id])
+
+  @@id([roomId, tagId])
+  @@index([tagId])
+  @@map("room_play_style_tags")
+}
+
+model Game {
+  id       String   @id @default(uuid()) @db.Uuid
+  igdbId   Int      @unique @map("igdb_id")
+  name     String   @db.VarChar(255)
+  coverUrl String?  @map("cover_url")
+  cachedAt DateTime @default(now()) @map("cached_at") @db.Timestamptz
+
+  rooms     Room[]
+  userGames UserGame[]
+
+  @@index([name])
+  @@map("games")
+}
+
+model UserGame {
+  userId    String   @map("user_id") @db.Uuid
+  gameId    String   @map("game_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@id([userId, gameId])
+  @@index([gameId])
+  @@map("user_games")
+}
