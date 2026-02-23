@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Gamepad2, Users, LogOut, Menu, X, Zap } from "lucide-react";
+import { Gamepad2, Users, Menu, X, Zap } from "lucide-react";
 import clsx from "clsx";
+import { SignOutButton } from "@/components/ui/SignOutButton";
 
 export function Header() {
   const pathname = usePathname();
@@ -64,14 +65,7 @@ export function Header() {
             </Link>
           ))}
           <div className="mx-2 h-6 w-px" style={{ backgroundColor: "var(--border)" }} />
-          <Link
-            href="/login"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:text-red-400"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            <LogOut className="h-4 w-4" />
-            ログアウト
-          </Link>
+          <SignOutButton />
         </nav>
 
         {/* Mobile Menu Button */}
@@ -108,14 +102,7 @@ export function Header() {
                 {label}
               </Link>
             ))}
-            <Link
-              href="/login"
-              className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-red-400"
-              onClick={() => setMobileOpen(false)}
-            >
-              <LogOut className="h-4 w-4" />
-              ログアウト
-            </Link>
+            <SignOutButton />
           </nav>
         </div>
       )}
