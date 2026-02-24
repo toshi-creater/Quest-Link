@@ -1,8 +1,7 @@
 import clsx from "clsx";
-import type { PlayStyleTag as PlayStyleTagType } from "@/lib/mock-data";
 
 type Props = {
-  tag: PlayStyleTagType;
+  tag: { id: string; name: string; slug: string };
   size?: "sm" | "md";
   className?: string;
 };

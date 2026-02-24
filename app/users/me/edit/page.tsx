@@ -1,13 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
-import { PLAY_STYLE_TAGS, type Game } from "@/lib/mock-data";
+import { type Game } from "@/lib/mock-data";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { MultiGamePicker } from "@/components/ui/GamePicker";
+
+type PlayStyleTag = {
+  id: string;
+  name: string;
+  slug: string;
+  displayOrder: number;
+};
+
+type UserProfile = {
+  username: string;
+  iconUrl: string | null;
+  bio: string | null;
+  playStyleTags: { id: string; name: string; slug: string }[];
+  games: Game[];
+};
+
+async function fetchMyProfile(): Promise<UserProfile> {
+  const res = await fetch("/api/v1/users/me");
+  if (!res.ok) throw new Error("failed");
+  const json = (await res.json()) as { data: UserProfile };
+  return json.data;
+}
+
+async function fetchPlayStyleTags(): Promise<PlayStyleTag[]> {
+  const res = await fetch("/api/v1/play-style-tags");
+  if (!res.ok) throw new Error("failed");
+  const json = (await res.json()) as { data: PlayStyleTag[] };
+  return json.data;
+}
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -16,6 +46,17 @@ export default function EditProfilePage() {
   const currentUsername = session?.user?.username ?? "";
   const isInitialSetup = /^\d{15,}$/.test(currentUsername);
 
+  const { data: profile } = useQuery({
+    queryKey: ["users", "me"],
+    queryFn: fetchMyProfile,
+    enabled: !isInitialSetup,
+  });
+
+  const { data: availableTags = [] } = useQuery({
+    queryKey: ["play-style-tags"],
+    queryFn: fetchPlayStyleTags,
+  });
+
   const [username, setUsername] = useState(isInitialSetup ? "" : currentUsername);
   const [iconUrl, setIconUrl] = useState(session?.user?.iconUrl ?? "");
   const [bio, setBio] = useState("");
@@ -23,6 +64,18 @@ export default function EditProfilePage() {
   const [selectedGames, setSelectedGames] = useState<Game[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (profile && !initialized) {
+      setUsername(profile.username);
+      setIconUrl(profile.iconUrl ?? "");
+      setBio(profile.bio ?? "");
+      setSelectedTagIds(profile.playStyleTags.map((t) => t.id));
+      setSelectedGames(profile.games);
+      setInitialized(true);
+    }
+  }, [profile, initialized]);
 
   const toggleTag = (id: string) => {
     setSelectedTagIds((prev) =>
@@ -30,7 +83,7 @@ export default function EditProfilePage() {
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setSaving(true);
@@ -43,6 +96,8 @@ export default function EditProfilePage() {
           username: username.trim(),
           bio: bio || null,
           iconUrl: iconUrl || null,
+          playStyleTagIds: selectedTagIds,
+          gameIds: selectedGames.map((g) => g.id),
         }),
       });
 
@@ -53,9 +108,8 @@ export default function EditProfilePage() {
         return;
       }
 
-      // JWTトークンを最新情報で更新してからリダイレクト
       await update({ username: username.trim() });
-      router.push("/rooms");
+      router.push(isInitialSetup ? "/rooms" : "/users/me");
     } catch {
       setError("通信エラーが発生しました。再度お試しください");
     } finally {
@@ -161,7 +215,7 @@ export default function EditProfilePage() {
               </span>
             </label>
             <div className="flex flex-wrap gap-2">
-              {PLAY_STYLE_TAGS.map((tag) => {
+              {availableTags.map((tag) => {
                 const active = selectedTagIds.includes(tag.id);
                 return (
                   <button

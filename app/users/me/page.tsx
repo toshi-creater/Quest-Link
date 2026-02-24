@@ -1,13 +1,56 @@
+"use client";
+
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { Edit2, History, Star } from "lucide-react";
-import { CURRENT_USER, MOCK_RATINGS } from "@/lib/mock-data";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
 import { GameCover } from "@/components/ui/GamePicker";
 import { DeleteAccountButton } from "./DeleteAccountButton";
 
+type UserProfile = {
+  id: string;
+  username: string;
+  iconUrl: string | null;
+  bio: string | null;
+  avgRating: number;
+  ratingCount: number;
+  playStyleTags: { id: string; name: string; slug: string }[];
+  games: { id: string; igdbId: number; name: string; coverUrl: string | null }[];
+};
+
+async function fetchMyProfile(): Promise<UserProfile> {
+  const res = await fetch("/api/v1/users/me");
+  if (!res.ok) throw new Error("プロフィールの取得に失敗しました");
+  const json = (await res.json()) as { data: UserProfile };
+  return json.data;
+}
+
 export default function MyProfilePage() {
+  const { data: user, isLoading, isError } = useQuery({
+    queryKey: ["users", "me"],
+    queryFn: fetchMyProfile,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-100 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (isError || !user) {
+    return (
+      <div className="flex min-h-100 items-center justify-center">
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+          プロフィールの読み込みに失敗しました
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       {/* Profile Card */}
@@ -16,29 +59,22 @@ export default function MyProfilePage() {
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-          <UserAvatar
-            username={CURRENT_USER.username}
-            iconUrl={CURRENT_USER.iconUrl}
-            size="xl"
-          />
+          <UserAvatar username={user.username} iconUrl={user.iconUrl} size="xl" />
           <div className="flex-1 text-center sm:text-left">
             <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-              {CURRENT_USER.username}
+              {user.username}
             </h1>
             <div className="mt-1.5">
-              <RatingDisplay
-                avgRating={CURRENT_USER.avgRating}
-                ratingCount={CURRENT_USER.ratingCount}
-              />
+              <RatingDisplay avgRating={user.avgRating} ratingCount={user.ratingCount} />
             </div>
-            {CURRENT_USER.bio && (
+            {user.bio && (
               <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                {CURRENT_USER.bio}
+                {user.bio}
               </p>
             )}
-            {CURRENT_USER.playStyleTags.length > 0 && (
+            {user.playStyleTags.length > 0 && (
               <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
-                {CURRENT_USER.playStyleTags.map((tag) => (
+                {user.playStyleTags.map((tag) => (
                   <PlayStyleTag key={tag.id} tag={tag} />
                 ))}
               </div>
@@ -66,7 +102,7 @@ export default function MyProfilePage() {
       </div>
 
       {/* My Games */}
-      {CURRENT_USER.games.length > 0 && (
+      {user.games.length > 0 && (
         <div
           className="mb-6 rounded-2xl border"
           style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
@@ -77,7 +113,7 @@ export default function MyProfilePage() {
             </h2>
           </div>
           <div className="flex flex-wrap gap-3 p-5">
-            {CURRENT_USER.games.map((game) => (
+            {user.games.map((game) => (
               <div
                 key={game.id}
                 className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5"
@@ -96,9 +132,8 @@ export default function MyProfilePage() {
       {/* Stats */}
       <div className="mb-6 grid grid-cols-3 gap-4">
         {[
-          { label: "平均評価", value: CURRENT_USER.avgRating?.toFixed(1) ?? "-", sub: "/ 5.0" },
-          { label: "評価件数", value: CURRENT_USER.ratingCount.toString(), sub: "件" },
-          { label: "参加部屋", value: "12", sub: "部屋" },
+          { label: "平均評価", value: user.avgRating > 0 ? user.avgRating.toFixed(1) : "-", sub: "/ 5.0" },
+          { label: "評価件数", value: user.ratingCount.toString(), sub: "件" },
         ].map(({ label, value, sub }) => (
           <div
             key={label}
@@ -129,46 +164,9 @@ export default function MyProfilePage() {
             受け取った評価
           </h2>
         </div>
-        <ul className="divide-y" style={{ borderColor: "var(--border)" }}>
-          {MOCK_RATINGS.map((rating) => (
-            <li key={rating.id} className="px-6 py-4" style={{ borderColor: "var(--border)" }}>
-              <div className="flex items-start gap-3">
-                <UserAvatar
-                  username={rating.reviewer.username}
-                  iconUrl={rating.reviewer.iconUrl}
-                  size="sm"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                      {rating.reviewer.username}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className="h-3.5 w-3.5"
-                          style={{
-                            fill: i < rating.score ? "#eab308" : "transparent",
-                            color: i < rating.score ? "#eab308" : "var(--text-muted)",
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  {rating.comment && (
-                    <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-                      {rating.comment}
-                    </p>
-                  )}
-                  <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
-                    {new Date(rating.createdAt).toLocaleDateString("ja-JP")}
-                  </p>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="px-6 py-8 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+          まだ評価がありません
+        </div>
       </div>
 
       {/* Danger Zone */}
