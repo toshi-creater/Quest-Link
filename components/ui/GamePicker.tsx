@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Search, X, Gamepad2, Check, ChevronDown } from "lucide-react";
-import { MOCK_GAMES, type Game } from "@/lib/mock-data";
+import { type Game } from "@/lib/mock-data";
 import clsx from "clsx";
 
 // ─── ゲームカバー画像 ─────────────────────────────────────────────────────────
@@ -50,6 +50,51 @@ export function GameCover({ game, size = "md", className }: GameCoverProps) {
   );
 }
 
+// ─── ゲーム検索フック ─────────────────────────────────────────────────────────
+
+function useGameSearch(query: string) {
+  const [results, setResults] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const search = useCallback(async (q: string) => {
+    if (q.trim().length === 0) {
+      setResults([]);
+      return;
+    }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/v1/games/search?q=${encodeURIComponent(q)}&limit=10`,
+        { signal: controller.signal }
+      );
+      if (!res.ok) {
+        setResults([]);
+        return;
+      }
+      const json = (await res.json()) as { data: Game[] };
+      setResults(json.data);
+    } catch {
+      // AbortError は無視
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => search(query), 300);
+    return () => clearTimeout(timer);
+  }, [query, search]);
+
+  return { results, loading };
+}
+
 // ─── ゲーム選択（単体） ────────────────────────────────────────────────────────
 
 type SingleGamePickerProps = {
@@ -66,11 +111,7 @@ export function SingleGamePicker({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-
-  // モック検索: MOCK_GAMES をフィルター
-  const results = MOCK_GAMES.filter((g) =>
-    g.name.toLowerCase().includes(query.toLowerCase())
-  );
+  const { results, loading } = useGameSearch(query);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -147,9 +188,13 @@ export function SingleGamePicker({
 
           {/* Results */}
           <ul className="max-h-64 overflow-y-auto py-1">
-            {results.length === 0 ? (
+            {loading ? (
               <li className="px-4 py-3 text-center text-sm" style={{ color: "var(--text-muted)" }}>
-                見つかりませんでした
+                検索中...
+              </li>
+            ) : results.length === 0 ? (
+              <li className="px-4 py-3 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+                {query.trim().length === 0 ? "ゲーム名を入力してください" : "見つかりませんでした"}
               </li>
             ) : (
               results.map((game) => (
@@ -192,10 +237,7 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-
-  const results = MOCK_GAMES.filter((g) =>
-    g.name.toLowerCase().includes(query.toLowerCase())
-  );
+  const { results, loading } = useGameSearch(query);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -288,9 +330,13 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
               </div>
 
               <ul className="max-h-64 overflow-y-auto py-1">
-                {results.length === 0 ? (
+                {loading ? (
                   <li className="px-4 py-3 text-center text-sm" style={{ color: "var(--text-muted)" }}>
-                    見つかりませんでした
+                    検索中...
+                  </li>
+                ) : results.length === 0 ? (
+                  <li className="px-4 py-3 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+                    {query.trim().length === 0 ? "ゲーム名を入力してください" : "見つかりませんでした"}
                   </li>
                 ) : (
                   results.map((game) => {
