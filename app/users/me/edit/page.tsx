@@ -41,15 +41,15 @@ async function fetchPlayStyleTags(): Promise<PlayStyleTag[]> {
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const { data: session, update } = useSession();
+  const { data: session, update, status } = useSession();
 
   const currentUsername = session?.user?.username ?? "";
-  const isInitialSetup = /^\d{15,}$/.test(currentUsername);
+  const isInitialSetup = status === "authenticated" && /^\d{15,}$/.test(currentUsername);
 
   const { data: profile } = useQuery({
     queryKey: ["users", "me"],
     queryFn: fetchMyProfile,
-    enabled: !isInitialSetup,
+    enabled: status === "authenticated" && !isInitialSetup,
   });
 
   const { data: availableTags = [] } = useQuery({
@@ -67,7 +67,7 @@ export default function EditProfilePage() {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (profile && !initialized) {
+    if (profile && !initialized && !isInitialSetup) {
       setUsername(profile.username);
       setIconUrl(profile.iconUrl ?? "");
       setBio(profile.bio ?? "");
@@ -75,7 +75,7 @@ export default function EditProfilePage() {
       setSelectedGames(profile.games);
       setInitialized(true);
     }
-  }, [profile, initialized]);
+  }, [profile, initialized, isInitialSetup]);
 
   const toggleTag = (id: string) => {
     setSelectedTagIds((prev) =>
