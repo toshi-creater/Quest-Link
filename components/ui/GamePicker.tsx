@@ -55,29 +55,27 @@ export function GameCover({ game, size = "md", className }: GameCoverProps) {
 function useGameSearch(query: string) {
   const [results, setResults] = useState<Game[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isPopular, setIsPopular] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   const search = useCallback(async (q: string) => {
-    if (q.trim().length === 0) {
-      setResults([]);
-      return;
-    }
-
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/v1/games/search?q=${encodeURIComponent(q)}&limit=10`,
-        { signal: controller.signal }
-      );
+      const url =
+        q.trim().length === 0
+          ? `/api/v1/games/search?limit=10`
+          : `/api/v1/games/search?q=${encodeURIComponent(q)}&limit=10`;
+      const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) {
         setResults([]);
         return;
       }
       const json = (await res.json()) as { data: Game[] };
+      setIsPopular(q.trim().length === 0);
       setResults(json.data);
     } catch {
       // AbortError は無視
@@ -88,11 +86,12 @@ function useGameSearch(query: string) {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => search(query), 300);
+    const delay = query.trim().length === 0 ? 0 : 300;
+    const timer = setTimeout(() => search(query), delay);
     return () => clearTimeout(timer);
   }, [query, search]);
 
-  return { results, loading };
+  return { results, loading, isPopular };
 }
 
 // ─── ゲーム選択（単体） ────────────────────────────────────────────────────────
@@ -111,7 +110,7 @@ export function SingleGamePicker({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-  const { results, loading } = useGameSearch(query);
+  const { results, loading, isPopular } = useGameSearch(query);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -194,29 +193,36 @@ export function SingleGamePicker({
               </li>
             ) : results.length === 0 ? (
               <li className="px-4 py-3 text-center text-sm" style={{ color: "var(--text-muted)" }}>
-                {query.trim().length === 0 ? "ゲーム名を入力してください" : "見つかりませんでした"}
+                見つかりませんでした
               </li>
             ) : (
-              results.map((game) => (
-                <li key={game.id}>
-                  <button
-                    type="button"
-                    onClick={() => { onChange(game); setOpen(false); setQuery(""); }}
-                    className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left"
-                    style={
-                      value?.id === game.id
-                        ? { backgroundColor: "rgba(124,58,237,0.15)", color: "var(--accent-light)" }
-                        : { color: "var(--text-primary)" }
-                    }
-                    onMouseEnter={(e) => { if (value?.id !== game.id) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
-                    onMouseLeave={(e) => { if (value?.id !== game.id) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
-                  >
-                    <GameCover game={game} size="sm" />
-                    <span className="flex-1 truncate">{game.name}</span>
-                    {value?.id === game.id && <Check className="h-4 w-4 shrink-0" style={{ color: "var(--accent-light)" }} />}
-                  </button>
-                </li>
-              ))
+              <>
+                {isPopular && (
+                  <li className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                    人気のゲーム
+                  </li>
+                )}
+                {results.map((game) => (
+                  <li key={game.id}>
+                    <button
+                      type="button"
+                      onClick={() => { onChange(game); setOpen(false); setQuery(""); }}
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left"
+                      style={
+                        value?.id === game.id
+                          ? { backgroundColor: "rgba(124,58,237,0.15)", color: "var(--accent-light)" }
+                          : { color: "var(--text-primary)" }
+                      }
+                      onMouseEnter={(e) => { if (value?.id !== game.id) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
+                      onMouseLeave={(e) => { if (value?.id !== game.id) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                    >
+                      <GameCover game={game} size="sm" />
+                      <span className="flex-1 truncate">{game.name}</span>
+                      {value?.id === game.id && <Check className="h-4 w-4 shrink-0" style={{ color: "var(--accent-light)" }} />}
+                    </button>
+                  </li>
+                ))}
+              </>
             )}
           </ul>
         </div>
@@ -237,7 +243,7 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-  const { results, loading } = useGameSearch(query);
+  const { results, loading, isPopular } = useGameSearch(query);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -336,32 +342,39 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
                   </li>
                 ) : results.length === 0 ? (
                   <li className="px-4 py-3 text-center text-sm" style={{ color: "var(--text-muted)" }}>
-                    {query.trim().length === 0 ? "ゲーム名を入力してください" : "見つかりませんでした"}
+                    見つかりませんでした
                   </li>
                 ) : (
-                  results.map((game) => {
-                    const isSelected = value.some((g) => g.id === game.id);
-                    return (
-                      <li key={game.id}>
-                        <button
-                          type="button"
-                          onClick={() => toggle(game)}
-                          className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left"
-                          style={
-                            isSelected
-                              ? { backgroundColor: "rgba(124,58,237,0.15)", color: "var(--accent-light)" }
-                              : { color: "var(--text-primary)" }
-                          }
-                          onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
-                          onMouseLeave={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
-                        >
-                          <GameCover game={game} size="sm" />
-                          <span className="flex-1 truncate">{game.name}</span>
-                          {isSelected && <Check className="h-4 w-4 shrink-0" style={{ color: "var(--accent-light)" }} />}
-                        </button>
+                  <>
+                    {isPopular && (
+                      <li className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                        人気のゲーム
                       </li>
-                    );
-                  })
+                    )}
+                    {results.map((game) => {
+                      const isSelected = value.some((g) => g.id === game.id);
+                      return (
+                        <li key={game.id}>
+                          <button
+                            type="button"
+                            onClick={() => toggle(game)}
+                            className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left"
+                            style={
+                              isSelected
+                                ? { backgroundColor: "rgba(124,58,237,0.15)", color: "var(--accent-light)" }
+                                : { color: "var(--text-primary)" }
+                            }
+                            onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
+                            onMouseLeave={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                          >
+                            <GameCover game={game} size="sm" />
+                            <span className="flex-1 truncate">{game.name}</span>
+                            {isSelected && <Check className="h-4 w-4 shrink-0" style={{ color: "var(--accent-light)" }} />}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </>
                 )}
               </ul>
             </div>

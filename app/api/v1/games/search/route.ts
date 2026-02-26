@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { searchGames } from "@/lib/igdb";
+import { searchGames, getPopularGames } from "@/lib/igdb";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -12,9 +12,9 @@ export async function GET(request: NextRequest) {
   const q = searchParams.get("q") ?? "";
   const limitParam = searchParams.get("limit");
 
-  if (q.length === 0 || q.length > 100) {
+  if (q.length > 100) {
     return NextResponse.json(
-      { error: { code: "BAD_REQUEST", message: "q は1〜100文字で指定してください。" } },
+      { error: { code: "BAD_REQUEST", message: "q は100文字以内で指定してください。" } },
       { status: 400 }
     );
   }
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(Math.max(parseInt(limitParam ?? "10", 10) || 10, 1), 20);
 
   try {
-    const games = await searchGames(q, limit);
+    const games = q.length === 0 ? await getPopularGames(limit) : await searchGames(q, limit);
     return NextResponse.json({ data: games });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "";
