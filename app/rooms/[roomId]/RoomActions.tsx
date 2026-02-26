@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { DoorOpen, LogOut, Trash2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { DoorOpen, LogOut, Loader2, Trash2 } from "lucide-react";
+import { closeRoom } from "@/lib/api/rooms";
 
 type Props = {
   roomId: string;
@@ -13,6 +15,16 @@ type Props = {
 
 export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const closeMutation = useMutation({
+    mutationFn: () => closeRoom(roomId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["room", roomId] });
+      await queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      router.push("/rooms");
+    },
+  });
 
   if (status === "closed") {
     return (
@@ -57,11 +69,16 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
       </Link>
       {isHost && (
         <button
-          onClick={() => router.push(`/rooms/${roomId}/ratings`)}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10"
+          onClick={() => closeMutation.mutate()}
+          disabled={closeMutation.isPending}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ backgroundColor: "rgba(239,68,68,0.05)" }}
         >
-          <Trash2 className="h-4 w-4" />
+          {closeMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
           解散する
         </button>
       )}
