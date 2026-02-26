@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Users } from "lucide-react";
-import type { Room } from "@/lib/mock-data";
+import type { RoomSummary } from "@/lib/api/rooms";
 import { UserAvatar } from "./UserAvatar";
 import { PlayStyleTag } from "./PlayStyleTag";
 import { RatingDisplay } from "./StarRating";
 import { GameCover } from "./GamePicker";
 
 type Props = {
-  room: Room;
+  room: RoomSummary;
 };
 
 const statusConfig = {
