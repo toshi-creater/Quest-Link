@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getSocketIO } from "@/lib/socket";
 
 type RouteParams = { params: Promise<{ roomId: string }> };
 
@@ -41,7 +42,12 @@ export async function POST(_request: Request, { params }: RouteParams) {
 
   const now = new Date();
 
-  await prisma.$transaction(async (tx) => {
+  type LeaveResult =
+    | { type: "host_changed"; newHostId: string; newHostUsername: string; systemMessageId: string; systemMessageContent: string; systemMessageCreatedAt: Date }
+    | { type: "room_closed"; closedAt: Date }
+    | { type: "normal" };
+
+  const result = await prisma.$transaction(async (tx): Promise<LeaveResult> => {
     // 退室時刻を記録
     await tx.roomParticipant.update({
       where: { id: participant.id },
@@ -66,22 +72,58 @@ export async function POST(_request: Request, { params }: RouteParams) {
           data: { hostId: nextHost.userId },
         });
         // ホスト変更のシステムメッセージ
-        await tx.chatMessage.create({
+        const systemMsg = await tx.chatMessage.create({
           data: {
             roomId,
             content: `${nextHost.user.username}さんがホストになりました`,
             isSystem: true,
           },
         });
+        return {
+          type: "host_changed",
+          newHostId: nextHost.userId,
+          newHostUsername: nextHost.user.username,
+          systemMessageId: systemMsg.id,
+          systemMessageContent: systemMsg.content,
+          systemMessageCreatedAt: systemMsg.createdAt,
+        };
       } else {
         // 残余参加者なし → 部屋を closed に
+        const closedAt = now;
         await tx.room.update({
           where: { id: roomId },
-          data: { status: "closed", closedAt: now },
+          data: { status: "closed", closedAt },
         });
+        return { type: "room_closed", closedAt };
       }
     }
+
+    return { type: "normal" };
   });
+
+  // Socket.IOイベント送信（ホスト移譲・解散通知）
+  const io = getSocketIO();
+  if (io) {
+    if (result.type === "host_changed") {
+      io.to(roomId).emit("chat:message", {
+        id: result.systemMessageId,
+        roomId,
+        user: null,
+        content: result.systemMessageContent,
+        isSystem: true,
+        createdAt: result.systemMessageCreatedAt,
+      });
+      io.to(roomId).emit("room:host_changed", {
+        newHostId: result.newHostId,
+        newHostUsername: result.newHostUsername,
+      });
+    } else if (result.type === "room_closed") {
+      io.to(roomId).emit("room:closed", {
+        roomId,
+        closedAt: result.closedAt,
+      });
+    }
+  }
 
   return new NextResponse(null, { status: 204 });
 }
