@@ -48,7 +48,7 @@ model Room {
   updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz
   closedAt    DateTime?  @map("closed_at") @db.Timestamptz
 
-  host          User               @relation("RoomHost", fields: [hostId], references: [id])
+  host          User               @relation("RoomHost", fields: [hostId], references: [id], onDelete: Restrict)
   game          Game               @relation(fields: [gameId], references: [id])
   participants  RoomParticipant[]
   chatMessages  ChatMessage[]
