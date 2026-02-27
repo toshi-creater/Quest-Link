@@ -121,3 +121,35 @@ export async function closeRoom(roomId: string): Promise<void> {
     throw new Error(body.error?.message ?? "部屋の解散に失敗しました");
   }
 }
+
+export type JoinRoomResponse = {
+  data: {
+    roomId: string;
+    userId: string;
+    isHost: boolean;
+    joinedAt: string;
+  };
+};
+
+export async function joinRoom(roomId: string): Promise<JoinRoomResponse> {
+  const res = await fetch(`/api/v1/rooms/${roomId}/join`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = (await res.json()) as { error?: { code: string; message: string } };
+    throw new Error(body.error?.message ?? "部屋への参加に失敗しました");
+  }
+  return res.json() as Promise<JoinRoomResponse>;
+}
+
+export async function leaveRoom(roomId: string): Promise<void> {
+  const res = await fetch(`/api/v1/rooms/${roomId}/leave`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = (await res.json()) as { error?: { code: string; message: string } };
+    throw new Error(body.error?.message ?? "退室に失敗しました");
+  }
+}
