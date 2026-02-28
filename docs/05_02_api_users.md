@@ -165,9 +165,11 @@ GET /users/{userId}
 
 ---
 
-## 5. 自分の参加履歴取得
+## 5. 自分の参加履歴・参加中の部屋取得
 
-ログイン中のユーザーが過去に参加した部屋の履歴を取得する。新しい順（`joined_at` 降順）で返却される。
+ログイン中のユーザーの部屋参加情報を取得する。新しい順（`joined_at` 降順）で返却される。
+
+`active=true` を指定すると現在参加中（`left_at IS NULL`）の部屋のみを返す。ユーザーが同時に参加できる部屋は1つまでのため、`active=true` の場合は最大1件が返却される。
 
 ```
 GET /users/me/rooms
@@ -179,8 +181,9 @@ GET /users/me/rooms
 
 | パラメータ | 型 | デフォルト | 説明 |
 |-----------|-----|-----------|------|
-| `page` | integer | 1 | ページ番号 |
-| `limit` | integer | 20 | 件数（最大100） |
+| `active` | boolean | `false` | `true` の場合、現在参加中（`left_at IS NULL`）の部屋のみ返す（最大1件） |
+| `page` | integer | 1 | ページ番号（`active=false` のみ有効） |
+| `limit` | integer | 20 | 件数（最大100、`active=false` のみ有効） |
 
 ### レスポンス `200 OK`
 

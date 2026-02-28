@@ -1,19 +1,59 @@
+"use client";
+
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Star } from "lucide-react";
-import { MOCK_USERS, MOCK_RATINGS } from "@/lib/mock-data";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
 import { GameCover } from "@/components/ui/GamePicker";
 
-type Props = {
-  params: Promise<{ userId: string }>;
+type UserProfile = {
+  id: string;
+  username: string;
+  iconUrl: string | null;
+  bio: string | null;
+  avgRating: number;
+  ratingCount: number;
+  playStyleTags: { id: string; name: string; slug: string }[];
+  games: { id: string; igdbId: number; name: string; coverUrl: string | null }[];
 };
 
-export default async function UserProfilePage({ params }: Props) {
-  const { userId } = await params;
-  const user = MOCK_USERS.find((u) => u.id === userId) ?? MOCK_USERS[0];
-  const ratings = MOCK_RATINGS.slice(0, 2);
+async function fetchUserProfile(userId: string): Promise<UserProfile> {
+  const res = await fetch(`/api/v1/users/${userId}`);
+  if (!res.ok) throw new Error("プロフィールの取得に失敗しました");
+  const json = (await res.json()) as { data: UserProfile };
+  return json.data;
+}
+
+export default function UserProfilePage() {
+  const params = useParams<{ userId: string }>();
+  const userId = params.userId;
+
+  const { data: user, isLoading, isError } = useQuery({
+    queryKey: ["users", userId],
+    queryFn: () => fetchUserProfile(userId),
+    enabled: !!userId,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-100 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (isError || !user) {
+    return (
+      <div className="flex min-h-100 items-center justify-center">
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+          ユーザーが見つかりませんでした
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
@@ -32,11 +72,7 @@ export default async function UserProfilePage({ params }: Props) {
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-          <UserAvatar
-            username={user.username}
-            iconUrl={user.iconUrl}
-            size="xl"
-          />
+          <UserAvatar username={user.username} iconUrl={user.iconUrl} size="xl" />
           <div className="flex-1 text-center sm:text-left">
             <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
               {user.username}
@@ -95,9 +131,8 @@ export default async function UserProfilePage({ params }: Props) {
       {/* Stats */}
       <div className="mb-6 grid grid-cols-3 gap-4">
         {[
-          { label: "平均評価", value: user.avgRating?.toFixed(1) ?? "-", sub: "/ 5.0" },
+          { label: "平均評価", value: user.avgRating > 0 ? user.avgRating.toFixed(1) : "-", sub: "/ 5.0" },
           { label: "評価件数", value: user.ratingCount.toString(), sub: "件" },
-          { label: "参加部屋", value: "8", sub: "部屋" },
         ].map(({ label, value, sub }) => (
           <div
             key={label}
@@ -128,52 +163,9 @@ export default async function UserProfilePage({ params }: Props) {
             受け取った評価
           </h2>
         </div>
-        {ratings.length > 0 ? (
-          <ul className="divide-y" style={{ borderColor: "var(--border)" }}>
-            {ratings.map((rating) => (
-              <li key={rating.id} className="px-6 py-4" style={{ borderColor: "var(--border)" }}>
-                <div className="flex items-start gap-3">
-                  <UserAvatar
-                    username={rating.reviewer.username}
-                    iconUrl={rating.reviewer.iconUrl}
-                    size="sm"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                        {rating.reviewer.username}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className="h-3.5 w-3.5"
-                            style={{
-                              fill: i < rating.score ? "#eab308" : "transparent",
-                              color: i < rating.score ? "#eab308" : "var(--text-muted)",
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    {rating.comment && (
-                      <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-                        {rating.comment}
-                      </p>
-                    )}
-                    <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
-                      {new Date(rating.createdAt).toLocaleDateString("ja-JP")}
-                    </p>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="px-6 py-8 text-center text-sm" style={{ color: "var(--text-muted)" }}>
-            まだ評価がありません
-          </div>
-        )}
+        <div className="px-6 py-8 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+          まだ評価がありません
+        </div>
       </div>
     </div>
   );

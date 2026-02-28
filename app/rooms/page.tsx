@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { MOCK_ROOMS, PLAY_STYLE_TAGS } from "@/lib/mock-data";
 import { RoomsFilter } from "./RoomsFilter";
 
 export default function RoomsPage() {
@@ -12,9 +11,6 @@ export default function RoomsPage() {
           <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
             部屋一覧
           </h1>
-          <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-            {MOCK_ROOMS.filter((r) => r.status !== "closed").length}件の部屋が見つかりました
-          </p>
         </div>
         <Link
           href="/rooms/new"
@@ -30,7 +26,7 @@ export default function RoomsPage() {
       </div>
 
       {/* Filter / Search (client component) */}
-      <RoomsFilter tags={PLAY_STYLE_TAGS} rooms={MOCK_ROOMS} />
+      <RoomsFilter />
     </div>
   );
 }

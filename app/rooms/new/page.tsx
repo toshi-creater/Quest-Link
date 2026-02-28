@@ -3,9 +3,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Plus } from "lucide-react";
-import { PLAY_STYLE_TAGS, type Game } from "@/lib/mock-data";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { ArrowLeft, Plus, Loader2 } from "lucide-react";
+import type { Game } from "@/lib/mock-data";
 import { SingleGamePicker } from "@/components/ui/GamePicker";
+import { createRoom } from "@/lib/api/rooms";
+
+type Tag = { id: string; name: string; slug: string; displayOrder: number };
+type TagsResponse = { data: Tag[] };
+
+async function fetchTags(): Promise<Tag[]> {
+  const res = await fetch("/api/v1/play-style-tags", { credentials: "include" });
+  if (!res.ok) return [];
+  const json = (await res.json()) as TagsResponse;
+  return json.data;
+}
 
 export default function NewRoomPage() {
   const router = useRouter();
@@ -14,6 +26,22 @@ export default function NewRoomPage() {
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [description, setDescription] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const { data: tags = [] } = useQuery({
+    queryKey: ["play-style-tags"],
+    queryFn: fetchTags,
+  });
+
+  const mutation = useMutation({
+    mutationFn: createRoom,
+    onSuccess: (res) => {
+      router.push(`/rooms/${res.data.id}`);
+    },
+    onError: (err: Error) => {
+      setErrorMessage(err.message);
+    },
+  });
 
   const toggleTag = (id: string) => {
     setSelectedTagIds((prev) =>
@@ -23,7 +51,15 @@ export default function NewRoomPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/rooms/room-1");
+    if (!selectedGame) return;
+    setErrorMessage(null);
+    mutation.mutate({
+      title,
+      gameId: selectedGame.id,
+      maxPlayers,
+      description: description || undefined,
+      playStyleTagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+    });
   };
 
   const inputStyle = {
@@ -56,6 +92,15 @@ export default function NewRoomPage() {
             一緒にプレイする仲間を募集しましょう
           </p>
         </div>
+
+        {errorMessage && (
+          <div
+            className="mb-4 rounded-xl border px-4 py-3 text-sm"
+            style={{ borderColor: "rgba(239,68,68,0.4)", backgroundColor: "rgba(239,68,68,0.08)", color: "#f87171" }}
+          >
+            {errorMessage}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Game Picker */}
@@ -152,7 +197,7 @@ export default function NewRoomPage() {
               </span>
             </label>
             <div className="flex flex-wrap gap-2">
-              {PLAY_STYLE_TAGS.map((tag) => {
+              {tags.map((tag) => {
                 const active = selectedTagIds.includes(tag.id);
                 return (
                   <button
@@ -192,14 +237,18 @@ export default function NewRoomPage() {
             </Link>
             <button
               type="submit"
-              disabled={!selectedGame || !title}
+              disabled={!selectedGame || !title || mutation.isPending}
               className="flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
                 background: "linear-gradient(135deg, var(--accent), #6d28d9)",
                 boxShadow: selectedGame && title ? "0 4px 14px rgba(124,58,237,0.4)" : "none",
               }}
             >
-              <Plus className="h-4 w-4" />
+              {mutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
               作成する
             </button>
           </div>

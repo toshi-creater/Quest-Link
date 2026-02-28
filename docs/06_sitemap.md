@@ -14,7 +14,8 @@
 │
 ├── /rooms                          # 部屋一覧画面（メインページ）
 │   ├── /rooms/new                  # 部屋作成画面
-│   └── /rooms/[roomId]             # 部屋詳細画面
+│   ├── /rooms/current              # 参加中の部屋詳細画面（最大1件・空の場合はメッセージ表示）
+│   └── /rooms/[roomId]             # 部屋詳細画面（自分が参加中の部屋の場合は /rooms/current へリダイレクト）
 │       ├── /rooms/[roomId]/chat    # チャット画面（部屋詳細内タブ or ページ）
 │       └── /rooms/[roomId]/ratings # セッション終了後の評価画面
 │
@@ -44,7 +45,8 @@
 |------|--------|---------|---------|
 | `/rooms` | 部屋一覧 | 募集中の部屋を一覧表示、ゲームタイトル・タグで絞り込み、ページネーション | `GET /rooms` |
 | `/rooms/new` | 部屋作成 | タイトル・ゲームタイトル・最大人数・説明・タグを入力して部屋を作成 | `GET /play-style-tags`、`POST /rooms` |
-| `/rooms/[roomId]` | 部屋詳細 | 部屋情報・参加者一覧表示、参加 / 退室 / 解散、ホストによる部屋情報編集、リアルタイム参加者更新（WebSocket） | `GET /rooms/{roomId}`、`POST /rooms/{roomId}/join`、`POST /rooms/{roomId}/leave`、`POST /rooms/{roomId}/close`、`PATCH /rooms/{roomId}` |
+| `/rooms/current` | 参加中の部屋 | 現在参加中の部屋の詳細を表示。参加中がなければ空状態メッセージを表示。部屋詳細と同様の操作が可能 | `GET /users/me/rooms?active=true`、`GET /rooms/{roomId}` |
+| `/rooms/[roomId]` | 部屋詳細 | 部屋情報・参加者一覧表示、参加 / 退室 / 解散、ホストによる部屋情報編集、リアルタイム参加者更新（WebSocket）。自分が参加中の部屋の場合は `/rooms/current` へリダイレクト | `GET /rooms/{roomId}`、`POST /rooms/{roomId}/join`、`POST /rooms/{roomId}/leave`、`POST /rooms/{roomId}/close`、`PATCH /rooms/{roomId}` |
 | `/rooms/[roomId]/chat` | チャット | リアルタイムチャット送受信（WebSocket）、過去ログのスクロール読み込み（カーソルページネーション） | `GET /rooms/{roomId}/messages`、WebSocket `chat:send` / `chat:message` |
 | `/rooms/[roomId]/ratings` | セッション評価 | 部屋クローズ後に同室メンバーを評価（スコア・コメント）、評価期限（24時間）表示 | `GET /rooms/{roomId}/pending-ratings`、`POST /ratings` |
 
@@ -84,6 +86,7 @@
 
 ヘッダーナビゲーション（全画面共通）
     ├─→ /rooms（部屋一覧）
+    ├─→ /rooms/current（参加中の部屋）
     ├─→ /users/me（自分のプロフィール）
     │       ├─→ /users/me/edit（編集）
     │       └─→ /users/me/history（参加履歴）

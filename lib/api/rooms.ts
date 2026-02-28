@@ -1,0 +1,164 @@
+// ─── 型定義 ──────────────────────────────────────────────────────────────────
+
+export type RoomGame = {
+  id: string;
+  igdbId: number;
+  name: string;
+  coverUrl: string | null;
+};
+
+export type RoomHost = {
+  id: string;
+  username: string;
+  iconUrl: string | null;
+  avgRating: number;
+};
+
+export type RoomTag = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export type RoomParticipant = {
+  userId: string;
+  username: string;
+  iconUrl: string | null;
+  avgRating: number | null;
+  isHost: boolean;
+  joinedAt: string;
+};
+
+export type RoomSummary = {
+  id: string;
+  title: string;
+  description: string | null;
+  game: RoomGame;
+  maxPlayers: number;
+  currentPlayers: number;
+  status: "waiting" | "playing" | "closed";
+  playStyleTags: RoomTag[];
+  host: RoomHost;
+  createdAt: string;
+};
+
+export type RoomDetail = RoomSummary & {
+  description: string | null;
+  participants: RoomParticipant[];
+  closedAt: string | null;
+};
+
+export type RoomsListResponse = {
+  data: RoomSummary[];
+  meta: { total: number; page: number; limit: number };
+};
+
+export type RoomDetailResponse = {
+  data: RoomDetail;
+};
+
+export type CreateRoomInput = {
+  title: string;
+  gameId: string;
+  maxPlayers: number;
+  description?: string;
+  playStyleTagIds?: string[];
+};
+
+// ─── API フェッチ関数 ─────────────────────────────────────────────────────────
+
+export async function fetchRooms(params?: {
+  status?: string;
+  gameId?: string;
+  tagSlugs?: string;
+  page?: number;
+  limit?: number;
+}): Promise<RoomsListResponse> {
+  const searchParams = new URLSearchParams();
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.gameId) searchParams.set("gameId", params.gameId);
+  if (params?.tagSlugs) searchParams.set("tagSlugs", params.tagSlugs);
+  if (params?.page) searchParams.set("page", String(params.page));
+  if (params?.limit) searchParams.set("limit", String(params.limit));
+
+  const query = searchParams.toString();
+  const res = await fetch(`/api/v1/rooms${query ? `?${query}` : ""}`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("部屋一覧の取得に失敗しました");
+  return res.json() as Promise<RoomsListResponse>;
+}
+
+export async function fetchRoom(roomId: string): Promise<RoomDetailResponse> {
+  const res = await fetch(`/api/v1/rooms/${roomId}`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("部屋情報の取得に失敗しました");
+  return res.json() as Promise<RoomDetailResponse>;
+}
+
+export async function createRoom(input: CreateRoomInput): Promise<RoomDetailResponse> {
+  const res = await fetch("/api/v1/rooms", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const body = (await res.json()) as { error?: { code: string; message: string } };
+    throw new Error(body.error?.message ?? "部屋の作成に失敗しました");
+  }
+  return res.json() as Promise<RoomDetailResponse>;
+}
+
+export async function closeRoom(roomId: string): Promise<void> {
+  const res = await fetch(`/api/v1/rooms/${roomId}/close`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = (await res.json()) as { error?: { code: string; message: string } };
+    throw new Error(body.error?.message ?? "部屋の解散に失敗しました");
+  }
+}
+
+export type JoinRoomResponse = {
+  data: {
+    roomId: string;
+    userId: string;
+    isHost: boolean;
+    joinedAt: string;
+  };
+};
+
+export async function joinRoom(roomId: string): Promise<JoinRoomResponse> {
+  const res = await fetch(`/api/v1/rooms/${roomId}/join`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = (await res.json()) as { error?: { code: string; message: string } };
+    throw new Error(body.error?.message ?? "部屋への参加に失敗しました");
+  }
+  return res.json() as Promise<JoinRoomResponse>;
+}
+
+export async function leaveRoom(roomId: string): Promise<void> {
+  const res = await fetch(`/api/v1/rooms/${roomId}/leave`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = (await res.json()) as { error?: { code: string; message: string } };
+    throw new Error(body.error?.message ?? "退室に失敗しました");
+  }
+}
+
+export async function fetchCurrentRoom(): Promise<RoomDetailResponse | null> {
+  const res = await fetch("/api/v1/rooms/current", {
+    credentials: "include",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("参加中の部屋の取得に失敗しました");
+  return res.json() as Promise<RoomDetailResponse>;
+}
