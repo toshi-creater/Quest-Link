@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getSocketIO } from "@/lib/socket";
+import { emitToRoom } from "@/lib/socket-emitter";
 
 type RouteParams = { params: Promise<{ roomId: string }> };
 
@@ -45,11 +45,8 @@ export async function POST(_request: Request, { params }: RouteParams) {
     });
   });
 
-  // Socket.IO: 部屋解散通知を全参加者に送信
-  const io = getSocketIO();
-  if (io) {
-    io.to(roomId).emit("room:closed", { roomId, closedAt });
-  }
+  // Socket.IOサーバー（別プロセス）へ解散通知を送信
+  await emitToRoom("room:closed", roomId, { roomId, closedAt });
 
   return new NextResponse(null, { status: 204 });
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getSocketIO } from "@/lib/socket";
+import { emitToRoom } from "@/lib/socket-emitter";
 
 type RouteParams = { params: Promise<{ roomId: string }> };
 
@@ -101,28 +101,25 @@ export async function POST(_request: Request, { params }: RouteParams) {
     return { type: "normal" };
   });
 
-  // Socket.IOイベント送信（ホスト移譲・解散通知）
-  const io = getSocketIO();
-  if (io) {
-    if (result.type === "host_changed") {
-      io.to(roomId).emit("chat:message", {
-        id: result.systemMessageId,
-        roomId,
-        user: null,
-        content: result.systemMessageContent,
-        isSystem: true,
-        createdAt: result.systemMessageCreatedAt,
-      });
-      io.to(roomId).emit("room:host_changed", {
-        newHostId: result.newHostId,
-        newHostUsername: result.newHostUsername,
-      });
-    } else if (result.type === "room_closed") {
-      io.to(roomId).emit("room:closed", {
-        roomId,
-        closedAt: result.closedAt,
-      });
-    }
+  // Socket.IOサーバー（別プロセス）へイベントを送信
+  if (result.type === "host_changed") {
+    await emitToRoom("chat:message", roomId, {
+      id: result.systemMessageId,
+      roomId,
+      user: null,
+      content: result.systemMessageContent,
+      isSystem: true,
+      createdAt: result.systemMessageCreatedAt,
+    });
+    await emitToRoom("room:host_changed", roomId, {
+      newHostId: result.newHostId,
+      newHostUsername: result.newHostUsername,
+    });
+  } else if (result.type === "room_closed") {
+    await emitToRoom("room:closed", roomId, {
+      roomId,
+      closedAt: result.closedAt,
+    });
   }
 
   return new NextResponse(null, { status: 204 });
