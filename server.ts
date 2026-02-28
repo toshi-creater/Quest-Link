@@ -3,8 +3,10 @@ import { parse } from "url";
 import next from "next";
 import { Server as SocketIOServer } from "socket.io";
 import { decode } from "next-auth/jwt";
-import { prisma } from "./lib/prisma";
 import { setSocketIO } from "./lib/socket";
+// prisma は app.prepare() 後に dynamic import する
+// （.env の読み込みが app.prepare() 内で行われるため、
+//   静的 import だと DATABASE_URL が undefined のまま Pool が生成されてしまう）
 
 interface AuthenticatedSocketData {
   userId: string;
@@ -31,7 +33,9 @@ function parseCookies(cookieHeader: string): Record<string, string> {
   return result;
 }
 
-void app.prepare().then(() => {
+void app.prepare().then(async () => {
+  // app.prepare() 完了後に .env が読み込まれているため、ここで prisma を初期化する
+  const { prisma } = await import("./lib/prisma");
   const httpServer = createServer(async (req, res) => {
     try {
       const parsedUrl = parse(req.url ?? "/", true);
