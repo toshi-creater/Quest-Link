@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Edit2, History, Star, DoorOpen } from "lucide-react";
+import { Edit2, History, Star } from "lucide-react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
@@ -88,14 +88,6 @@ export default function MyProfilePage() {
             >
               <Edit2 className="h-4 w-4" />
               プロフィール編集
-            </Link>
-            <Link
-              href="/users/me/rooms"
-              className="flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all hover:border-purple-500"
-              style={{ borderColor: "var(--border)", color: "var(--text-secondary)", backgroundColor: "var(--bg-input)" }}
-            >
-              <DoorOpen className="h-4 w-4" />
-              参加中の部屋
             </Link>
             <Link
               href="/users/me/history"

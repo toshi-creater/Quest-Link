@@ -19,20 +19,19 @@ export function Header() {
       href: "/rooms",
       label: "部屋一覧",
       icon: Gamepad2,
-      isActive: (p: string) => p.startsWith("/rooms"),
+      isActive: (p: string) => p.startsWith("/rooms") && p !== "/rooms/current",
     },
     {
-      href: "/users/me/rooms",
+      href: "/rooms/current",
       label: "参加中の部屋",
       icon: DoorOpen,
-      isActive: (p: string) => p.startsWith("/users/me/rooms"),
+      isActive: (p: string) => p === "/rooms/current",
     },
     {
       href: "/users/me",
       label: "プロフィール",
       icon: Users,
-      isActive: (p: string) =>
-        p.startsWith("/users/me") && !p.startsWith("/users/me/rooms"),
+      isActive: (p: string) => p.startsWith("/users/me"),
     },
   ];
 

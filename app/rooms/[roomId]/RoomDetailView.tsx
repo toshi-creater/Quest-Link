@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { ArrowLeft, Crown, Loader2, MessageSquare, Users } from "lucide-react";
@@ -22,6 +24,8 @@ type Props = { roomId: string };
 export function RoomDetailView({ roomId }: Props) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
+  const router = useRouter();
+  const pathname = usePathname();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["room", roomId],
@@ -29,7 +33,18 @@ export function RoomDetailView({ roomId }: Props) {
     enabled: !!currentUserId,
   });
 
-  if (isLoading) {
+  const isParticipantOnOtherPage =
+    pathname !== "/rooms/current" &&
+    !!data &&
+    data.data.participants.some((p) => p.userId === currentUserId);
+
+  useEffect(() => {
+    if (isParticipantOnOtherPage) {
+      router.replace("/rooms/current");
+    }
+  }, [isParticipantOnOtherPage, router]);
+
+  if (isLoading || isParticipantOnOtherPage) {
     return (
       <div className="flex justify-center py-32">
         <Loader2 className="h-8 w-8 animate-spin" style={{ color: "var(--accent)" }} />
