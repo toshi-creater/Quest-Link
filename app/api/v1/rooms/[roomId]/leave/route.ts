@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { emitToRoom } from "@/lib/socket-emitter";
 
 type RouteParams = { params: Promise<{ roomId: string }> };
 
@@ -41,7 +42,12 @@ export async function POST(_request: Request, { params }: RouteParams) {
 
   const now = new Date();
 
-  await prisma.$transaction(async (tx) => {
+  type LeaveResult =
+    | { type: "host_changed"; newHostId: string; newHostUsername: string; systemMessageId: string; systemMessageContent: string; systemMessageCreatedAt: Date }
+    | { type: "room_closed"; closedAt: Date }
+    | { type: "normal" };
+
+  const result = await prisma.$transaction(async (tx): Promise<LeaveResult> => {
     // 退室時刻を記録
     await tx.roomParticipant.update({
       where: { id: participant.id },
@@ -66,22 +72,55 @@ export async function POST(_request: Request, { params }: RouteParams) {
           data: { hostId: nextHost.userId },
         });
         // ホスト変更のシステムメッセージ
-        await tx.chatMessage.create({
+        const systemMsg = await tx.chatMessage.create({
           data: {
             roomId,
             content: `${nextHost.user.username}さんがホストになりました`,
             isSystem: true,
           },
         });
+        return {
+          type: "host_changed",
+          newHostId: nextHost.userId,
+          newHostUsername: nextHost.user.username,
+          systemMessageId: systemMsg.id,
+          systemMessageContent: systemMsg.content,
+          systemMessageCreatedAt: systemMsg.createdAt,
+        };
       } else {
         // 残余参加者なし → 部屋を closed に
+        const closedAt = now;
         await tx.room.update({
           where: { id: roomId },
-          data: { status: "closed", closedAt: now },
+          data: { status: "closed", closedAt },
         });
+        return { type: "room_closed", closedAt };
       }
     }
+
+    return { type: "normal" };
   });
+
+  // Socket.IOサーバー（別プロセス）へイベントを送信
+  if (result.type === "host_changed") {
+    await emitToRoom("chat:message", roomId, {
+      id: result.systemMessageId,
+      roomId,
+      user: null,
+      content: result.systemMessageContent,
+      isSystem: true,
+      createdAt: result.systemMessageCreatedAt,
+    });
+    await emitToRoom("room:host_changed", roomId, {
+      newHostId: result.newHostId,
+      newHostUsername: result.newHostUsername,
+    });
+  } else if (result.type === "room_closed") {
+    await emitToRoom("room:closed", roomId, {
+      roomId,
+      closedAt: result.closedAt,
+    });
+  }
 
   return new NextResponse(null, { status: 204 });
 }

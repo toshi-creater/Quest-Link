@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { emitToRoom } from "@/lib/socket-emitter";
 
 type RouteParams = { params: Promise<{ roomId: string }> };
 
@@ -29,18 +30,23 @@ export async function POST(_request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: { code: "ROOM_ALREADY_CLOSED", message: "既に解散済みです" } }, { status: 400 });
   }
 
+  const closedAt = new Date();
+
   await prisma.$transaction(async (tx) => {
     // 全参加者を退室状態に
     await tx.roomParticipant.updateMany({
       where: { roomId, leftAt: null },
-      data: { leftAt: new Date() },
+      data: { leftAt: closedAt },
     });
     // 部屋を closed に
     await tx.room.update({
       where: { id: roomId },
-      data: { status: "closed", closedAt: new Date() },
+      data: { status: "closed", closedAt },
     });
   });
+
+  // Socket.IOサーバー（別プロセス）へ解散通知を送信
+  await emitToRoom("room:closed", roomId, { roomId, closedAt });
 
   return new NextResponse(null, { status: 204 });
 }
