@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Gamepad2, Users, Menu, X, Zap } from "lucide-react";
+import { Gamepad2, Users, Menu, X, Zap, DoorOpen } from "lucide-react";
 import clsx from "clsx";
 import { SignOutButton } from "@/components/ui/SignOutButton";
 
@@ -15,8 +15,25 @@ export function Header() {
   if (isLoginPage) return null;
 
   const navLinks = [
-    { href: "/rooms", label: "部屋一覧", icon: Gamepad2 },
-    { href: "/users/me", label: "プロフィール", icon: Users },
+    {
+      href: "/rooms",
+      label: "部屋一覧",
+      icon: Gamepad2,
+      isActive: (p: string) => p.startsWith("/rooms"),
+    },
+    {
+      href: "/users/me/rooms",
+      label: "参加中の部屋",
+      icon: DoorOpen,
+      isActive: (p: string) => p.startsWith("/users/me/rooms"),
+    },
+    {
+      href: "/users/me",
+      label: "プロフィール",
+      icon: Users,
+      isActive: (p: string) =>
+        p.startsWith("/users/me") && !p.startsWith("/users/me/rooms"),
+    },
   ];
 
   return (
@@ -44,18 +61,16 @@ export function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden items-center gap-1 sm:flex">
-          {navLinks.map(({ href, label, icon: Icon }) => (
+          {navLinks.map(({ href, label, icon: Icon, isActive }) => (
             <Link
               key={href}
               href={href}
               className={clsx(
                 "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all",
-                pathname.startsWith(href)
-                  ? "text-white"
-                  : "hover:text-white"
+                isActive(pathname) ? "text-white" : "hover:text-white"
               )}
               style={
-                pathname.startsWith(href)
+                isActive(pathname)
                   ? { backgroundColor: "rgba(124,58,237,0.2)", color: "var(--accent-light)" }
                   : { color: "var(--text-secondary)" }
               }
@@ -86,13 +101,13 @@ export function Header() {
           style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
         >
           <nav className="flex flex-col gap-1 p-3">
-            {navLinks.map(({ href, label, icon: Icon }) => (
+            {navLinks.map(({ href, label, icon: Icon, isActive }) => (
               <Link
                 key={href}
                 href={href}
                 className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium"
                 style={
-                  pathname.startsWith(href)
+                  isActive(pathname)
                     ? { backgroundColor: "rgba(124,58,237,0.15)", color: "var(--accent-light)" }
                     : { color: "var(--text-secondary)" }
                 }

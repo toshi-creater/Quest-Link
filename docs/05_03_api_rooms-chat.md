@@ -201,7 +201,7 @@ PATCH /rooms/{roomId}
 
 ## 6. 部屋に参加
 
-満員または `closed` の部屋には参加不可。参加成功後に `room:user_joined` が発火。
+満員または `closed` の部屋には参加不可。ユーザーが既に別の部屋に参加中の場合も参加不可（同時参加は1部屋まで）。参加成功後に `room:user_joined` が発火。
 
 ```
 POST /rooms/{roomId}/join
@@ -228,7 +228,8 @@ POST /rooms/{roomId}/join
 |--------------|------------|------|
 | 400 | `ROOM_CLOSED` | 部屋が解散済み |
 | 404 | `ROOM_NOT_FOUND` | 部屋が存在しない |
-| 409 | `ALREADY_JOINED` | 既に参加中 |
+| 409 | `ALREADY_JOINED` | 既にこの部屋に参加中 |
+| 409 | `ALREADY_IN_ANOTHER_ROOM` | 別の部屋に参加中（同時参加は1部屋まで） |
 | 409 | `ROOM_FULL` | 定員に達している |
 
 ---

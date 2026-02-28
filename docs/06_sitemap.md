@@ -21,6 +21,7 @@
 └── /users
     ├── /users/me                   # 自分のプロフィール画面
     │   ├── /users/me/edit          # プロフィール編集画面
+    │   ├── /users/me/rooms         # 参加中の部屋画面（最大1件・空の場合はメッセージ表示）
     │   └── /users/me/history       # 部屋参加履歴画面
     └── /users/[userId]             # 他ユーザーのプロフィール画面
 ```
@@ -56,6 +57,7 @@
 |------|--------|---------|---------|
 | `/users/me` | 自分のプロフィール | 自分のユーザー名・アイコン・自己紹介・平均評価・プレイスタイルタグ・受け取った評価一覧を表示 | `GET /users/me`、`GET /users/{userId}/ratings` |
 | `/users/me/edit` | プロフィール編集 | ユーザー名・アイコン URL・自己紹介・プレイスタイルタグを編集 | `GET /play-style-tags`、`PATCH /users/me` |
+| `/users/me/rooms` | 参加中の部屋 | 現在参加中の部屋（最大1件）を表示。参加中がなければ空状態メッセージを表示。部屋詳細へ遷移可能 | `GET /users/me/rooms?active=true` |
 | `/users/me/history` | 参加履歴 | 過去に参加した部屋の一覧をページネーション付きで表示 | `GET /users/me/rooms` |
 | `/users/[userId]` | 他ユーザープロフィール | 他ユーザーのプロフィール情報・受け取った評価一覧を表示 | `GET /users/{userId}`、`GET /users/{userId}/ratings` |
 
@@ -84,8 +86,10 @@
 
 ヘッダーナビゲーション（全画面共通）
     ├─→ /rooms（部屋一覧）
+    ├─→ /users/me/rooms（参加中の部屋）
     ├─→ /users/me（自分のプロフィール）
     │       ├─→ /users/me/edit（編集）
+    │       ├─→ /users/me/rooms（参加中の部屋）
     │       └─→ /users/me/history（参加履歴）
     └─→ ログアウト（POST /auth/logout → /login）
 ```
