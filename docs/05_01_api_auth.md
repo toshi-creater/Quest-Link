@@ -1,92 +1,61 @@
 # API設計書 — 認証 API
 ## ゲーマー向けリアルタイムマッチングプラットフォーム
 
-**ver 1.0 | 2026年2月**
-
----
-
-## 目次
-
-1. [概要](#1-概要)
-2. [Google OAuth コールバック](#2-google-oauth-コールバック)
-3. [トークンリフレッシュ](#3-トークンリフレッシュ)
-4. [ログアウト](#4-ログアウト)
+**ver 2.0 | 2026年2月**
 
 ---
 
 ## 1. 概要
 
-### 1.1 認証フロー
+Google / X / Discord の3プロバイダに対応。複数プロバイダを同一アカウントに連携可能。募集リンク経由の部屋参加に限りゲストセッションを発行する。
 
-```
-クライアント
-    │
-    ├─① Google OAuth 認証画面へリダイレクト（クライアント側処理）
-    │
-    ├─② 認可コード（code）を受け取る
-    │
-    └─③ POST /auth/google/callback へ code を送信
-            │
-            └─ サーバーが Google と通信し JWT を発行して返却
-```
-
-### 1.2 JWT の利用
-
-取得した `accessToken` はすべての認証必須エンドポイントで `Authorization` ヘッダーに付与する。
-
-```
-Authorization: Bearer <accessToken>
-```
-
-`accessToken` の有効期限は `expiresIn`（秒）で示される。期限切れ後は **トークンリフレッシュ** API で再取得する。
-
-### 1.3 エンドポイント一覧
+### エンドポイント一覧
 
 | メソッド | パス | 認証 | 説明 |
 |---------|------|------|------|
-| POST | `/auth/google/callback` | 不要 | Google OAuth コールバック・JWT 発行 |
+| POST | `/auth/{provider}/callback` | 不要 | OAuth コールバック・JWT 発行 |
 | POST | `/auth/refresh` | 不要 | アクセストークンのリフレッシュ |
 | POST | `/auth/logout` | 必要 | ログアウト・トークン無効化 |
+| POST | `/auth/guest` | 不要 | ゲストセッション発行 |
+| POST | `/auth/{provider}/link` | 必要 | 追加プロバイダを現アカウントに連携 |
+| DELETE | `/auth/{provider}/unlink` | 必要 | プロバイダ連携の解除 |
+
+**`{provider}` の値**: `google` / `x` / `discord`
+
+### 認証フロー
+
+取得した `accessToken` を `Authorization: Bearer <accessToken>` で送信する。有効期限は `expiresIn`（秒）で示され、期限切れ後はリフレッシュ API で再取得する。
 
 ---
 
-## 2. Google OAuth コールバック
-
-Google 認証後に発行された認可コードを受け取り、JWT を発行する。
+## 2. OAuth コールバック
 
 ```
-POST /auth/google/callback
+POST /auth/{provider}/callback
 ```
 
-**認証**: 不要
+**認証**: 不要 ／ 初回ログイン時はユーザーが自動作成される
 
 ### リクエストボディ
 
 | フィールド | 型 | 必須 | 説明 |
 |-----------|-----|------|------|
-| `code` | string | ○ | Google から発行された認可コード |
-
-```json
-{
-  "code": "4/0AfgeXvs..."
-}
-```
+| `code` | string | ○ | プロバイダから発行された認可コード |
 
 ### レスポンス `200 OK`
-
-初回ログイン時はユーザーが自動作成される。
 
 ```json
 {
   "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...",
+    "accessToken": "eyJhbGci...",
+    "refreshToken": "dGhpcyBp...",
     "tokenType": "Bearer",
     "expiresIn": 3600,
+    "isNewUser": true,
     "user": {
       "id": "550e8400-e29b-41d4-a716-446655440000",
-      "username": "gamer123",
-      "iconUrl": "https://example.com/icon.png",
+      "username": null,
+      "iconUrl": null,
       "avgRating": 0.00,
       "ratingCount": 0
     }
@@ -94,32 +63,24 @@ POST /auth/google/callback
 }
 ```
 
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| `accessToken` | string | API アクセス用 JWT |
-| `refreshToken` | string | トークン再取得用（有効期限: 30日） |
-| `tokenType` | string | 常に `"Bearer"` |
-| `expiresIn` | integer | アクセストークンの有効期限（秒） |
-| `user` | object | ログインユーザーの基本情報 |
+`isNewUser: true` の場合、クライアントはプロフィール設定画面へ誘導する。`username` が `null` の間は部屋への参加・作成・チャットが利用不可。
 
 ### エラー
 
-| HTTP ステータス | エラーコード | 説明 |
-|--------------|------------|------|
+| HTTP | エラーコード | 説明 |
+|------|------------|------|
 | 400 | `INVALID_CODE` | 認可コードが無効または期限切れ |
-| 500 | `OAUTH_ERROR` | Google との通信に失敗 |
+| 500 | `OAUTH_ERROR` | プロバイダとの通信に失敗 |
 
 ---
 
 ## 3. トークンリフレッシュ
 
-アクセストークンの有効期限が切れた際に、リフレッシュトークンを使って新しいアクセストークンを取得する。
-
 ```
 POST /auth/refresh
 ```
 
-**認証**: 不要（リフレッシュトークンを使用）
+**認証**: 不要（リフレッシュトークンを使用） ／ リフレッシュトークンの有効期限は30日
 
 ### リクエストボディ
 
@@ -127,37 +88,29 @@ POST /auth/refresh
 |-----------|-----|------|------|
 | `refreshToken` | string | ○ | リフレッシュトークン |
 
-```json
-{
-  "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
-}
-```
-
 ### レスポンス `200 OK`
 
 ```json
 {
   "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "accessToken": "eyJhbGci...",
     "tokenType": "Bearer",
     "expiresIn": 3600
   }
 }
 ```
 
-> リフレッシュトークン自体は更新されない。リフレッシュトークンの有効期限（30日）が切れた場合は再度ログインが必要。
-
 ### エラー
 
-| HTTP ステータス | エラーコード | 説明 |
-|--------------|------------|------|
+| HTTP | エラーコード | 説明 |
+|------|------------|------|
 | 401 | `UNAUTHORIZED` | リフレッシュトークンが無効または期限切れ |
 
 ---
 
 ## 4. ログアウト
 
-サーバー側でリフレッシュトークンを無効化する。
+サーバー側でリフレッシュトークンを無効化する。クライアント側でもトークンを破棄すること。
 
 ```
 POST /auth/logout
@@ -165,16 +118,95 @@ POST /auth/logout
 
 **認証**: 必要
 
-### リクエストボディ
-
-なし
-
 ### レスポンス `204 No Content`
 
-> クライアント側でもアクセストークンおよびリフレッシュトークンを破棄すること。
+---
+
+## 4. ゲストセッション発行
+
+募集リンク経由で部屋に参加する際にゲストセッションを発行する。発行されたセッション ID は Cookie（HttpOnly）に保存され、有効期限は24時間。
+
+```
+POST /auth/guest
+```
+
+**認証**: 不要
+
+### リクエストボディ
+
+| フィールド | 型 | 必須 | 制約 | 説明 |
+|-----------|-----|------|------|------|
+| `roomId` | string (UUID) | ○ | - | 参加対象の部屋 ID |
+| `displayName` | string | - | 1〜50文字 | 表示名（省略時はサーバーが `guest_xxxxxxxx` を自動設定） |
+
+### レスポンス `200 OK`
+
+```json
+{
+  "data": {
+    "guestId": "guest_a1b2c3d4",
+    "displayName": "ゲスト参加者",
+    "expiresAt": "2026-02-21T22:00:00Z"
+  }
+}
+```
+
+セッション ID は `Set-Cookie: guest_session=<token>; HttpOnly; Secure` でも返却される。以降のリクエストでは Cookie が自動送信されるため、追加のヘッダー設定は不要。
 
 ### エラー
 
-| HTTP ステータス | エラーコード | 説明 |
-|--------------|------------|------|
-| 401 | `UNAUTHORIZED` | トークンが無効または期限切れ |
+| HTTP | エラーコード | 説明 |
+|------|------------|------|
+| 400 | `ROOM_CLOSED` | 終了済みの部屋にはゲスト参加不可 |
+| 404 | `ROOM_NOT_FOUND` | 部屋が存在しない |
+| 409 | `ROOM_FULL` | 定員に達している |
+
+---
+
+## 6. プロバイダ連携追加
+
+ログイン済みアカウントに別プロバイダを追加連携する。
+
+```
+POST /auth/{provider}/link
+```
+
+**認証**: 必要
+
+### リクエストボディ
+
+| フィールド | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| `code` | string | ○ | 追加するプロバイダの認可コード |
+
+### レスポンス `204 No Content`
+
+### エラー
+
+| HTTP | エラーコード | 説明 |
+|------|------------|------|
+| 400 | `INVALID_CODE` | 認可コードが無効 |
+| 409 | `PROVIDER_ALREADY_LINKED` | そのプロバイダは既に別アカウントに紐づいている |
+
+---
+
+## 7. プロバイダ連携解除
+
+```
+DELETE /auth/{provider}/unlink
+```
+
+**認証**: 必要 ／ 最後の1プロバイダは解除不可
+
+### レスポンス `204 No Content`
+
+### エラー
+
+| HTTP | エラーコード | 説明 |
+|------|------------|------|
+| 400 | `LAST_PROVIDER` | 唯一のプロバイダは解除できない |
+| 404 | `PROVIDER_NOT_LINKED` | そのプロバイダは連携されていない |
+
+---
+
+*以上*
