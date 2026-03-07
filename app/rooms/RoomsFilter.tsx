@@ -17,7 +17,7 @@ async function fetchTags(): Promise<Tag[]> {
   return json.data;
 }
 
-export function RoomsFilter() {
+export function RoomsFilter({ gameId }: { gameId?: string }) {
   const [query, setQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
@@ -33,8 +33,8 @@ export function RoomsFilter() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["rooms", { tagSlugs: tagSlugsParam }],
-    queryFn: () => fetchRooms({ status: "waiting", tagSlugs: tagSlugsParam }),
+    queryKey: ["rooms", { gameId, tagSlugs: tagSlugsParam }],
+    queryFn: () => fetchRooms({ status: "waiting", gameId, tagSlugs: tagSlugsParam }),
   });
 
   const allRooms: RoomSummary[] = roomsData?.data ?? [];

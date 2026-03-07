@@ -21,9 +21,12 @@ export const authConfig = {
       const isEditPage = pathname === "/users/me/edit";
 
       if (isLoginPage) {
-        if (isLoggedIn) return Response.redirect(new URL("/rooms", nextUrl));
+        if (isLoggedIn) return Response.redirect(new URL("/", nextUrl));
         return true;
       }
+
+      const isPublicPage = pathname === "/" || pathname.startsWith("/rooms");
+      if (!isLoggedIn && isPublicPage) return true;
 
       if (!isLoggedIn) return false;
 
