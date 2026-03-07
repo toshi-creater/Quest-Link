@@ -153,3 +153,16 @@ export async function leaveRoom(roomId: string): Promise<void> {
     throw new Error(body.error?.message ?? "退室に失敗しました");
   }
 }
+
+export type CurrentRoomResponse = {
+  data: RoomDetail | null;
+};
+
+export async function fetchCurrentRoom(): Promise<CurrentRoomResponse> {
+  const res = await fetch("/api/v1/rooms/current", {
+    credentials: "include",
+  });
+  if (res.status === 401) return { data: null };
+  if (!res.ok) throw new Error("参加中の部屋の取得に失敗しました");
+  return res.json() as Promise<CurrentRoomResponse>;
+}

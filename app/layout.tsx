@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Header } from "@/components/ui/Header";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
@@ -18,7 +19,8 @@ export default function RootLayout({
       <body className="antialiased min-h-screen" style={{ backgroundColor: "var(--bg-base)", color: "var(--text-primary)" }}>
         <Providers>
           <Header />
-          <main className="min-h-[calc(100vh-64px)]">{children}</main>
+          <main className="min-h-[calc(100vh-64px)] pb-[60px] md:pb-0">{children}</main>
+          <BottomNav />
         </Providers>
       </body>
     </html>
