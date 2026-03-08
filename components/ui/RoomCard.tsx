@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Users } from "lucide-react";
 import type { RoomSummary } from "@/lib/api/rooms";
