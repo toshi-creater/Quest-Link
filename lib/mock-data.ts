@@ -7,12 +7,9 @@ export type PlayStyleTag = {
   displayOrder: number;
 };
 
-/** IGDB API 由来のゲーム情報 */
 export type Game = {
   id: string;
-  igdbId: number;
   name: string;
-  /** IGDB CDN URL (t_cover_big サイズ) | null */
   coverUrl: string | null;
 };
 
@@ -72,82 +69,21 @@ export type Rating = {
   createdAt: string;
 };
 
-// ─── IGDB モックゲームデータ ─────────────────────────────────────────────────
-// IGDB CDN: https://images.igdb.com/igdb/image/upload/t_cover_big/{hash}.jpg
+// ─── モックゲームデータ ──────────────────────────────────────────────────────
 
 export const MOCK_GAMES: Game[] = [
-  {
-    id: "game-1",
-    igdbId: 126459,
-    name: "VALORANT",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg",
-  },
-  {
-    id: "game-2",
-    igdbId: 1372,
-    name: "Apex Legends",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co50e8.jpg",
-  },
-  {
-    id: "game-3",
-    igdbId: 119277,
-    name: "Splatoon 3",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co64rj.jpg",
-  },
-  {
-    id: "game-4",
-    igdbId: 115,
-    name: "League of Legends",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co49wj.jpg",
-  },
-  {
-    id: "game-5",
-    igdbId: 121,
-    name: "Minecraft",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co8fu7.jpg",
-  },
-  {
-    id: "game-6",
-    igdbId: 159590,
-    name: "Genshin Impact",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co7u0c.jpg",
-  },
-  {
-    id: "game-7",
-    igdbId: 210841,
-    name: "Overwatch 2",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/coa0t9.jpg",
-  },
-  {
-    id: "game-8",
-    igdbId: 1905,
-    name: "Fortnite",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5ztm.jpg",
-  },
-  {
-    id: "game-9",
-    igdbId: 9766,
-    name: "Final Fantasy XIV Online",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/cobl04.jpg",
-  },
-  {
-    id: "game-10",
-    igdbId: 233832,
-    name: "Call of Duty: Modern Warfare III",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkn.jpg",
-  },
-  {
-    id: "game-11",
-    igdbId: 12220,
-    name: "ELDEN RING",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg",
-  },
-  {
-    id: "game-12",
-    igdbId: 77346,
-    name: "Pokémon Unite",
-    coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co9avm.jpg",
-  },
+  { id: "game-1", name: "VALORANT", coverUrl: "/images/covers/valorant.jpg" },
+  { id: "game-2", name: "Apex Legends", coverUrl: "/images/covers/apex-legends.jpg" },
+  { id: "game-3", name: "Splatoon 3", coverUrl: "/images/covers/splatoon-3.jpg" },
+  { id: "game-4", name: "League of Legends", coverUrl: "/images/covers/league-of-legends.jpg" },
+  { id: "game-5", name: "Minecraft", coverUrl: "/images/covers/minecraft.jpg" },
+  { id: "game-6", name: "Genshin Impact", coverUrl: "/images/covers/genshin-impact.jpg" },
+  { id: "game-7", name: "Overwatch 2", coverUrl: "/images/covers/overwatch-2.jpg" },
+  { id: "game-8", name: "Fortnite", coverUrl: "/images/covers/fortnite.jpg" },
+  { id: "game-9", name: "Final Fantasy XIV Online", coverUrl: "/images/covers/final-fantasy-xiv-online.jpg" },
+  { id: "game-10", name: "Call of Duty: Modern Warfare III", coverUrl: "/images/covers/cod-mwiii.jpg" },
+  { id: "game-11", name: "ELDEN RING", coverUrl: "/images/covers/elden-ring.jpg" },
+  { id: "game-12", name: "Pokémon Unite", coverUrl: "/images/covers/pokemon-unite.jpg" },
 ];
 
 // ─── プレイスタイルタグ ──────────────────────────────────────────────────────

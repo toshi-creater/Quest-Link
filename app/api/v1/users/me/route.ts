@@ -27,7 +27,7 @@ const profileSelect = {
   },
   games: {
     select: {
-      game: { select: { id: true, igdbId: true, name: true, coverUrl: true } },
+      game: { select: { id: true, name: true, coverUrl: true } },
     },
   },
 } satisfies Prisma.UserSelect;

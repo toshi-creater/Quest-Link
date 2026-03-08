@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 import { Clock, CheckCircle2 } from "lucide-react";
-import { PENDING_RATING_USERS } from "@/lib/mock-data";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { RatingForm } from "./RatingForm";
 
 type Props = {
@@ -9,8 +11,43 @@ type Props = {
 
 export default async function RatingsPage({ params }: Props) {
   const { roomId } = await params;
-  const expiresAt = new Date("2026-02-23T22:00:00Z");
-  const now = new Date("2026-02-22T22:30:00Z");
+
+  const session = await auth();
+  const currentUserId = session?.user?.id;
+  if (!currentUserId) redirect("/login");
+
+  const [room, participants, submittedRatings] = await Promise.all([
+    prisma.room.findUnique({ where: { id: roomId }, select: { closedAt: true } }),
+    prisma.roomParticipant.findMany({
+      where: { roomId, userId: { not: currentUserId } },
+      select: {
+        userId: true,
+        user: { select: { username: true, iconUrl: true, avgRating: true } },
+      },
+    }),
+    prisma.rating.findMany({
+      where: { roomId, reviewerId: currentUserId },
+      select: { revieweeId: true },
+    }),
+  ]);
+  if (!room) notFound();
+
+  const ratedIds = new Set(submittedRatings.map((r) => r.revieweeId));
+  const now = new Date();
+  const expiresAt = room.closedAt
+    ? new Date(room.closedAt.getTime() + 24 * 60 * 60 * 1000)
+    : new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+  const pendingUsers = participants
+    .filter((p) => p.userId && p.user && !ratedIds.has(p.userId))
+    .map((p) => ({
+      userId: p.userId!,
+      username: p.user!.username,
+      iconUrl: p.user!.iconUrl,
+      avgRating: p.user!.avgRating !== null ? Number(p.user!.avgRating) : null,
+      expiresAt: expiresAt.toISOString(),
+    }));
+
   const hoursLeft = Math.floor((expiresAt.getTime() - now.getTime()) / 1000 / 60 / 60);
 
   return (
@@ -43,7 +80,7 @@ export default async function RatingsPage({ params }: Props) {
 
       {/* Rating cards */}
       <div className="space-y-4">
-        {PENDING_RATING_USERS.map((user) => (
+        {pendingUsers.map((user) => (
           <RatingForm key={user.userId} user={user} roomId={roomId} />
         ))}
       </div>

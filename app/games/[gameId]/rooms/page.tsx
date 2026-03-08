@@ -1,5 +1,7 @@
 import Image from "next/image";
-import { MOCK_GAMES, MOCK_ROOMS } from "@/lib/mock-data";
+import { notFound } from "next/navigation";
+import { getGameById } from "@/lib/games";
+import { prisma } from "@/lib/prisma";
 import { RoomsFilter } from "@/app/rooms/RoomsFilter";
 
 type Props = {
@@ -8,16 +10,18 @@ type Props = {
 
 export default async function GameRoomsPage({ params }: Props) {
   const { gameId } = await params;
-  const game = MOCK_GAMES.find((g) => g.id === gameId);
-  const roomCount = MOCK_ROOMS.filter(
-    (r) => r.game.id === gameId && r.status === "waiting"
-  ).length;
+  const game = await getGameById(gameId);
+  if (!game) notFound();
+
+  const roomCount = await prisma.room.count({
+    where: { gameId, status: "waiting" },
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="mb-8 flex items-end gap-5">
         <div className="h-24 w-16 shrink-0 overflow-hidden rounded-xl">
-          {game?.coverUrl ? (
+          {game.coverUrl ? (
             <Image
               src={game.coverUrl}
               alt={game.name}
@@ -57,7 +61,7 @@ export default async function GameRoomsPage({ params }: Props) {
             ゲーム別部屋一覧
           </p>
           <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-            {game?.name ?? gameId}
+            {game.name}
           </h1>
           <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
             {roomCount > 0 ? `${roomCount} 部屋が参加者を募集中` : "現在募集中の部屋はありません"}

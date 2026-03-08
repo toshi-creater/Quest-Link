@@ -15,7 +15,7 @@
 | `ratings` | セッション後の相互評価 |
 | `play_style_tags` | プレイスタイルタグ マスタ |
 | `room_play_style_tags` | 部屋 × タグ |
-| `games` | ゲーム情報マスタ（IGDB連携） |
+| `games` | ゲーム情報マスタ |
 | `user_games` | ユーザー × ゲーム |
 | `sns_share_logs` | SNSシェア投稿ログ（レート制限用） |
 
@@ -208,14 +208,14 @@ Google / X / Discord の3プロバイダに対応するため、プロバイダ�
 
 ### 2.10 `games`
 
-IGDBからピックアップして自社マスターDBに登録するゲーム情報。運営のみ追加・編集可。MVP登録数は20〜30タイトル。
+運営がマスター登録するゲーム情報。運営のみ追加・編集可。MVP登録数は20〜30タイトル。
 
 | カラム名 | 型 | NULL | デフォルト | 説明 |
 |---------|-----|------|-----------|------|
 | `id` | `UUID` | NOT NULL | `gen_random_uuid()` | PK |
-| `igdb_id` | `INTEGER` | NOT NULL | - | IGDB上のゲームID |
+| `igdb_id` | `INTEGER` | NULL | - | 任意の外部参照ID（運営作業時の参照用。NULL可） |
 | `name` | `VARCHAR(255)` | NOT NULL | - | ゲーム名 |
-| `cover_image_url` | `TEXT` | NULL | - | IGDBカバー画像URL（表示時に直接参照） |
+| `cover_image_url` | `TEXT` | NULL | - | カバー画像URL（表示時に直接参照） |
 | `genre` | `VARCHAR(50)` | NULL | - | ジャンル（例: FPS / RPG / MOBA） |
 | `is_active` | `BOOLEAN` | NOT NULL | `true` | falseでゲーム選択画面から非表示 |
 | `display_order` | `SMALLINT` | NOT NULL | `0` | ゲーム選択画面でのグリッド表示順 |

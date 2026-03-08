@@ -45,7 +45,6 @@
 | Discord OAuth 2.0 | ソーシャルログイン | OAuth 2.0 |
 | X Share API | 募集リンクの投稿 | REST API |
 | Discord Webhook | 募集リンクの投稿 | Webhook POST |
-| IGDB API | ゲームマスター登録時のメタデータ・画像URL取得（運営作業時のみ使用） | REST API |
 
 ---
 

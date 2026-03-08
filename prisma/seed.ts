@@ -26,44 +26,18 @@ async function main() {
   }
   console.log(`✓ play_style_tags: ${tagDefs.length}件`);
 
-  // ─── 2. ゲームデータ（IGDBキャッシュ） ────────────────────────────────────────
+  // ─── 2. ゲームデータ ──────────────────────────────────────────────────────────
   const gameDefs = [
-    {
-      igdbId: 126459,
-      name: "VALORANT",
-      coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.webp",
-    },
-    {
-      igdbId: 101064,
-      name: "Apex Legends",
-      coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvc.webp",
-    },
-    {
-      igdbId: 119133,
-      name: "Overwatch 2",
-      coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co5s5v.webp",
-    },
-    {
-      igdbId: 11198,
-      name: "League of Legends",
-      coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co49wj.webp",
-    },
-    {
-      igdbId: 1905,
-      name: "Minecraft",
-      coverUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co49x5.webp",
-    },
+    { name: "VALORANT", coverUrl: "/images/covers/valorant.jpg", displayOrder: 1 },
+    { name: "Apex Legends", coverUrl: "/images/covers/apex-legends.jpg", displayOrder: 2 },
+    { name: "Overwatch 2", coverUrl: "/images/covers/overwatch-2.jpg", displayOrder: 3 },
+    { name: "League of Legends", coverUrl: "/images/covers/league-of-legends.jpg", displayOrder: 4 },
+    { name: "Minecraft", coverUrl: "/images/covers/minecraft.jpg", displayOrder: 5 },
   ];
 
-  const games: { id: string; name: string }[] = [];
-  for (const g of gameDefs) {
-    const game = await prisma.game.upsert({
-      where: { igdbId: g.igdbId },
-      update: { name: g.name, coverUrl: g.coverUrl },
-      create: g,
-    });
-    games.push({ id: game.id, name: game.name });
-  }
+  await prisma.game.deleteMany({});
+  await prisma.game.createMany({ data: gameDefs });
+  const games = await prisma.game.findMany({ select: { id: true, name: true }, orderBy: { displayOrder: "asc" } });
   console.log(`✓ games: ${games.length}件`);
 
   // ─── 3. テストユーザー ────────────────────────────────────────────────────────

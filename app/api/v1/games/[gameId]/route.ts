@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getGameById } from "@/lib/igdb";
+import { getGameById } from "@/lib/games";
 
 export async function GET(
   _request: NextRequest,

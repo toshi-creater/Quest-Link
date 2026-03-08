@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { searchGames, getPopularGames } from "@/lib/igdb";
+import { searchGames, getPopularGames } from "@/lib/games";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -24,14 +24,7 @@ export async function GET(request: NextRequest) {
   try {
     const games = q.length === 0 ? await getPopularGames(limit) : await searchGames(q, limit);
     return NextResponse.json({ data: games });
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "";
-    if (msg === "IGDB_ERROR") {
-      return NextResponse.json(
-        { error: { code: "IGDB_ERROR", message: "IGDB API との通信に失敗しました。" } },
-        { status: 500 }
-      );
-    }
+  } catch {
     return NextResponse.json(
       { error: { code: "INTERNAL_SERVER_ERROR", message: "サーバーエラーが発生しました。" } },
       { status: 500 }

@@ -14,7 +14,7 @@ const roomSelect = {
   status: true,
   createdAt: true,
   closedAt: true,
-  game: { select: { id: true, igdbId: true, name: true, coverUrl: true } },
+  game: { select: { id: true, name: true, coverUrl: true } },
   host: { select: { id: true, username: true, iconUrl: true, avgRating: true } },
   playStyleTags: {
     select: { tag: { select: { id: true, name: true, slug: true } } },
