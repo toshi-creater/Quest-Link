@@ -10,21 +10,33 @@ datasource db {
 
 enum RoomStatus {
   waiting
-  playing
+  full
   closed
 }
 
-model User {
-  id          String   @id @default(uuid()) @db.Uuid
-  googleId    String   @unique @map("google_id") @db.VarChar(255)
-  username    String   @unique @db.VarChar(50)
-  iconUrl     String?  @map("icon_url")
-  bio         String?
-  avgRating   Decimal  @default(0.00) @map("avg_rating") @db.Decimal(3, 2)
-  ratingCount Int      @default(0) @map("rating_count")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+enum OauthProvider {
+  google
+  x
+  discord
+}
 
+enum SnsPlatform {
+  x
+  discord
+}
+
+model User {
+  id                String   @id @default(uuid()) @db.Uuid
+  username          String   @unique @db.VarChar(50)
+  iconUrl           String?  @map("icon_url")
+  bio               String?
+  discordWebhookUrl String?  @map("discord_webhook_url")
+  avgRating         Decimal  @default(0.00) @map("avg_rating") @db.Decimal(3, 2)
+  ratingCount       Int      @default(0) @map("rating_count")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  oauthProviders  OauthProviderAccount[]
   hostedRooms     Room[]             @relation("RoomHost")
   participations  RoomParticipant[]
   sentRatings     Rating[]           @relation("Reviewer")
@@ -32,8 +44,23 @@ model User {
   chatMessages    ChatMessage[]
   playStyleTags   UserPlayStyleTag[]
   games           UserGame[]
+  snsShareLogs    SnsShareLog[]
 
   @@map("users")
+}
+
+model OauthProviderAccount {
+  id             String        @id @default(uuid()) @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  provider       OauthProvider
+  providerUserId String        @map("provider_user_id") @db.VarChar(255)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("oauth_providers")
 }
 
 model Room {
@@ -54,6 +81,7 @@ model Room {
   chatMessages  ChatMessage[]
   ratings       Rating[]
   playStyleTags RoomPlayStyleTag[]
+  snsShareLogs  SnsShareLog[]
 
   @@index([status])
   @@index([hostId])
@@ -63,19 +91,21 @@ model Room {
 }
 
 model RoomParticipant {
-  id       String    @id @default(uuid()) @db.Uuid
-  roomId   String    @map("room_id") @db.Uuid
-  userId   String    @map("user_id") @db.Uuid
-  isHost   Boolean   @default(false) @map("is_host")
-  joinedAt DateTime  @default(now()) @map("joined_at") @db.Timestamptz
-  leftAt   DateTime? @map("left_at") @db.Timestamptz
+  id             String    @id @default(uuid()) @db.Uuid
+  roomId         String    @map("room_id") @db.Uuid
+  userId         String?   @map("user_id") @db.Uuid
+  guestSessionId String?   @map("guest_session_id") @db.VarChar(50)
+  displayName    String?   @map("display_name") @db.VarChar(50)
+  isHost         Boolean   @default(false) @map("is_host")
+  joinedAt       DateTime  @default(now()) @map("joined_at") @db.Timestamptz
+  leftAt         DateTime? @map("left_at") @db.Timestamptz
 
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([roomId, userId, joinedAt])
   @@index([roomId])
   @@index([userId])
+  @@index([guestSessionId])
   @@map("room_participants")
 }
 
@@ -156,16 +186,20 @@ model RoomPlayStyleTag {
 }
 
 model Game {
-  id       String   @id @default(uuid()) @db.Uuid
-  igdbId   Int      @unique @map("igdb_id")
-  name     String   @db.VarChar(255)
-  coverUrl String?  @map("cover_url")
-  cachedAt DateTime @default(now()) @map("cached_at") @db.Timestamptz
+  id           String   @id @default(uuid()) @db.Uuid
+  igdbId       Int      @unique @map("igdb_id")
+  name         String   @db.VarChar(255)
+  coverUrl     String?  @map("cover_url")
+  genre        String?  @db.VarChar(50)
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order") @db.SmallInt
+  cachedAt     DateTime @default(now()) @map("cached_at") @db.Timestamptz
 
   rooms     Room[]
   userGames UserGame[]
 
   @@index([name])
+  @@index([isActive, displayOrder])
   @@map("games")
 }
 
@@ -175,9 +209,23 @@ model UserGame {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  game Game @relation(fields: [gameId], references: [id])
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@id([userId, gameId])
   @@index([gameId])
   @@map("user_games")
+}
+
+model SnsShareLog {
+  id        String      @id @default(uuid()) @db.Uuid
+  roomId    String      @map("room_id") @db.Uuid
+  userId    String      @map("user_id") @db.Uuid
+  platform  SnsPlatform
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt(sort: Desc)])
+  @@map("sns_share_logs")
 }

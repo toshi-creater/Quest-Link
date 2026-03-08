@@ -34,7 +34,7 @@ export type Room = {
   description: string | null;
   maxPlayers: number;
   currentPlayers: number;
-  status: "waiting" | "playing" | "closed";
+  status: "waiting" | "full" | "closed";
   playStyleTags: PlayStyleTag[];
   host: {
     id: string;
@@ -251,7 +251,7 @@ export const MOCK_ROOMS: Room[] = [
     description: "ガチマッチ専門。X帯以上のみ。",
     maxPlayers: 4,
     currentPlayers: 4,
-    status: "playing",
+    status: "full",
     playStyleTags: [PLAY_STYLE_TAGS[0], PLAY_STYLE_TAGS[3]],
     host: { id: "user-2", username: "PixelWarrior", iconUrl: null, avgRating: 3.8 },
     participants: [

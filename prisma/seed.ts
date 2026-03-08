@@ -69,35 +69,30 @@ async function main() {
   // ─── 3. テストユーザー ────────────────────────────────────────────────────────
   const userDefs = [
     {
-      googleId: "test-google-001",
       username: "gamer_alice",
       bio: "FPS大好きなガチ勢です。ランク上げ一緒にやりましょう！",
       avgRating: 4.5,
       ratingCount: 12,
     },
     {
-      googleId: "test-google-002",
       username: "player_bob",
       bio: "エンジョイ勢。深夜によく遊んでます。",
       avgRating: 4.2,
       ratingCount: 8,
     },
     {
-      googleId: "test-google-003",
       username: "nova_charlie",
       bio: "初心者ですがよろしくお願いします！",
       avgRating: 3.8,
       ratingCount: 5,
     },
     {
-      googleId: "test-google-004",
       username: "pro_diana",
       bio: "元プロゲーマー。コーチングもやってます。",
       avgRating: 4.9,
       ratingCount: 30,
     },
     {
-      googleId: "test-google-005",
       username: "midnight_eve",
       bio: "深夜専門。声なしでもOK！",
       avgRating: 4.1,
@@ -108,10 +103,9 @@ async function main() {
   const users: { id: string; username: string }[] = [];
   for (const u of userDefs) {
     const user = await prisma.user.upsert({
-      where: { googleId: u.googleId },
-      update: { username: u.username, bio: u.bio },
+      where: { username: u.username },
+      update: { bio: u.bio },
       create: {
-        googleId: u.googleId,
         username: u.username,
         bio: u.bio,
         avgRating: u.avgRating,
@@ -228,14 +222,14 @@ async function main() {
     ],
   });
 
-  // playing × 1部屋（一覧には表示されない）
+  // full × 1部屋（一覧には表示されない）
   const room5 = await prisma.room.create({
     data: {
       title: "LoL 5on5 スクリム中",
       gameId: gameId("League of Legends"),
       hostId: userId("pro_diana"),
       maxPlayers: 10,
-      status: "playing",
+      status: "full",
       playStyleTags: {
         createMany: {
           data: [{ tagId: tagId("hardcore") }],
@@ -275,7 +269,7 @@ async function main() {
     ],
   });
 
-  console.log(`✓ rooms: 6件（waiting×4, playing×1, closed×1）`);
+  console.log(`✓ rooms: 6件（waiting×4, full×1, closed×1）`);
   console.log("");
   console.log("── AC確認用データ ──────────────────────────────────────────");
   console.log("部屋一覧（waiting）: 4件表示されることを確認");
@@ -283,7 +277,7 @@ async function main() {
   console.log("  2. Apex エンジョイ勢（1/3人）   ← player_bob ホスト");
   console.log("  3. OW2 タンク欲しい（2/6人）    ← pro_diana ホスト");
   console.log("  4. マイクラ 建築サーバー（2/8人）← midnight_eve ホスト");
-  console.log("playing/closed の部屋は一覧に表示されない");
+  console.log("full/closed の部屋は一覧に表示されない");
   console.log("────────────────────────────────────────────────────────────");
 }
 
