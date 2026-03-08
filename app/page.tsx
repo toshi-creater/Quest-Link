@@ -1,23 +1,70 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Gamepad2, ChevronRight } from "lucide-react";
-import { MOCK_GAMES, MOCK_ROOMS } from "@/lib/mock-data";
+import { ChevronRight } from "lucide-react";
+import { Prisma } from "@prisma/client";
+import { getPopularGames } from "@/lib/games";
+import { prisma } from "@/lib/prisma";
 import { RoomCard } from "@/components/ui/RoomCard";
 import { type RoomSummary } from "@/lib/api/rooms";
+import { HomeGameGrid } from "./HomeGameGrid";
 
-const FEATURED_GAMES = MOCK_GAMES.slice(0, 6);
-const WAITING_ROOMS = MOCK_ROOMS.filter((r) => r.status === "waiting");
+const roomSelect = {
+  id: true,
+  title: true,
+  description: true,
+  maxPlayers: true,
+  status: true,
+  createdAt: true,
+  closedAt: true,
+  game: { select: { id: true, name: true, coverUrl: true } },
+  host: { select: { id: true, username: true, iconUrl: true, avgRating: true } },
+  playStyleTags: {
+    select: { tag: { select: { id: true, name: true, slug: true } } },
+  },
+  participants: {
+    where: { leftAt: null },
+    select: {
+      userId: true,
+      isHost: true,
+      joinedAt: true,
+      user: { select: { username: true, iconUrl: true, avgRating: true } },
+    },
+  },
+} satisfies Prisma.RoomSelect;
 
-export default function HomePage() {
-  const router = useRouter();
-  const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
+type RawRoom = Prisma.RoomGetPayload<{ select: typeof roomSelect }>;
 
-  const handleImgError = (gameId: string) => {
-    setImgErrors((prev) => new Set(prev).add(gameId));
+function formatRoom(room: RawRoom): RoomSummary {
+  const currentPlayers = room.participants.length;
+  return {
+    id: room.id,
+    title: room.title,
+    description: room.description,
+    maxPlayers: room.maxPlayers,
+    currentPlayers,
+    status: room.status as "waiting" | "playing" | "closed",
+    createdAt: room.createdAt.toISOString(),
+    game: room.game,
+    host: {
+      id: room.host.id,
+      username: room.host.username,
+      iconUrl: room.host.iconUrl,
+      avgRating: Number(room.host.avgRating),
+    },
+    playStyleTags: room.playStyleTags.map((t) => t.tag),
   };
+}
+
+export default async function HomePage() {
+  const [games, rawRooms] = await Promise.all([
+    getPopularGames(6),
+    prisma.room.findMany({
+      where: { status: "waiting" },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: roomSelect,
+    }),
+  ]);
+  const rooms = rawRooms.map(formatRoom);
 
   return (
     <main className="mx-auto max-w-screen-xl px-4 py-10 pb-24 md:pb-10 space-y-12">
@@ -37,42 +84,7 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-          {FEATURED_GAMES.map((game) => {
-            const hasError = imgErrors.has(game.id);
-            return (
-              <button
-                key={game.id}
-                onClick={() => router.push(`/games/${game.id}/rooms`)}
-                className="group text-left"
-              >
-                <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl">
-                  {!hasError && game.coverUrl ? (
-                    <img
-                      src={game.coverUrl}
-                      alt={game.name}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      onError={() => handleImgError(game.id)}
-                    />
-                  ) : (
-                    <div
-                      className="flex h-full w-full items-center justify-center"
-                      style={{ background: "var(--bg-elevated)" }}
-                    >
-                      <Gamepad2 className="h-8 w-8 opacity-40" style={{ color: "var(--primary)" }} />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-transparent p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                    <span className="text-xs font-semibold text-white">探す →</span>
-                  </div>
-                </div>
-                <p className="mt-1.5 truncate text-xs font-medium" style={{ color: "var(--text-primary)" }}>
-                  {game.name}
-                </p>
-              </button>
-            );
-          })}
-        </div>
+        <HomeGameGrid games={games} />
       </section>
 
       {/* ── 募集中の部屋 ── */}
@@ -92,11 +104,8 @@ export default function HomePage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {WAITING_ROOMS.map((room) => (
-            <RoomCard
-              key={room.id}
-              room={{ ...room, host: { ...room.host, avgRating: room.host.avgRating ?? 0 } } as RoomSummary}
-            />
+          {rooms.map((room) => (
+            <RoomCard key={room.id} room={room} />
           ))}
         </div>
       </section>

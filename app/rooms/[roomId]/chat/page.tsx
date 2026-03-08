@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ArrowLeft, Crown } from "lucide-react";
-import { MOCK_ROOMS, MOCK_CHAT_MESSAGES, CURRENT_USER } from "@/lib/mock-data";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
@@ -12,8 +14,45 @@ type Props = {
 
 export default async function ChatPage({ params }: Props) {
   const { roomId } = await params;
-  const room = MOCK_ROOMS.find((r) => r.id === roomId) ?? MOCK_ROOMS[0];
-  const messages = MOCK_CHAT_MESSAGES;
+
+  const session = await auth();
+  const currentUserId = session?.user?.id ?? null;
+
+  const room = await prisma.room.findUnique({
+    where: { id: roomId },
+    select: {
+      id: true,
+      title: true,
+      maxPlayers: true,
+      game: { select: { id: true, name: true } },
+      playStyleTags: { select: { tag: { select: { id: true, name: true, slug: true } } } },
+      participants: {
+        where: { leftAt: null },
+        select: {
+          userId: true,
+          isHost: true,
+          user: { select: { username: true, iconUrl: true, avgRating: true } },
+        },
+      },
+    },
+  });
+  if (!room) notFound();
+
+  const currentPlayers = room.participants.length;
+  const tags = room.playStyleTags.map((t) => t.tag);
+
+  const messages = await prisma.chatMessage.findMany({
+    where: { roomId },
+    orderBy: { createdAt: "asc" },
+    take: 100,
+    select: {
+      id: true,
+      content: true,
+      isSystem: true,
+      createdAt: true,
+      user: { select: { id: true, username: true, iconUrl: true } },
+    },
+  });
 
   return (
     <div
@@ -41,9 +80,9 @@ export default async function ChatPage({ params }: Props) {
           <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
             {room.game.name}
           </p>
-          {room.playStyleTags.length > 0 && (
+          {tags.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
-              {room.playStyleTags.map((tag) => (
+              {tags.map((tag) => (
                 <PlayStyleTag key={tag.id} tag={tag} size="sm" />
               ))}
             </div>
@@ -53,35 +92,43 @@ export default async function ChatPage({ params }: Props) {
         {/* Participants */}
         <div className="flex-1 overflow-y-auto p-4">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
-            参加者 {room.currentPlayers}/{room.maxPlayers}
+            参加者 {currentPlayers}/{room.maxPlayers}
           </p>
           <ul className="space-y-2.5">
-            {room.participants.map((p) => (
-              <li key={p.userId} className="flex items-center gap-2.5">
-                <div className="relative">
-                  <UserAvatar username={p.username} iconUrl={p.iconUrl} size="sm" />
-                  <span
-                    className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2"
-                    style={{
-                      backgroundColor: "#22c55e",
-                      borderColor: "var(--bg-card)",
-                    }}
-                  />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1">
-                    {p.isHost && <Crown className="h-3 w-3" style={{ color: "#eab308" }} />}
+            {room.participants.map((p) => {
+              if (!p.user) return null;
+              const { username, iconUrl, avgRating } = p.user;
+              return (
+                <li key={p.userId} className="flex items-center gap-2.5">
+                  <div className="relative">
+                    <UserAvatar username={username} iconUrl={iconUrl} size="sm" />
                     <span
-                      className="truncate text-xs font-medium"
-                      style={{ color: p.userId === CURRENT_USER.id ? "var(--accent-light)" : "var(--text-primary)" }}
-                    >
-                      {p.username}
-                    </span>
+                      className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2"
+                      style={{
+                        backgroundColor: "#22c55e",
+                        borderColor: "var(--bg-card)",
+                      }}
+                    />
                   </div>
-                  <RatingDisplay avgRating={p.avgRating} ratingCount={p.avgRating != null ? 10 : 3} size="sm" />
-                </div>
-              </li>
-            ))}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1">
+                      {p.isHost && <Crown className="h-3 w-3" style={{ color: "#eab308" }} />}
+                      <span
+                        className="truncate text-xs font-medium"
+                        style={{ color: p.userId === currentUserId ? "var(--accent-light)" : "var(--text-primary)" }}
+                      >
+                        {username}
+                      </span>
+                    </div>
+                    <RatingDisplay
+                      avgRating={avgRating !== null ? Number(avgRating) : null}
+                      ratingCount={avgRating != null ? 10 : 3}
+                      size="sm"
+                    />
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </aside>
@@ -101,7 +148,7 @@ export default async function ChatPage({ params }: Props) {
               {room.title}
             </p>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              {room.currentPlayers}人参加中
+              {currentPlayers}人参加中
             </p>
           </div>
         </div>
@@ -121,7 +168,7 @@ export default async function ChatPage({ params }: Props) {
               );
             }
 
-            const isMe = msg.user?.id === CURRENT_USER.id;
+            const isMe = msg.user?.id === currentUserId;
             return (
               <div
                 key={msg.id}

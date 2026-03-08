@@ -18,14 +18,7 @@
 
 ### 1.1 ゲームデータの取得元
 
-ゲーム情報は **IGDB API**（Twitch Developer が提供するゲームデータベース）から取得する。バックエンドは受け取ったゲーム情報を `games` テーブルにキャッシュし、次回以降の同一クエリにはキャッシュから返す。IGDB APIへのリクエストはバックエンド経由でのみ行い、クライアントが IGDB に直接アクセスすることはない。
-
-取得時は以下の処理でデータ品質を保証する。
-
-- IGDB クエリに `version_parent = null & parent_game = null` フィルタを適用し、版違い（エディション等）・エピソード・シーズン・DLC を除外する
-- 同一名称のゲームが複数返却された場合、`updated_at` が最新の1件のみを残す
-
-> 例：「Call of Duty: WWII」と「Call of Duty: Black Ops 2」はタイトルが異なるため両方返却される。「Fortnite」のように同名エントリが複数ある場合は最新の1件に絞られる。
+ゲーム情報は `games` テーブルから直接返す。運営が事前に登録したゲームマスターのみが対象であり、外部APIへのリクエストは行わない。
 
 ### 1.2 利用シーン
 
@@ -49,24 +42,22 @@
 ```json
 {
   "id": "game-uuid-1",
-  "igdbId": 126459,
   "name": "VALORANT",
-  "coverUrl": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg"
+  "coverUrl": "https://example.com/images/valorant.jpg"
 }
 ```
 
 | フィールド | 型 | 説明 |
 |-----------|-----|------|
 | `id` | string (UUID) | DB内部のゲーム ID。部屋作成・プロフィール更新 API で使用する |
-| `igdbId` | integer | IGDB 上のゲーム ID |
 | `name` | string | ゲーム名 |
-| `coverUrl` | string \| null | カバー画像 URL（IGDB CDN）。未設定の場合は `null` |
+| `coverUrl` | string \| null | カバー画像 URL。未設定の場合は `null` |
 
 ---
 
 ## 2. ゲーム検索
 
-キーワードをもとに IGDB API を経由してゲームを検索する。結果はバックエンドで `games` テーブルにキャッシュされる。
+キーワードをもとに `games` テーブルから検索する。
 
 ```
 GET /games/search
@@ -81,7 +72,7 @@ GET /games/search
 | `q` | string | - | 0〜100文字 | 検索キーワード。省略または空文字の場合は人気ゲームを返す |
 | `limit` | integer | - | 1〜20、デフォルト10 | 取得件数 |
 
-> **`q` 省略時の動作**: IGDB の総評価数（`total_rating_count`）上位ゲームを `limit` 件返す。UI 上のゲーム選択ドロップダウンを開いた初期状態での表示に使用する。
+> **`q` 省略時の動作**: `display_order` 順で `limit` 件返す。UI 上のゲーム選択ドロップダウンを開いた初期状態での表示に使用する。
 
 ```
 GET /games/search?q=Apex&limit=5   # キーワード検索
@@ -95,15 +86,13 @@ GET /games/search                  # 人気ゲームをデフォルト10件取�
   "data": [
     {
       "id": "game-uuid-1",
-      "igdbId": 1372,
       "name": "Apex Legends",
-      "coverUrl": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3okb.jpg"
+      "coverUrl": "https://example.com/images/apex-legends.jpg"
     },
     {
       "id": "game-uuid-2",
-      "igdbId": 119171,
       "name": "Apex Legends Mobile",
-      "coverUrl": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5esv.jpg"
+      "coverUrl": "https://example.com/images/apex-legends-mobile.jpg"
     }
   ]
 }
@@ -116,7 +105,6 @@ GET /games/search                  # 人気ゲームをデフォルト10件取�
 | HTTP ステータス | エラーコード | 説明 |
 |--------------|------------|------|
 | 400 | `BAD_REQUEST` | `q` が100文字を超えている |
-| 500 | `IGDB_ERROR` | IGDB API との通信に失敗 |
 
 ---
 
@@ -142,9 +130,8 @@ GET /games/{gameId}
 {
   "data": {
     "id": "game-uuid-1",
-    "igdbId": 1372,
     "name": "Apex Legends",
-    "coverUrl": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3okb.jpg"
+    "coverUrl": "https://example.com/images/apex-legends.jpg"
   }
 }
 ```

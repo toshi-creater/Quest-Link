@@ -2,7 +2,6 @@
 
 export type RoomGame = {
   id: string;
-  igdbId: number;
   name: string;
   coverUrl: string | null;
 };
