@@ -9,10 +9,11 @@
 
 | メソッド | パス | 認証 | 説明 |
 |---------|------|------|------|
-| POST | `/ratings` | 必要 | 評価を送信 |
+| POST | `/rooms/{roomId}/ratings` | 必要 | 評価を送信 |
 | GET | `/users/{userId}/ratings` | 不要 | ユーザーが受け取った評価一覧 |
 | GET | `/rooms/{roomId}/pending-ratings` | 必要 | 未評価の相手一覧 |
 | GET | `/play-style-tags` | 不要 | 有効なタグ一覧取得 |
+| GET | `/games/{gameId}/tags` | 不要 | ゲームタグ一覧 |
 
 ---
 
@@ -21,7 +22,7 @@
 セッション終了後、同じ部屋に参加していたユーザーを評価する。
 
 ```
-POST /ratings
+POST /rooms/{roomId}/ratings
 ```
 
 **認証**: 必要
@@ -41,7 +42,6 @@ POST /ratings
 
 | フィールド | 型 | 必須 | 制約 | 説明 |
 |-----------|-----|------|------|------|
-| `roomId` | string (UUID) | ○ | - | 対象セッションの部屋 ID |
 | `revieweeId` | string (UUID) | ○ | 自分以外 | 評価対象ユーザーの ID |
 | `score` | integer | ○ | 1〜5 | 評価スコア |
 | `comment` | string | - | - | 任意コメント（匿名） |
@@ -178,6 +178,41 @@ GET /play-style-tags
   ]
 }
 ```
+
+---
+
+## 6. ゲームタグ一覧取得
+
+全ゲーム共通の `play_style_tags` マスターから `is_active = true` のタグを返す。`GET /play-style-tags` と同等だが、フロントが gameId コンテキストで呼べる利便性のために残す。
+
+```
+GET /games/{gameId}/tags
+```
+
+**認証**: 不要
+
+### パスパラメータ
+
+| パラメータ | 型 | 説明 |
+|-----------|-----|------|
+| `gameId` | string (UUID) | `games.id`（DB内部のゲーム ID） |
+
+### レスポンス `200 OK`
+
+```json
+{
+  "data": [
+    { "id": "...", "name": "ガチ勢", "slug": "hardcore", "displayOrder": 1 },
+    { "id": "...", "name": "エンジョイ勢", "slug": "casual", "displayOrder": 2 }
+  ]
+}
+```
+
+### エラー
+
+| HTTP | エラーコード | 説明 |
+|------|------------|------|
+| 404 | `GAME_NOT_FOUND` | 指定した ID のゲームが存在しない |
 
 ---
 

@@ -40,9 +40,6 @@ GET /users/me
     "discordWebhookUrl": "https://discord.com/api/webhooks/...",
     "avgRating": 4.20,
     "ratingCount": 15,
-    "playStyleTags": [
-      { "id": "...", "name": "ガチ勢", "slug": "hardcore" }
-    ],
     "games": [
       { "id": "...", "igdbId": 1372, "name": "Apex Legends", "coverImageUrl": "https://images.igdb.com/..." }
     ],
@@ -57,6 +54,7 @@ GET /users/me
 | `discordWebhookUrl` | string \| null | Discord Webhook URL（SNSシェアに使用） |
 | `games` | array | プレイしているゲーム一覧（最大20件） |
 | `linkedProviders` | string[] | 連携済みプロバイダ一覧（`google` / `x` / `discord`） |
+
 
 ---
 
@@ -78,7 +76,6 @@ PATCH /users/me
 | `iconUrl` | string \| null | URL形式 | アイコン画像 URL |
 | `bio` | string \| null | 500文字以内 | 自己紹介文 |
 | `discordWebhookUrl` | string \| null | Discord Webhook URL形式 | Discord Webhook URL（null で削除） |
-| `playStyleTagIds` | string[] | 有効なタグ ID | プレイスタイルタグ（全件置換） |
 | `gameIds` | string[] | `games.id`、最大20件 | プレイしているゲーム（全件置換） |
 
 ### レスポンス `200 OK`
@@ -89,7 +86,6 @@ PATCH /users/me
 
 | HTTP | エラーコード | 説明 |
 |------|------------|------|
-| 400 | `INVALID_TAG` | 無効なタグ ID |
 | 400 | `INVALID_GAME` | 存在しないゲーム ID |
 | 400 | `TOO_MANY_GAMES` | ゲームが上限（20件）超過 |
 | 400 | `INVALID_WEBHOOK_URL` | Discord Webhook URL の形式が無効 |
@@ -132,9 +128,6 @@ GET /users/{userId}
     "bio": "Apex Legendsプレデター目指してます。",
     "avgRating": 4.80,
     "ratingCount": 32,
-    "playStyleTags": [
-      { "id": "...", "name": "ガチ勢", "slug": "hardcore" }
-    ],
     "games": [
       { "id": "...", "igdbId": 1372, "name": "Apex Legends", "coverImageUrl": "https://images.igdb.com/..." }
     ],

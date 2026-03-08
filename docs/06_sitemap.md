@@ -38,7 +38,7 @@
 |------|--------|---------|---------|
 | `/login` | ログイン | Google ログインボタン表示 | - |
 | `/auth/callback` | OAuthコールバック | 認可コードを受け取り JWT を取得・保存。レスポンスの `isNewUser: true` の場合は `/onboarding` へ、既存ユーザーは OAuth `state` に保持した遷移元 URL へリダイレクト | `POST /auth/{provider}/callback`（Google / X / Discord） |
-| `/onboarding` | 初回プロフィール設定 | ユーザー名（必須）・アイコン URL・自己紹介・プレイスタイルタグ・プレイゲームを設定。完了後は OAuth `state` に保持した遷移元 URL へリダイレクト。ユーザー名未設定のまま離脱すると部屋機能利用不可（`username: null` の間は参加・作成・チャット不可） | `GET /play-style-tags`（認証不要）、`GET /games/search`、`PATCH /users/me` |
+| `/onboarding` | 初回プロフィール設定 | ユーザー名（必須）・アイコン URL・自己紹介・プレイゲームを設定。完了後は OAuth `state` に保持した遷移元 URL へリダイレクト。ユーザー名未設定のまま離脱すると部屋機能利用不可（`username: null` の間は参加・作成・チャット不可） | `GET /games/search`、`PATCH /users/me` |
 
 ---
 
@@ -77,11 +77,11 @@
 
 | パス | 画面名 | 主な機能 | 使用 API |
 |------|--------|---------|---------|
-| `/users/me` | 自分のプロフィール | ユーザー名・アイコン・自己紹介・平均評価・プレイスタイルタグ・プレイゲーム一覧・受け取った評価一覧を表示。未評価セッションがある場合はバナー通知 | `GET /users/me`、`GET /users/{userId}/ratings`、`GET /rooms/{roomId}/pending-ratings`（未評価バナー用） |
-| `/users/me/edit` | プロフィール編集 | ユーザー名・アイコン URL・自己紹介・プレイスタイルタグ・プレイゲームを編集（ゲームは IGDB 連携検索で選択、最大20件）。Discord Webhook URL の登録、連携済みプロバイダ（Google / X / Discord）の確認・追加・解除も行う | `GET /play-style-tags`（認証不要）、`GET /games/search`、`GET /games/{gameId}`、`PATCH /users/me`、`POST /auth/{provider}/link`、`DELETE /auth/{provider}/unlink` |
+| `/users/me` | 自分のプロフィール | ユーザー名・アイコン・自己紹介・平均評価・プレイゲーム一覧・受け取った評価一覧を表示。未評価セッションがある場合はバナー通知 | `GET /users/me`、`GET /users/{userId}/ratings`、`GET /rooms/{roomId}/pending-ratings`（未評価バナー用） |
+| `/users/me/edit` | プロフィール編集 | ユーザー名・アイコン URL・自己紹介・プレイゲームを編集（ゲームは IGDB 連携検索で選択、最大20件）。Discord Webhook URL の登録、連携済みプロバイダ（Google / X / Discord）の確認・追加・解除も行う | `GET /games/search`、`GET /games/{gameId}`、`PATCH /users/me`、`POST /auth/{provider}/link`、`DELETE /auth/{provider}/unlink` |
 | `/users/me/history` | 参加履歴 | 過去に参加した部屋の一覧をページネーション付きで表示 | `GET /users/me/rooms` |
 | `/users/me/delete` | アカウント削除 | 退会の確認・実行（MVP対象） | （退会 API：未定義、要追加） |
-| `/users/[userId]` | 他ユーザープロフィール | 他ユーザーのユーザー名・アイコン・自己紹介・平均評価・プレイスタイルタグ・プレイゲーム一覧・受け取った評価一覧を表示（**認証不要**）。評価は完全匿名（評価者非表示） | `GET /users/{userId}`、`GET /users/{userId}/ratings`（いずれも認証不要） |
+| `/users/[userId]` | 他ユーザープロフィール | 他ユーザーのユーザー名・アイコン・自己紹介・平均評価・プレイゲーム一覧・受け取った評価一覧を表示（**認証不要**）。評価は完全匿名（評価者非表示） | `GET /users/{userId}`、`GET /users/{userId}/ratings`（いずれも認証不要） |
 
 ---
 
@@ -170,6 +170,7 @@
 | ver 5.0 | 2026年2月 | ゲーム選択画面（`/`）を新設しトップ画面に設定、部屋一覧フィルターを `status` 廃止・`vacant`/`q` 追加・タグOR検索に更新、`DELETE /users/me` 追加によるアカウント削除対応、OAuth `state` 経由の遷移元リダイレクト対応 |
 | ver 5.1 | 2026年2月 | ヘッダーナビゲーションを整理：ゲーム選択・部屋作成・参加中の部屋チャット・プロフィールの4項目に統一。部屋一覧へのリンクを削除 |
 | ver 6.0 | 2026年3月 | URL構造変更：トップ（`/`）をおすすめ＋部屋一覧の複合ページに刷新、ゲーム選択を `/games` に移動、部屋一覧を `/rooms` 廃止・`/games/[gameId]/rooms` に変更。ヘッダーナビゲーションを5項目（トップ・部屋を探す・部屋を作る・参加中の部屋・プロフィール）に更新 |
+| ver 6.1 | 2026年3月 | ユーザータグ廃止に伴い、オンボーディング・プロフィール・プロフィール編集・他ユーザープロフィール画面からプレイスタイルタグ関連記述を削除 |
 
 ---
 

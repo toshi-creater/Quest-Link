@@ -14,7 +14,6 @@
 | `chat_messages` | 部屋内チャット |
 | `ratings` | セッション後の相互評価 |
 | `play_style_tags` | プレイスタイルタグ マスタ |
-| `user_play_style_tags` | ユーザー × タグ |
 | `room_play_style_tags` | 部屋 × タグ |
 | `games` | ゲーム情報マスタ（IGDB連携） |
 | `user_games` | ユーザー × ゲーム |
@@ -192,22 +191,7 @@ Google / X / Discord の3プロバイダに対応するため、プロバイダ�
 
 ---
 
-### 2.8 `user_play_style_tags`
-
-| カラム名 | 型 | NULL | 説明 |
-|---------|-----|------|------|
-| `user_id` | `UUID` | NOT NULL | PK / FK: users.id |
-| `tag_id` | `UUID` | NOT NULL | PK / FK: play_style_tags.id |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL | - |
-
-**制約**
-- `PRIMARY KEY (user_id, tag_id)`
-- `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`
-- `FOREIGN KEY (tag_id) REFERENCES play_style_tags(id) ON DELETE RESTRICT`
-
----
-
-### 2.9 `room_play_style_tags`
+### 2.8 `room_play_style_tags`
 
 | カラム名 | 型 | NULL | 説明 |
 |---------|-----|------|------|
@@ -301,7 +285,6 @@ SNSシェア投稿のログ。1部屋・1時間あたり3回の投稿制限を�
 | `ratings` | `reviewee_id` | INDEX | 被評価者の評価一覧 |
 | `ratings` | `(room_id, reviewer_id)` | INDEX | 評価済みチェック |
 | `play_style_tags` | `(is_active, display_order)` | INDEX | UIタグ一覧取得 |
-| `user_play_style_tags` | `tag_id` | INDEX | タグ別ユーザー検索 |
 | `room_play_style_tags` | `tag_id` | INDEX | タグ別部屋絞り込み |
 | `games` | `name` | INDEX | ゲーム名検索 |
 | `games` | `(is_active, display_order)` | INDEX | ゲーム選択画面の表示順取得 |
