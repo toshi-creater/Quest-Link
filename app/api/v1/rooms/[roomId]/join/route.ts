@@ -59,11 +59,11 @@ export async function POST(_request: Request, { params }: RouteParams) {
           data: { roomId, userId, isHost: false },
         });
 
-        // 満員到達時に status を playing へ自動遷移
+        // 満員到達時に status を full へ自動遷移
         if (currentCount + 1 >= room.maxPlayers) {
           await tx.room.update({
             where: { id: roomId },
-            data: { status: "playing" },
+            data: { status: "full" },
           });
         }
 

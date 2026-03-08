@@ -65,7 +65,7 @@ function formatRoom(room: RawRoom) {
 // ─── GET /api/v1/rooms ─────────────────────────────────────────────────────────
 
 const listQuerySchema = z.object({
-  status: z.enum(["waiting", "playing", "closed"]).default("waiting"),
+  status: z.enum(["waiting", "full", "closed"]).default("waiting"),
   gameId: z.string().uuid().optional(),
   tagSlugs: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),
