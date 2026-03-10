@@ -3,7 +3,7 @@
 export type RoomGame = {
   id: string;
   name: string;
-  coverUrl: string | null;
+  coverImageUrl: string | null;
 };
 
 export type RoomHost = {

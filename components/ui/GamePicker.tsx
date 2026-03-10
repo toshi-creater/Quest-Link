@@ -23,7 +23,7 @@ export function GameCover({ game, size = "md", className }: GameCoverProps) {
   const [error, setError] = useState(false);
   const sizeClass = coverSizes[size];
 
-  if (!game.coverUrl || error) {
+  if (!game.coverImageUrl || error) {
     return (
       <div
         className={clsx(
@@ -42,7 +42,7 @@ export function GameCover({ game, size = "md", className }: GameCoverProps) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={game.coverUrl}
+      src={game.coverImageUrl}
       alt={game.name}
       onError={() => setError(true)}
       className={clsx("shrink-0 rounded-md object-cover", sizeClass, className)}

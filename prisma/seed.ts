@@ -28,11 +28,11 @@ async function main() {
 
   // ─── 2. ゲームデータ ──────────────────────────────────────────────────────────
   const gameDefs = [
-    { name: "VALORANT", coverUrl: "/images/covers/valorant.jpg", displayOrder: 1 },
-    { name: "Apex Legends", coverUrl: "/images/covers/apex-legends.jpg", displayOrder: 2 },
-    { name: "Overwatch 2", coverUrl: "/images/covers/overwatch-2.jpg", displayOrder: 3 },
-    { name: "League of Legends", coverUrl: "/images/covers/league-of-legends.jpg", displayOrder: 4 },
-    { name: "Minecraft", coverUrl: "/images/covers/minecraft.jpg", displayOrder: 5 },
+    { name: "VALORANT", coverImageUrl: "/images/covers/valorant.jpg", displayOrder: 1 },
+    { name: "Apex Legends", coverImageUrl: "/images/covers/apex-legends.jpg", displayOrder: 2 },
+    { name: "Overwatch 2", coverImageUrl: "/images/covers/overwatch-2.jpg", displayOrder: 3 },
+    { name: "League of Legends", coverImageUrl: "/images/covers/league-of-legends.jpg", displayOrder: 4 },
+    { name: "Minecraft", coverImageUrl: "/images/covers/minecraft.jpg", displayOrder: 5 },
   ];
 
   await prisma.game.deleteMany({});

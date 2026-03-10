@@ -69,20 +69,20 @@ export async function POST(_request: Request, { params }: RouteParams) {
         });
         await tx.room.update({
           where: { id: roomId },
-          data: { hostId: nextHost.userId },
+          data: { hostId: nextHost.userId ?? undefined },
         });
         // ホスト変更のシステムメッセージ
         const systemMsg = await tx.chatMessage.create({
           data: {
             roomId,
-            content: `${nextHost.user.username}さんがホストになりました`,
+            content: `${nextHost.user?.username ?? "新しいホスト"}さんがホストになりました`,
             isSystem: true,
           },
         });
         return {
           type: "host_changed",
-          newHostId: nextHost.userId,
-          newHostUsername: nextHost.user.username,
+          newHostId: nextHost.userId ?? "",
+          newHostUsername: nextHost.user?.username ?? "",
           systemMessageId: systemMsg.id,
           systemMessageContent: systemMsg.content,
           systemMessageCreatedAt: systemMsg.createdAt,
