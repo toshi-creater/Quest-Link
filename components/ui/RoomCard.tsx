@@ -42,10 +42,10 @@ export function RoomCard({ room }: Props) {
         style={{ backgroundColor: "rgba(124,58,237,0.08)" }}
       >
         {/* Blurred cover as background */}
-        {room.game.coverUrl && (
+        {room.game.coverImageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={room.game.coverUrl}
+            src={room.game.coverImageUrl}
             alt=""
             aria-hidden
             className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20 blur-sm scale-110"

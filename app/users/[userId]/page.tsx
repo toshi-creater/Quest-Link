@@ -17,7 +17,7 @@ type UserProfile = {
   avgRating: number;
   ratingCount: number;
   playStyleTags: { id: string; name: string; slug: string }[];
-  games: { id: string; igdbId: number; name: string; coverUrl: string | null }[];
+  games: { id: string; igdbId: number; name: string; coverImageUrl: string | null }[];
 };
 
 async function fetchUserProfile(userId: string): Promise<UserProfile> {

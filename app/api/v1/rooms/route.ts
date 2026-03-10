@@ -14,7 +14,7 @@ const roomSelect = {
   status: true,
   createdAt: true,
   closedAt: true,
-  game: { select: { id: true, name: true, coverUrl: true } },
+  game: { select: { id: true, name: true, coverImageUrl: true } },
   host: { select: { id: true, username: true, iconUrl: true, avgRating: true } },
   playStyleTags: {
     select: { tag: { select: { id: true, name: true, slug: true } } },
@@ -53,9 +53,9 @@ function formatRoom(room: RawRoom) {
     playStyleTags: room.playStyleTags.map((t) => t.tag),
     participants: room.participants.map((p) => ({
       userId: p.userId,
-      username: p.user.username,
-      iconUrl: p.user.iconUrl,
-      avgRating: p.user.avgRating !== null ? Number(p.user.avgRating) : null,
+      username: p.user?.username ?? "",
+      iconUrl: p.user?.iconUrl ?? null,
+      avgRating: p.user?.avgRating !== null && p.user?.avgRating !== undefined ? Number(p.user.avgRating) : null,
       isHost: p.isHost,
       joinedAt: p.joinedAt,
     })),

@@ -21,9 +21,9 @@ export default async function GameRoomsPage({ params }: Props) {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="mb-8 flex items-end gap-5">
         <div className="h-24 w-16 shrink-0 overflow-hidden rounded-xl">
-          {game.coverUrl ? (
+          {game.coverImageUrl ? (
             <Image
-              src={game.coverUrl}
+              src={game.coverImageUrl}
               alt={game.name}
               width={64}
               height={96}

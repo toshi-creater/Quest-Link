@@ -10,7 +10,7 @@ export type PlayStyleTag = {
 export type Game = {
   id: string;
   name: string;
-  coverUrl: string | null;
+  coverImageUrl: string | null;
 };
 
 export type User = {
@@ -72,18 +72,18 @@ export type Rating = {
 // ─── モックゲームデータ ──────────────────────────────────────────────────────
 
 export const MOCK_GAMES: Game[] = [
-  { id: "game-1", name: "VALORANT", coverUrl: "/images/covers/valorant.jpg" },
-  { id: "game-2", name: "Apex Legends", coverUrl: "/images/covers/apex-legends.jpg" },
-  { id: "game-3", name: "Splatoon 3", coverUrl: "/images/covers/splatoon-3.jpg" },
-  { id: "game-4", name: "League of Legends", coverUrl: "/images/covers/league-of-legends.jpg" },
-  { id: "game-5", name: "Minecraft", coverUrl: "/images/covers/minecraft.jpg" },
-  { id: "game-6", name: "Genshin Impact", coverUrl: "/images/covers/genshin-impact.jpg" },
-  { id: "game-7", name: "Overwatch 2", coverUrl: "/images/covers/overwatch-2.jpg" },
-  { id: "game-8", name: "Fortnite", coverUrl: "/images/covers/fortnite.jpg" },
-  { id: "game-9", name: "Final Fantasy XIV Online", coverUrl: "/images/covers/final-fantasy-xiv-online.jpg" },
-  { id: "game-10", name: "Call of Duty: Modern Warfare III", coverUrl: "/images/covers/cod-mwiii.jpg" },
-  { id: "game-11", name: "ELDEN RING", coverUrl: "/images/covers/elden-ring.jpg" },
-  { id: "game-12", name: "Pokémon Unite", coverUrl: "/images/covers/pokemon-unite.jpg" },
+  { id: "game-1", name: "VALORANT", coverImageUrl: "/images/covers/valorant.jpg" },
+  { id: "game-2", name: "Apex Legends", coverImageUrl: "/images/covers/apex-legends.jpg" },
+  { id: "game-3", name: "Splatoon 3", coverImageUrl: "/images/covers/splatoon-3.jpg" },
+  { id: "game-4", name: "League of Legends", coverImageUrl: "/images/covers/league-of-legends.jpg" },
+  { id: "game-5", name: "Minecraft", coverImageUrl: "/images/covers/minecraft.jpg" },
+  { id: "game-6", name: "Genshin Impact", coverImageUrl: "/images/covers/genshin-impact.jpg" },
+  { id: "game-7", name: "Overwatch 2", coverImageUrl: "/images/covers/overwatch-2.jpg" },
+  { id: "game-8", name: "Fortnite", coverImageUrl: "/images/covers/fortnite.jpg" },
+  { id: "game-9", name: "Final Fantasy XIV Online", coverImageUrl: "/images/covers/final-fantasy-xiv-online.jpg" },
+  { id: "game-10", name: "Call of Duty: Modern Warfare III", coverImageUrl: "/images/covers/cod-mwiii.jpg" },
+  { id: "game-11", name: "ELDEN RING", coverImageUrl: "/images/covers/elden-ring.jpg" },
+  { id: "game-12", name: "Pokémon Unite", coverImageUrl: "/images/covers/pokemon-unite.jpg" },
 ];
 
 // ─── プレイスタイルタグ ──────────────────────────────────────────────────────

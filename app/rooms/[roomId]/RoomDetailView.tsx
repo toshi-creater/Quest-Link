@@ -84,10 +84,10 @@ export function RoomDetailView({ roomId }: Props) {
               className="relative h-32 flex items-end px-6 pb-4 overflow-hidden"
               style={{ backgroundColor: "rgba(124,58,237,0.08)" }}
             >
-              {room.game.coverUrl && (
+              {room.game.coverImageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={room.game.coverUrl}
+                  src={room.game.coverImageUrl}
                   alt=""
                   aria-hidden
                   className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-25 blur-sm scale-110"

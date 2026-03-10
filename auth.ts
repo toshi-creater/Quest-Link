@@ -19,23 +19,30 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
     async signIn({ profile }) {
       if (!profile?.sub) return false;
 
-      const existing = await prisma.user.findUnique({
-        where: { googleId: profile.sub },
-        select: { id: true },
+      const existing = await prisma.oauthProviderAccount.findUnique({
+        where: { provider_providerUserId: { provider: "google", providerUserId: profile.sub } },
+        select: { userId: true },
       });
 
       if (!existing) {
-        // 初回ログイン: usernameをGoogle sub IDで仮登録（Issue #4で更新）
-        await prisma.user.create({
+        // 初回ログイン: ユーザーを作成し OAuth アカウントを紐づける
+        const user = await prisma.user.create({
           data: {
-            googleId: profile.sub,
             username: String(profile.sub).slice(0, 50),
             iconUrl: (profile.picture as string | undefined) ?? null,
+          },
+          select: { id: true },
+        });
+        await prisma.oauthProviderAccount.create({
+          data: {
+            userId: user.id,
+            provider: "google",
+            providerUserId: profile.sub,
           },
         });
       } else {
         await prisma.user.update({
-          where: { googleId: profile.sub },
+          where: { id: existing.userId },
           data: { iconUrl: (profile.picture as string | undefined) ?? null },
         });
       }
@@ -59,20 +66,19 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
 
       // 初回ログイン時: DBからユーザー情報を取得してトークンに格納
       if (profile?.sub) {
-        const user = await prisma.user.findUnique({
-          where: { googleId: profile.sub },
+        const account = await prisma.oauthProviderAccount.findUnique({
+          where: { provider_providerUserId: { provider: "google", providerUserId: profile.sub } },
           select: {
-            id: true,
-            username: true,
-            iconUrl: true,
-            avgRating: true,
+            user: {
+              select: { id: true, username: true, iconUrl: true, avgRating: true },
+            },
           },
         });
-        if (user) {
-          token["userId"] = user.id;
-          token["username"] = user.username;
-          token["iconUrl"] = user.iconUrl;
-          token["avgRating"] = Number(user.avgRating);
+        if (account?.user) {
+          token["userId"] = account.user.id;
+          token["username"] = account.user.username;
+          token["iconUrl"] = account.user.iconUrl;
+          token["avgRating"] = Number(account.user.avgRating);
         }
       }
 

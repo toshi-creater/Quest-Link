@@ -22,7 +22,7 @@ export default async function HistoryPage() {
           title: true,
           closedAt: true,
           game: {
-            select: { id: true, igdbId: true, name: true, coverUrl: true },
+            select: { id: true, igdbId: true, name: true, coverImageUrl: true },
           },
         },
       },
