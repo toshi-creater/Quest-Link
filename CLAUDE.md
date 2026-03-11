@@ -45,3 +45,5 @@
 | `docs/05_03_api_rooms-chat.md`   | ルーム／チャット関連エンドポイント＋WebSocketイベント       |
 | `docs/05_04_api_ratings-tags.md` | 評価・タグ関連エンドポイント                        |
 | `docs/06_sitemap.md`             | フロントエンドルート構成・画面遷移フロー                  |
+| `docs/development_procedure.md`             | 実装手順、実装の前に必ず確認すること                  |
+| `docs/issue_creation.md`             | issue作成手順、issue作成前に必ず確認すること                  |
