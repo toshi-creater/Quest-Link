@@ -42,37 +42,40 @@ pnpm install
 
 ### 3. 環境変数の設定
 
-`.env.local` ファイルをプロジェクトルートに作成し、以下の変数を設定する。
+`.env` ファイルをプロジェクトルートに作成し、以下の変数を設定する。
 
 ```env
 # データベース
-DATABASE_URL="postgresql://postgres:password@localhost:5432/questlink"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/questlink?schema=public"
 
-# NextAuth.js
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key"   # openssl rand -base64 32 で生成
+# NextAuth.js v5 シークレット（openssl rand -base64 32 で生成）
+AUTH_SECRET="your-secret-key"
 
 # Google OAuth 2.0
 # https://console.cloud.google.com/ で取得
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
+AUTH_GOOGLE_ID="your-google-client-id"
+AUTH_GOOGLE_SECRET="your-google-client-secret"
 
 # IGDB API (Twitch Developer)
 # https://dev.twitch.tv/console で取得
 TWITCH_CLIENT_ID="your-twitch-client-id"
 TWITCH_CLIENT_SECRET="your-twitch-client-secret"
 
-# Redis（Phase 2 以降）
-# REDIS_URL="redis://localhost:6379"
+# Redis
+REDIS_URL="redis://localhost:6379"
 ```
 
 ### 4. データベースの起動
 
-Docker Compose で PostgreSQL を起動する。
+Docker Compose で PostgreSQL 16 と Redis 7 を起動する。
 
 ```bash
 docker compose up -d
 ```
+
+起動するサービス:
+- **postgres**: PostgreSQL 16（ポート 5432）
+- **redis**: Redis 7、AOF 永続化有効（ポート 6379）
 
 ### 5. データベースのマイグレーション
 
