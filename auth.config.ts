@@ -25,7 +25,7 @@ export const authConfig = {
         return true;
       }
 
-      const isPublicPage = pathname === "/" || pathname.startsWith("/rooms");
+      const isPublicPage = pathname === "/" || pathname === "/rooms";
       if (!isLoggedIn && isPublicPage) return true;
 
       if (!isLoggedIn) return false;
