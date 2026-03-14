@@ -2,17 +2,18 @@
 
 import { useState } from "react";
 import { Send } from "lucide-react";
+import { getSocket } from "@/lib/socket";
 
 type Props = {
   roomId: string;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function ChatInput({ roomId: _roomId }: Props) {
+export function ChatInput({ roomId }: Props) {
   const [message, setMessage] = useState("");
 
   const handleSend = () => {
     if (!message.trim()) return;
+    getSocket().emit("chat:send", { roomId, content: message.trim() });
     setMessage("");
   };
 
