@@ -10,6 +10,7 @@ vi.mock("@/lib/prisma", () => ({
       findUnique: vi.fn(),
     },
     roomParticipant: {
+      findFirst: vi.fn(),
       findMany: vi.fn(),
     },
     rating: {
@@ -24,6 +25,7 @@ import { GET } from "./route";
 
 const mockAuth = vi.mocked(auth);
 const mockRoomFindUnique = vi.mocked(prisma.room.findUnique);
+const mockParticipantFindFirst = vi.mocked(prisma.roomParticipant.findFirst);
 const mockParticipantFindMany = vi.mocked(prisma.roomParticipant.findMany);
 const mockRatingFindMany = vi.mocked(prisma.rating.findMany);
 
@@ -71,15 +73,39 @@ describe("GET /api/v1/rooms/[roomId]/pending-ratings", () => {
     expect(body.data).toEqual([]);
   });
 
-  it("closedAt が null の場合 200 で空配列を返す", async () => {
+  it("leftAt が null かつ closedAt が null の場合 200 で空配列を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockRoomFindUnique.mockResolvedValue({ id: "room-1", closedAt: null } as never);
+    mockParticipantFindFirst.mockResolvedValue({ leftAt: null } as never);
 
     const res = await GET(makeRequest(), makeParams());
     const body = await res.json();
 
     expect(res.status).toBe(200);
     expect(body.data).toEqual([]);
+  });
+
+  it("leftAt が設定済み（room.closedAt null）の場合、正常取得できる", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
+    mockRoomFindUnique.mockResolvedValue({ id: "room-1", closedAt: null } as never);
+    const recentLeftAt = new Date(Date.now() - 60 * 60 * 1000); // 1時間前
+    mockParticipantFindFirst.mockResolvedValue({ leftAt: recentLeftAt } as never);
+
+    mockParticipantFindMany.mockResolvedValue([
+      {
+        userId: "user-2",
+        user: { username: "Player2", iconUrl: null, avgRating: null },
+      },
+    ] as never);
+
+    mockRatingFindMany.mockResolvedValue([]);
+
+    const res = await GET(makeRequest(), makeParams());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0].userId).toBe("user-2");
   });
 
   it("正常取得: 自分を除く・評価済みを除く未評価ユーザーを返す", async () => {

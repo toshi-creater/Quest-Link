@@ -70,31 +70,34 @@ export async function POST(request: Request, { params }: RouteParams) {
     );
   }
 
-  if (!room.closedAt) {
-    return NextResponse.json(
-      { error: { code: "ROOM_NOT_CLOSED", message: "部屋がまだ解散されていません" } },
-      { status: 400 }
-    );
-  }
-
-  const expiresAt = new Date(room.closedAt.getTime() + 24 * 60 * 60 * 1000);
-  const now = new Date();
-
-  if (now > expiresAt) {
-    return NextResponse.json(
-      { error: { code: "RATING_EXPIRED", message: "評価期限が切れています" } },
-      { status: 400 }
-    );
-  }
-
   const reviewerParticipant = await prisma.roomParticipant.findFirst({
     where: { roomId, userId: reviewerId },
+    select: { leftAt: true },
   });
 
   if (!reviewerParticipant) {
     return NextResponse.json(
       { error: { code: "NOT_PARTICIPATED", message: "この部屋に参加していません" } },
       { status: 403 }
+    );
+  }
+
+  const baseTime = reviewerParticipant.leftAt ?? room.closedAt;
+
+  if (!baseTime) {
+    return NextResponse.json(
+      { error: { code: "NOT_LEFT", message: "まだ部屋に参加中です" } },
+      { status: 400 }
+    );
+  }
+
+  const expiresAt = new Date(baseTime.getTime() + 24 * 60 * 60 * 1000);
+  const now = new Date();
+
+  if (now > expiresAt) {
+    return NextResponse.json(
+      { error: { code: "RATING_EXPIRED", message: "評価期限が切れています" } },
+      { status: 400 }
     );
   }
 

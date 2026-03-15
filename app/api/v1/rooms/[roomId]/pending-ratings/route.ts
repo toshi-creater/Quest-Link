@@ -28,11 +28,18 @@ export async function GET(_request: Request, { params }: RouteParams) {
     );
   }
 
-  if (!room.closedAt) {
+  const myParticipant = await prisma.roomParticipant.findFirst({
+    where: { roomId, userId: currentUserId },
+    select: { leftAt: true },
+  });
+
+  const baseTime = myParticipant?.leftAt ?? room.closedAt;
+
+  if (!baseTime) {
     return NextResponse.json({ data: [] });
   }
 
-  const expiresAt = new Date(room.closedAt.getTime() + 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(baseTime.getTime() + 24 * 60 * 60 * 1000);
   const now = new Date();
 
   if (now > expiresAt) {
