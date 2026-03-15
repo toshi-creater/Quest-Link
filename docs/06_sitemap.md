@@ -63,8 +63,8 @@
 | パス | 画面名 | 主な機能 | 使用 API |
 |------|--------|---------|---------|
 | `/games/[gameId]/rooms` | ゲーム別部屋一覧 | 選択したゲームで絞り込んだ部屋を新着順で一覧表示（**認証不要で閲覧可**）。フィルター：プレイスタイルタグ（OR 検索）・空き枠あり/なし（`vacant`）・フリーワード（`q`、部屋名・募集文）。URL パラメータでフィルター条件を保持（ブックマーク・共有可）。ログイン済みかつ参加中の部屋がある場合はヘッダーに「参加中の部屋へ」ボタンを表示 | `GET /rooms`（`gameId` パラメータ付き、認証不要）、`GET /rooms/current`（参加中チェック用、ログイン時のみ） |
-| `/rooms/current` | 参加中の部屋詳細 | 現在参加中の部屋の詳細を表示。参加中がなければ空状態メッセージを表示。部屋詳細と同様の操作が可能 | `GET /rooms/current` |
-| `/rooms/current/chat` | 参加中の部屋チャット | 参加中の部屋のチャット画面に直接アクセス。`GET /rooms/current` で roomId を取得してチャットを表示。参加中の部屋がない場合は `/` へリダイレクト | `GET /rooms/current`、`GET /rooms/{roomId}/messages`、WebSocket `chat:send` / `chat:message` |
+| `/rooms/current` | 参加中の部屋リダイレクト | サーバーサイドで参加中の roomId を取得し `/rooms/{roomId}` へリダイレクト。参加中の部屋がない場合は「参加中の部屋がありません」メッセージと「部屋を探す」リンクを表示 | Prisma 直接アクセス |
+| `/rooms/current/chat` | 参加中の部屋チャット | サーバーサイドで参加中の roomId を取得し `/rooms/{roomId}/chat` へリダイレクト。参加中の部屋がない場合は「参加中の部屋がありません」メッセージと「部屋を探す」リンクを表示 | Prisma 直接アクセス（リダイレクト後は `GET /rooms/{roomId}/messages`、WebSocket `chat:send` / `chat:message`） |
 | `/rooms/new` | 部屋作成 | タイトル・ゲーム（IGDB連携検索で選択）・最大人数・説明・タグを入力して部屋を作成 | `GET /play-style-tags`、`GET /games/search`、`POST /rooms` |
 | `/rooms/[roomId]` | 部屋詳細 | 部屋情報・参加者一覧表示（**認証不要で閲覧可**）、参加 / 退室 / 解散（認証必要）、ホストによる部屋情報編集、SNS シェア、リアルタイム参加者更新（WebSocket）。ログイン済みで自分が参加中の場合は `/rooms/current` へリダイレクト | `GET /rooms/{roomId}`（認証不要）、`POST /rooms/{roomId}/join`、`POST /rooms/{roomId}/leave`、`POST /rooms/{roomId}/close`、`PATCH /rooms/{roomId}`、`POST /rooms/{roomId}/share`、`GET /play-style-tags`（ホスト編集用）、`GET /rooms/current`（自分の参加中部屋かの判定用、ログイン時のみ） |
 | `/rooms/[roomId]/guest` | ゲスト参加フロー | 募集リンク経由でアクセスした未ログインユーザー向け。表示名（任意）を入力してゲストセッションを発行し、そのまま部屋に参加。ログインを促すボタンも併設 | `POST /auth/guest`、`POST /rooms/{roomId}/join` |
@@ -108,8 +108,8 @@
     │       └─→ 作成成功 → /rooms/[roomId]（部屋詳細）
     │
     ├─→ /rooms/current/chat ボタン（ヘッダー／ログイン済み・参加中のみ表示）
-    │       └─→ GET /rooms/current で roomId を取得してチャットを表示
-    │               └─→ 参加中なし → /（トップ）へリダイレクト
+    │       └─→ Prisma で roomId を取得し /rooms/{roomId}/chat へサーバーサイドリダイレクト
+    │               └─→ 参加中なし → 「参加中の部屋がありません」メッセージ画面を表示
     │
     └─→ /rooms/[roomId]（部屋詳細）※認証不要で閲覧可
             ├─→ ログイン済みの場合: GET /rooms/current で自分の参加中 roomId を確認
