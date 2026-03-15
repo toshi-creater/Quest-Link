@@ -55,7 +55,12 @@ export function RoomDetailView({ roomId }: Props) {
   }
 
   const room = data.data;
-  const status = statusConfig[room.status];
+  const status = statusConfig[room.status as keyof typeof statusConfig] ?? {
+    label: room.status,
+    bg: "rgba(100,100,120,0.15)",
+    color: "#8888aa",
+    border: "rgba(100,100,120,0.3)",
+  };
   const isParticipant = room.participants.some((p) => p.userId === currentUserId);
   const isHost = room.host.id === currentUserId;
 
