@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { CheckCircle2 } from "lucide-react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StarRating, RatingDisplay } from "@/components/ui/StarRating";
@@ -19,18 +20,45 @@ type Props = {
   roomId: string;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function RatingForm({ user, roomId: _roomId }: Props) {
+type RatingPayload = {
+  revieweeId: string;
+  score: number;
+  comment?: string;
+};
+
+async function postRating(roomId: string, payload: RatingPayload) {
+  const res = await fetch(`/api/v1/rooms/${roomId}/ratings`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(
+      (body as { error?: { message?: string } }).error?.message ?? "評価の送信に失敗しました"
+    );
+  }
+  return res.json();
+}
+
+export function RatingForm({ user, roomId }: Props) {
   const [score, setScore] = useState<number | null>(null);
   const [comment, setComment] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: (payload: RatingPayload) => postRating(roomId, payload),
+  });
 
   const handleSubmit = () => {
     if (!score) return;
-    setSubmitted(true);
+    mutation.mutate({
+      revieweeId: user.userId,
+      score,
+      comment: comment || undefined,
+    });
   };
 
-  if (submitted) {
+  if (mutation.isSuccess) {
     return (
       <div
         className="flex items-center gap-4 rounded-2xl border p-5 opacity-60"
@@ -95,20 +123,27 @@ export function RatingForm({ user, roomId: _roomId }: Props) {
         />
       </div>
 
+      {mutation.isError && (
+        <p className="mb-3 text-xs text-red-400">
+          {mutation.error instanceof Error ? mutation.error.message : "評価の送信に失敗しました"}
+        </p>
+      )}
+
       <button
         onClick={handleSubmit}
-        disabled={!score}
+        disabled={!score || mutation.isPending}
         className={clsx(
           "w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-all",
-          score ? "hover:opacity-90" : "opacity-40 cursor-not-allowed"
+          score && !mutation.isPending ? "hover:opacity-90" : "opacity-40 cursor-not-allowed"
         )}
         style={{
-          background: score
-            ? "linear-gradient(135deg, var(--accent), #6d28d9)"
-            : "var(--border)",
+          background:
+            score && !mutation.isPending
+              ? "linear-gradient(135deg, var(--accent), #6d28d9)"
+              : "var(--border)",
         }}
       >
-        評価を送信
+        {mutation.isPending ? "送信中..." : "評価を送信"}
       </button>
     </div>
   );

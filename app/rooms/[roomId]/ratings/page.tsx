@@ -16,8 +16,12 @@ export default async function RatingsPage({ params }: Props) {
   const currentUserId = session?.user?.id;
   if (!currentUserId) redirect("/login");
 
-  const [room, participants, submittedRatings] = await Promise.all([
+  const [room, myParticipant, participants, submittedRatings] = await Promise.all([
     prisma.room.findUnique({ where: { id: roomId }, select: { closedAt: true } }),
+    prisma.roomParticipant.findFirst({
+      where: { roomId, userId: currentUserId },
+      select: { leftAt: true },
+    }),
     prisma.roomParticipant.findMany({
       where: { roomId, userId: { not: currentUserId } },
       select: {
@@ -34,8 +38,9 @@ export default async function RatingsPage({ params }: Props) {
 
   const ratedIds = new Set(submittedRatings.map((r) => r.revieweeId));
   const now = new Date();
-  const expiresAt = room.closedAt
-    ? new Date(room.closedAt.getTime() + 24 * 60 * 60 * 1000)
+  const baseTime = myParticipant?.leftAt ?? room.closedAt;
+  const expiresAt = baseTime
+    ? new Date(baseTime.getTime() + 24 * 60 * 60 * 1000)
     : new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
   const pendingUsers = participants
