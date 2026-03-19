@@ -8,6 +8,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     room: { findUnique: vi.fn() },
     roomParticipant: { findFirst: vi.fn() },
+    user: { findUnique: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -22,6 +23,7 @@ import { POST } from "./route";
 const mockAuth = vi.mocked(auth);
 const mockFindUnique = vi.mocked(prisma.room.findUnique);
 const mockFindFirst = vi.mocked(prisma.roomParticipant.findFirst);
+const mockUserFindUnique = vi.mocked(prisma.user.findUnique);
 const mockTransaction = vi.mocked(prisma.$transaction);
 const mockEmitToRoom = vi.mocked(emitToRoom);
 
@@ -49,10 +51,12 @@ beforeEach(() => {
       findFirst: vi.fn(),
     },
     room: { update: vi.fn() },
-    chatMessage: { create: vi.fn() },
+    chatMessage: { create: vi.fn().mockResolvedValue({ id: "leave-msg-1", content: "leaving", createdAt: new Date() }) },
   };
 
   mockTransaction.mockImplementation(async (fn) => fn(mockTx as never));
+
+  mockUserFindUnique.mockResolvedValue({ username: "user-1-name" } as never);
 });
 
 describe("POST /api/v1/rooms/[roomId]/leave", () => {
@@ -103,7 +107,10 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
         data: expect.objectContaining({ leftAt: expect.any(Date) }),
       })
     );
-    expect(mockEmitToRoom).not.toHaveBeenCalled();
+    // 退室メッセージ (chat:message) + room:user_left
+    expect(mockEmitToRoom).toHaveBeenCalledTimes(2);
+    expect(mockEmitToRoom).toHaveBeenCalledWith("chat:message", "room-1", expect.objectContaining({ isSystem: true }));
+    expect(mockEmitToRoom).toHaveBeenCalledWith("room:user_left", "room-1", expect.objectContaining({ userId: "user-1" }));
   });
 
   it("ホストが退室し後継者がいる場合 204 を返し isHost 更新と host_changed イベントが発火する", async () => {
@@ -125,7 +132,10 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
     });
     mockTx.roomParticipant.update.mockResolvedValue({});
     mockTx.room.update.mockResolvedValue({});
-    mockTx.chatMessage.create.mockResolvedValue(systemMsg);
+    // 1回目: leaveMsg, 2回目: hostChangeMsg
+    mockTx.chatMessage.create
+      .mockResolvedValueOnce({ id: "leave-msg-1", content: "user-1-nameさんが退室しました", createdAt: now })
+      .mockResolvedValueOnce(systemMsg);
 
     const res = await POST(makeRequest(), makeParams());
 
@@ -136,7 +146,8 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
         data: { isHost: true },
       })
     );
-    expect(mockEmitToRoom).toHaveBeenCalledTimes(2);
+    // 退室msg + room:user_left + ホスト変更msg + room:host_changed = 4回
+    expect(mockEmitToRoom).toHaveBeenCalledTimes(4);
   });
 
   it("ホストが退室し後継者がいない場合 204 を返し status=closed 更新と room:closed イベントが発火する", async () => {
@@ -156,7 +167,8 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
         data: expect.objectContaining({ status: "closed", closedAt: expect.any(Date) }),
       })
     );
-    expect(mockEmitToRoom).toHaveBeenCalledTimes(1);
+    // 退室msg + room:user_left + room:closed = 3回
+    expect(mockEmitToRoom).toHaveBeenCalledTimes(3);
     expect(mockEmitToRoom).toHaveBeenCalledWith(
       "room:closed",
       "room-1",
@@ -170,6 +182,11 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
     mockFindFirst.mockResolvedValue({ id: "participant-1", isHost: true } as never);
 
     const now = new Date();
+    const leaveMsg = {
+      id: "leave-msg-1",
+      content: "user-1-nameさんが退室しました",
+      createdAt: now,
+    };
     const systemMsg = {
       id: "msg-1",
       content: "new-userさんがホストになりました",
@@ -183,11 +200,14 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
     });
     mockTx.roomParticipant.update.mockResolvedValue({});
     mockTx.room.update.mockResolvedValue({});
-    mockTx.chatMessage.create.mockResolvedValue(systemMsg);
+    mockTx.chatMessage.create
+      .mockResolvedValueOnce(leaveMsg)
+      .mockResolvedValueOnce(systemMsg);
 
     await POST(makeRequest(), makeParams());
 
-    expect(mockEmitToRoom).toHaveBeenNthCalledWith(1, "chat:message", "room-1", {
+    // 1: 退室chat:message, 2: room:user_left, 3: ホスト変更chat:message, 4: room:host_changed
+    expect(mockEmitToRoom).toHaveBeenNthCalledWith(3, "chat:message", "room-1", {
       id: "msg-1",
       roomId: "room-1",
       user: null,
@@ -195,7 +215,7 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
       isSystem: true,
       createdAt: now,
     });
-    expect(mockEmitToRoom).toHaveBeenNthCalledWith(2, "room:host_changed", "room-1", {
+    expect(mockEmitToRoom).toHaveBeenNthCalledWith(4, "room:host_changed", "room-1", {
       newHostId: "user-2",
       newHostUsername: "new-user",
     });

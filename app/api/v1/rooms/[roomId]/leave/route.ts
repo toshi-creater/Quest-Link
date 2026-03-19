@@ -42,10 +42,16 @@ export async function POST(_request: Request, { params }: RouteParams) {
 
   const now = new Date();
 
+  const leavingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { username: true },
+  });
+  const leavingUsername = leavingUser?.username ?? "ユーザー";
+
   type LeaveResult =
-    | { type: "host_changed"; newHostId: string; newHostUsername: string; systemMessageId: string; systemMessageContent: string; systemMessageCreatedAt: Date }
-    | { type: "room_closed"; closedAt: Date }
-    | { type: "normal" };
+    | { type: "host_changed"; newHostId: string; newHostUsername: string; systemMessageId: string; systemMessageContent: string; systemMessageCreatedAt: Date; leaveMessageId: string; leaveMessageContent: string; leaveMessageCreatedAt: Date }
+    | { type: "room_closed"; closedAt: Date; leaveMessageId: string; leaveMessageContent: string; leaveMessageCreatedAt: Date }
+    | { type: "normal"; leaveMessageId: string; leaveMessageContent: string; leaveMessageCreatedAt: Date };
 
   const result = await prisma.$transaction(async (tx): Promise<LeaveResult> => {
     // 退室時刻を記録
@@ -71,6 +77,14 @@ export async function POST(_request: Request, { params }: RouteParams) {
           where: { id: roomId },
           data: { hostId: nextHost.userId ?? undefined },
         });
+        // 退室メッセージ
+        const leaveMsg = await tx.chatMessage.create({
+          data: {
+            roomId,
+            content: `${leavingUsername}さんが退室しました`,
+            isSystem: true,
+          },
+        });
         // ホスト変更のシステムメッセージ
         const systemMsg = await tx.chatMessage.create({
           data: {
@@ -86,6 +100,9 @@ export async function POST(_request: Request, { params }: RouteParams) {
           systemMessageId: systemMsg.id,
           systemMessageContent: systemMsg.content,
           systemMessageCreatedAt: systemMsg.createdAt,
+          leaveMessageId: leaveMsg.id,
+          leaveMessageContent: leaveMsg.content,
+          leaveMessageCreatedAt: leaveMsg.createdAt,
         };
       } else {
         // 残余参加者なし → 部屋を closed に
@@ -94,14 +111,45 @@ export async function POST(_request: Request, { params }: RouteParams) {
           where: { id: roomId },
           data: { status: "closed", closedAt },
         });
-        return { type: "room_closed", closedAt };
+        // 退室メッセージ
+        const leaveMsg = await tx.chatMessage.create({
+          data: {
+            roomId,
+            content: `${leavingUsername}さんが退室しました`,
+            isSystem: true,
+          },
+        });
+        return { type: "room_closed", closedAt, leaveMessageId: leaveMsg.id, leaveMessageContent: leaveMsg.content, leaveMessageCreatedAt: leaveMsg.createdAt };
       }
     }
 
-    return { type: "normal" };
+    // 退室メッセージ
+    const leaveMsg = await tx.chatMessage.create({
+      data: {
+        roomId,
+        content: `${leavingUsername}さんが退室しました`,
+        isSystem: true,
+      },
+    });
+    return { type: "normal", leaveMessageId: leaveMsg.id, leaveMessageContent: leaveMsg.content, leaveMessageCreatedAt: leaveMsg.createdAt };
   });
 
   // Socket.IOサーバー（別プロセス）へイベントを送信
+  // 全ケースで退室メッセージと room:user_left を送信
+  await emitToRoom("chat:message", roomId, {
+    id: result.leaveMessageId,
+    roomId,
+    user: null,
+    content: result.leaveMessageContent,
+    isSystem: true,
+    createdAt: result.leaveMessageCreatedAt,
+  });
+  await emitToRoom("room:user_left", roomId, {
+    userId,
+    username: leavingUsername,
+    leftAt: now,
+  });
+
   if (result.type === "host_changed") {
     await emitToRoom("chat:message", roomId, {
       id: result.systemMessageId,

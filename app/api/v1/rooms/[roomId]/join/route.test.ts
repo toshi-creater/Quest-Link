@@ -9,17 +9,29 @@ vi.mock("@/lib/prisma", () => ({
     room: {
       findUnique: vi.fn(),
     },
+    user: {
+      findUnique: vi.fn(),
+    },
+    chatMessage: {
+      create: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));
 
+vi.mock("@/lib/socket-emitter", () => ({ emitToRoom: vi.fn() }));
+
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { emitToRoom } from "@/lib/socket-emitter";
 import { POST } from "./route";
 
 const mockAuth = vi.mocked(auth);
-const mockFindUnique = vi.mocked(prisma.room.findUnique);
+const mockRoomFindUnique = vi.mocked(prisma.room.findUnique);
+const mockUserFindUnique = vi.mocked(prisma.user.findUnique);
+const mockChatMessageCreate = vi.mocked(prisma.chatMessage.create);
 const mockTransaction = vi.mocked(prisma.$transaction);
+const mockEmitToRoom = vi.mocked(emitToRoom);
 
 type MockTx = {
   $queryRaw: ReturnType<typeof vi.fn>;
@@ -54,6 +66,18 @@ beforeEach(() => {
   };
 
   mockTransaction.mockImplementation(async (fn) => fn(mockTx as never));
+
+  mockUserFindUnique.mockResolvedValue({
+    username: "test-user",
+    iconUrl: null,
+    avgRating: 4.5,
+  } as never);
+
+  mockChatMessageCreate.mockResolvedValue({
+    id: "msg-1",
+    content: "test-userさんが入室しました",
+    createdAt: new Date(),
+  } as never);
 });
 
 describe("POST /api/v1/rooms/[roomId]/join", () => {
@@ -69,7 +93,7 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
 
   it("room が存在しない場合 404 ROOM_NOT_FOUND を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue(null);
+    mockRoomFindUnique.mockResolvedValue(null);
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
@@ -80,7 +104,7 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
 
   it("room.status が closed の場合 400 ROOM_CLOSED を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue({ id: "room-1", status: "closed", maxPlayers: 4 } as never);
+    mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "closed", maxPlayers: 4 } as never);
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
@@ -91,7 +115,7 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
 
   it("既に参加済みの場合 409 ALREADY_JOINED を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
+    mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
 
     mockTx.roomParticipant.count.mockResolvedValue(1);
     mockTx.roomParticipant.findFirst.mockResolvedValue({ id: "participant-1" });
@@ -105,7 +129,7 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
 
   it("満員の場合 409 ROOM_FULL を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
+    mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
 
     mockTx.roomParticipant.count.mockResolvedValue(4);
     mockTx.roomParticipant.findFirst.mockResolvedValue(null);
@@ -119,7 +143,7 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
 
   it("正常参加（満員にならない）場合 200 と data を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
+    mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
 
     const now = new Date();
     mockTx.roomParticipant.count.mockResolvedValue(1);
@@ -140,11 +164,14 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
     expect(body.data.isHost).toBe(false);
     expect(body.data.joinedAt).toBeDefined();
     expect(mockTx.room.update).not.toHaveBeenCalled();
+    expect(mockEmitToRoom).toHaveBeenCalledTimes(2);
+    expect(mockEmitToRoom).toHaveBeenCalledWith("chat:message", "room-1", expect.objectContaining({ isSystem: true }));
+    expect(mockEmitToRoom).toHaveBeenCalledWith("room:user_joined", "room-1", expect.objectContaining({ userId: "user-1" }));
   });
 
   it("正常参加（満員になる）場合 room.update({ status: 'full' }) が呼ばれる", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
+    mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
 
     const now = new Date();
     mockTx.roomParticipant.count.mockResolvedValue(3);

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { emitToRoom } from "@/lib/socket-emitter";
 import { Prisma } from "@prisma/client";
 
 type RouteParams = { params: Promise<{ roomId: string }> };
@@ -71,6 +72,37 @@ export async function POST(_request: Request, { params }: RouteParams) {
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
     );
+
+    // 入室システムメッセージとイベント通知
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { username: true, iconUrl: true, avgRating: true },
+    });
+
+    const systemMsg = await prisma.chatMessage.create({
+      data: {
+        roomId,
+        content: `${user?.username ?? "ユーザー"}さんが入室しました`,
+        isSystem: true,
+      },
+    });
+
+    await emitToRoom("chat:message", roomId, {
+      id: systemMsg.id,
+      roomId,
+      user: null,
+      content: systemMsg.content,
+      isSystem: true,
+      createdAt: systemMsg.createdAt,
+    });
+
+    await emitToRoom("room:user_joined", roomId, {
+      userId,
+      username: user?.username ?? "",
+      iconUrl: user?.iconUrl ?? null,
+      avgRating: Number(user?.avgRating ?? 0),
+      joinedAt: participant.joinedAt,
+    });
 
     return NextResponse.json({
       data: {
