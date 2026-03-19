@@ -52,6 +52,13 @@ describe("chatStore", () => {
       useChatStore.getState().addMessage(msg3);
       expect(useChatStore.getState().messages).toEqual([msg1, msg2, msg3]);
     });
+
+    it("同一 id のメッセージは重複追加されない", () => {
+      const msg = makeMsg("dup-1");
+      useChatStore.getState().addMessage(msg);
+      useChatStore.getState().addMessage(msg);
+      expect(useChatStore.getState().messages).toHaveLength(1);
+    });
   });
 
   describe("addParticipant", () => {

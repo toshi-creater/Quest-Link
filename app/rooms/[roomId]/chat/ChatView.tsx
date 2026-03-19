@@ -32,7 +32,7 @@ export function ChatView({
   initialParticipants,
   roomInfo,
 }: Props) {
-  const { messages, participants, setInitial, addMessage, addParticipant, removeParticipant, setConnectionStatus } =
+  const { messages, participants, connectionStatus, setInitial, addMessage, addParticipant, removeParticipant, setConnectionStatus } =
     useChatStore();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -55,6 +55,10 @@ export function ChatView({
 
     socket.on("connect_error", () => {
       setConnectionStatus("error");
+    });
+
+    socket.on("reconnect_failed", () => {
+      setConnectionStatus("failed");
     });
 
     socket.on("disconnect", () => {
@@ -90,6 +94,7 @@ export function ChatView({
       socket.emit("room:leave", { roomId });
       socket.off("connect");
       socket.off("connect_error");
+      socket.off("reconnect_failed");
       socket.off("disconnect");
       socket.off("chat:message");
       socket.off("room:user_joined");
@@ -210,6 +215,23 @@ export function ChatView({
             </p>
           </div>
         </div>
+
+        {/* Connection error banner */}
+        {(connectionStatus === "error" || connectionStatus === "failed") && (
+          <div
+            className="flex items-center gap-2 border-b px-4 py-2 text-sm"
+            style={{
+              backgroundColor: "rgba(239, 68, 68, 0.1)",
+              borderColor: "rgba(239, 68, 68, 0.3)",
+              color: "#f87171",
+            }}
+          >
+            <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" />
+            {connectionStatus === "failed"
+              ? "チャットサーバーへの接続に失敗しました。ページを再読み込みしてください。"
+              : "チャットサーバーに接続できません。再接続を試みています…"}
+          </div>
+        )}
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">

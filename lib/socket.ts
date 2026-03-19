@@ -7,14 +7,15 @@ export function getSocket(): Socket {
     socket = io(process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhost:3001", {
       withCredentials: true,
       autoConnect: false,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+      transports: ["websocket"],
     });
   }
   return socket;
 }
 
 export function disconnectSocket(): void {
-  if (socket?.connected) {
-    socket.disconnect();
-  }
+  socket?.disconnect();
   socket = null;
 }

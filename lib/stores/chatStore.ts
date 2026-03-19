@@ -15,7 +15,7 @@ export type Participant = {
   user: { username: string; iconUrl: string | null; avgRating: number | null } | null;
 };
 
-type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
+type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error" | "failed";
 
 type ChatStore = {
   messages: ChatMessage[];
@@ -33,7 +33,11 @@ export const useChatStore = create<ChatStore>((set) => ({
   participants: [],
   connectionStatus: "disconnected",
   setInitial: (messages, participants) => set({ messages, participants }),
-  addMessage: (msg) => set((state) => ({ messages: [...state.messages, msg] })),
+  addMessage: (msg) =>
+    set((state) => {
+      if (state.messages.some((m) => m.id === msg.id)) return state;
+      return { messages: [...state.messages, msg] };
+    }),
   addParticipant: (p) =>
     set((state) => {
       const exists = state.participants.some((x) => x.userId === p.userId);

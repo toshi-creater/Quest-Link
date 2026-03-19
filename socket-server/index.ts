@@ -138,86 +138,20 @@ io.use(async (socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  const { userId, username } = socket.data as AuthenticatedSocketData;
+  const { userId } = socket.data as AuthenticatedSocketData;
 
   // クライアント → サーバー: 部屋チャンネルに参加（REST /join 後に送信）
-  socket.on("room:join", async ({ roomId }: { roomId: string }) => {
+  // 通知・システムメッセージは REST /join ハンドラが担う
+  socket.on("room:join", ({ roomId }: { roomId: string }) => {
     if (typeof roomId !== "string" || !roomId) return;
-
-    try {
-      socket.join(roomId);
-
-      // 入室システムメッセージを保存してブロードキャスト
-      const systemMsg = await prisma.chatMessage.create({
-        data: {
-          roomId,
-          content: `${username}さんが入室しました`,
-          isSystem: true,
-        },
-      });
-
-      io.to(roomId).emit("chat:message", {
-        id: systemMsg.id,
-        roomId,
-        user: null,
-        content: systemMsg.content,
-        isSystem: true,
-        createdAt: systemMsg.createdAt,
-      });
-
-      // 同室の他クライアントへ入室通知を送信
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, username: true, iconUrl: true, avgRating: true },
-      });
-
-      if (user) {
-        socket.to(roomId).emit("room:user_joined", {
-          userId: user.id,
-          username: user.username,
-          iconUrl: user.iconUrl,
-          avgRating: Number(user.avgRating),
-          joinedAt: new Date(),
-        });
-      }
-    } catch (err) {
-      console.error("Error in room:join handler:", err);
-    }
+    socket.join(roomId);
   });
 
   // クライアント → サーバー: 部屋チャンネルから退出（REST /leave 後に送信）
-  socket.on("room:leave", async ({ roomId }: { roomId: string }) => {
+  // 通知・システムメッセージは REST /leave ハンドラが担う
+  socket.on("room:leave", ({ roomId }: { roomId: string }) => {
     if (typeof roomId !== "string" || !roomId) return;
-
-    try {
-      // 退室システムメッセージを保存してブロードキャスト（退出前に全員へ送信）
-      const systemMsg = await prisma.chatMessage.create({
-        data: {
-          roomId,
-          content: `${username}さんが退室しました`,
-          isSystem: true,
-        },
-      });
-
-      io.to(roomId).emit("chat:message", {
-        id: systemMsg.id,
-        roomId,
-        user: null,
-        content: systemMsg.content,
-        isSystem: true,
-        createdAt: systemMsg.createdAt,
-      });
-
-      socket.to(roomId).emit("room:user_left", {
-        userId,
-        username,
-        leftAt: new Date(),
-      });
-
-      socket.leave(roomId);
-    } catch (err) {
-      console.error("Error in room:leave handler:", err);
-    }
+    socket.leave(roomId);
   });
 
   // クライアント → サーバー: チャットメッセージを送信
