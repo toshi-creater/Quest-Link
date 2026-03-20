@@ -57,7 +57,7 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
         <button
           onClick={() => joinMutation.mutate()}
           disabled={joinMutation.isPending || status === "playing"}
-          className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
             background: "linear-gradient(135deg, var(--accent), #6d28d9)",
             boxShadow: "0 4px 14px rgba(124,58,237,0.4)",
@@ -71,7 +71,7 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
           {status === "playing" ? "満員" : "参加する"}
         </button>
         {joinMutation.isError && (
-          <p className="text-center text-xs" style={{ color: "#f87171" }}>
+          <p className="text-center text-xs animate-slide-in-bottom" style={{ color: "#f87171" }}>
             {joinMutation.error.message}
           </p>
         )}
@@ -85,7 +85,7 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
         <button
           onClick={() => leaveMutation.mutate()}
           disabled={leaveMutation.isPending}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all hover:opacity-80 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
             borderColor: "var(--border)",
             color: "var(--text-secondary)",
@@ -106,7 +106,7 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
               closeMutation.mutate();
             }}
             disabled={closeMutation.isPending}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: "rgba(239,68,68,0.05)" }}
           >
             {closeMutation.isPending ? (
@@ -119,12 +119,12 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
         )}
       </div>
       {leaveMutation.isError && (
-        <p className="text-center text-xs" style={{ color: "#f87171" }}>
+        <p className="text-center text-xs animate-slide-in-bottom" style={{ color: "#f87171" }}>
           {leaveMutation.error.message}
         </p>
       )}
       {closeMutation.isError && (
-        <p className="text-center text-xs" style={{ color: "#f87171" }}>
+        <p className="text-center text-xs animate-slide-in-bottom" style={{ color: "#f87171" }}>
           {closeMutation.error.message}
         </p>
       )}

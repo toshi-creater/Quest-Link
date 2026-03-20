@@ -56,7 +56,7 @@ export function GamesGrid({ games, roomCounts }: Props) {
       {/* Game grid */}
       {filteredGames.length > 0 ? (
         <div className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {filteredGames.map((game) => {
+          {filteredGames.map((game, index) => {
             const roomCount = roomCounts[game.id] ?? 0;
             const hasError = imgErrors.has(game.id);
 
@@ -64,7 +64,8 @@ export function GamesGrid({ games, roomCounts }: Props) {
               <button
                 key={game.id}
                 onClick={() => router.push(`/games/${game.id}/rooms`)}
-                className="group text-left"
+                className="group text-left animate-fade-in-up"
+                style={{ animationDelay: `${Math.min(index, 11) * 50}ms` }}
               >
                 {/* Cover image */}
                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl">

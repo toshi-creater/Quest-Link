@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import clsx from "clsx";
 import { fetchRooms, type RoomSummary } from "@/lib/api/rooms";
 import { RoomCard } from "@/components/ui/RoomCard";
@@ -111,8 +111,24 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
 
       {/* Room grid */}
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin" style={{ color: "var(--accent)" }} />
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border overflow-hidden animate-fade-in"
+              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", animationDelay: `${i * 60}ms` }}
+            >
+              <div className="h-32 animate-shimmer" />
+              <div className="p-4 space-y-3">
+                <div className="h-5 w-3/4 rounded-md animate-shimmer" />
+                <div className="h-3 w-1/2 rounded-md animate-shimmer" />
+                <div className="flex gap-2 mt-2">
+                  <div className="h-5 w-14 rounded-full animate-shimmer" />
+                  <div className="h-5 w-12 rounded-full animate-shimmer" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : isError ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -134,8 +150,10 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {filtered.map((room) => (
-            <RoomCard key={room.id} room={room} />
+          {filtered.map((room, index) => (
+            <div key={room.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 60}ms` }}>
+              <RoomCard room={room} />
+            </div>
           ))}
         </div>
       )}

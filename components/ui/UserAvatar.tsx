@@ -19,12 +19,12 @@ const sizeClasses = {
 };
 
 const gradients = [
-  "from-purple-600 to-blue-500",
-  "from-pink-600 to-purple-500",
-  "from-blue-600 to-cyan-500",
-  "from-green-600 to-teal-500",
-  "from-orange-600 to-pink-500",
-  "from-red-600 to-orange-500",
+  "from-violet-700 to-violet-500",
+  "from-indigo-700 to-indigo-500",
+  "from-purple-700 to-fuchsia-600",
+  "from-violet-600 to-indigo-400",
+  "from-fuchsia-700 to-violet-500",
+  "from-indigo-600 to-purple-400",
 ];
 
 function getGradient(username: string): string {

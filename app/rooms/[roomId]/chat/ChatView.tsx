@@ -219,14 +219,14 @@ export function ChatView({
         {/* Connection error banner */}
         {(connectionStatus === "error" || connectionStatus === "failed") && (
           <div
-            className="flex items-center gap-2 border-b px-4 py-2 text-sm"
+            className="flex items-center gap-2 border-b px-4 py-2 text-sm animate-slide-in-bottom"
             style={{
               backgroundColor: "rgba(239, 68, 68, 0.1)",
               borderColor: "rgba(239, 68, 68, 0.3)",
               color: "#f87171",
             }}
           >
-            <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" />
+            <span className="h-2 w-2 shrink-0 rounded-full bg-red-500 animate-pulse-dot" />
             {connectionStatus === "failed"
               ? "チャットサーバーへの接続に失敗しました。ページを再読み込みしてください。"
               : "チャットサーバーに接続できません。再接続を試みています…"}
@@ -245,7 +245,7 @@ export function ChatView({
           {messages.map((msg) => {
             if (msg.isSystem) {
               return (
-                <div key={msg.id} className="flex items-center gap-3">
+                <div key={msg.id} className={`flex items-center gap-3 ${msg.isNew ? "animate-fade-in" : ""}`}>
                   <div className="h-px flex-1" style={{ backgroundColor: "var(--border)" }} />
                   <span className="shrink-0 text-xs" style={{ color: "var(--text-muted)" }}>
                     {msg.content}
@@ -259,7 +259,7 @@ export function ChatView({
             return (
               <div
                 key={msg.id}
-                className={`flex items-end gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}
+                className={`flex items-end gap-2 ${isMe ? "flex-row-reverse" : "flex-row"} ${msg.isNew ? "animate-slide-in-bottom" : ""}`}
               >
                 {!isMe && msg.user && (
                   <UserAvatar
@@ -281,7 +281,7 @@ export function ChatView({
                     style={
                       isMe
                         ? {
-                            background: "linear-gradient(135deg, var(--accent), #6d28d9)",
+                            backgroundColor: "var(--accent)",
                             color: "#fff",
                             borderBottomRightRadius: "4px",
                           }

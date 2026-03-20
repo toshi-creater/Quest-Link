@@ -20,13 +20,14 @@ export function HomeGameGrid({ games }: Props) {
 
   return (
     <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-      {games.map((game) => {
+      {games.map((game, index) => {
         const hasError = imgErrors.has(game.id);
         return (
           <button
             key={game.id}
             onClick={() => router.push(`/games/${game.id}/rooms`)}
-            className="group text-left"
+            className="group text-left animate-fade-in-up"
+            style={{ animationDelay: `${Math.min(index, 11) * 50}ms` }}
           >
             <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl">
               {!hasError && game.coverImageUrl ? (

@@ -1,79 +1,39 @@
-import { Star, Zap, Shield, Users } from "lucide-react";
+import { Zap } from "lucide-react";
 import { signIn } from "@/auth";
 
-export default function LoginPage() {
+type Props = {
+  searchParams: Promise<{ callbackUrl?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: Props) {
+  const { callbackUrl } = await searchParams;
+  const redirectTo = callbackUrl?.startsWith("/") ? callbackUrl : "/rooms";
+
   return (
     <div
-      className="flex min-h-screen flex-col items-center justify-center px-4 relative overflow-hidden"
+      className="flex min-h-screen flex-col items-center justify-center px-4"
       style={{ backgroundColor: "var(--bg-base)" }}
     >
-      {/* Background decorations */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,58,237,0.18) 0%, transparent 60%)",
-        }}
-      />
-      <div
-        className="pointer-events-none absolute top-1/4 -left-32 h-96 w-96 rounded-full opacity-20 blur-3xl"
-        style={{ backgroundColor: "var(--accent)" }}
-      />
-      <div
-        className="pointer-events-none absolute bottom-1/4 -right-32 h-96 w-96 rounded-full opacity-10 blur-3xl"
-        style={{ backgroundColor: "var(--accent-light)" }}
-      />
-
-      <div className="relative z-10 w-full max-w-md">
+      <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="mb-8 flex flex-col items-center">
-          <div
-            className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
-            style={{
-              background: "linear-gradient(135deg, var(--accent), var(--accent-light))",
-              boxShadow: "0 0 40px rgba(124,58,237,0.4)",
-            }}
-          >
-            <Zap className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
-            Quest<span style={{ color: "var(--accent-light)" }}>Link</span>
+        <div className="mb-8 flex flex-col items-center animate-fade-in-up">
+          <Zap className="mb-3 h-8 w-8" style={{ color: "var(--accent-light)" }} />
+          <h1 className="text-4xl tracking-tight" style={{ color: "var(--text-primary)" }}>
+            <span className="font-medium">Quest</span>
+            <span className="font-bold">Link</span>
           </h1>
-          <p className="mt-2 text-lg" style={{ color: "var(--text-secondary)" }}>
+          <p className="mt-2 text-base" style={{ color: "var(--text-secondary)" }}>
             今すぐゲーム仲間を見つけよう
           </p>
         </div>
 
-        {/* Features */}
-        <div className="mb-8 grid grid-cols-3 gap-3">
-          {[
-            { icon: Zap, label: "即時マッチング", desc: "今すぐプレイ" },
-            { icon: Shield, label: "評価システム", desc: "質の高い仲間" },
-            { icon: Users, label: "フレンド不要", desc: "気軽に参加" },
-          ].map(({ icon: Icon, label, desc }) => (
-            <div
-              key={label}
-              className="flex flex-col items-center rounded-xl border p-3 text-center"
-              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
-            >
-              <Icon className="mb-1 h-5 w-5" style={{ color: "var(--accent-light)" }} />
-              <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                {label}
-              </span>
-              <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                {desc}
-              </span>
-            </div>
-          ))}
-        </div>
-
         {/* Login Card */}
         <div
-          className="rounded-2xl border p-8"
+          className="rounded-2xl border p-8 animate-fade-in-up"
           style={{
             backgroundColor: "var(--bg-card)",
             borderColor: "var(--border)",
-            boxShadow: "0 0 60px rgba(0,0,0,0.5)",
+            animationDelay: "120ms",
           }}
         >
           <h2
@@ -90,12 +50,12 @@ export default function LoginPage() {
           <form
             action={async () => {
               "use server";
-              await signIn("google", { redirectTo: "/rooms" });
+              await signIn("google", { redirectTo });
             }}
           >
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-3 rounded-xl border px-6 py-3.5 text-sm font-medium transition-all hover:shadow-lg"
+              className="flex w-full items-center justify-center gap-3 rounded-xl border px-6 py-3.5 text-sm font-medium transition-all hover:shadow-lg active:scale-[0.97]"
               style={{
                 backgroundColor: "#fff",
                 borderColor: "#dadce0",
@@ -130,27 +90,6 @@ export default function LoginPage() {
             <span style={{ color: "var(--accent-light)" }}>プライバシーポリシー</span>
             に同意したものとみなされます
           </p>
-        </div>
-
-        {/* Stats teaser */}
-        <div className="mt-6 flex items-center justify-center gap-6 text-center">
-          {[
-            { value: "2,400+", label: "アクティブユーザー" },
-            { value: "350+", label: "募集中の部屋" },
-            { value: "4.5", label: "平均評価", icon: Star },
-          ].map(({ value, label, icon: Icon }) => (
-            <div key={label}>
-              <div className="flex items-center justify-center gap-1">
-                {Icon && <Icon className="h-3 w-3" style={{ fill: "#eab308", color: "#eab308" }} />}
-                <span className="text-base font-bold" style={{ color: "var(--text-primary)" }}>
-                  {value}
-                </span>
-              </div>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                {label}
-              </p>
-            </div>
-          ))}
         </div>
       </div>
     </div>

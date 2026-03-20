@@ -67,7 +67,7 @@ export function ChatInput({ roomId }: Props) {
           <button
             onClick={handleSend}
             disabled={!canSend}
-            className="flex h-9 w-9 items-center justify-center rounded-lg transition-all disabled:opacity-40"
+            className="flex h-9 w-9 items-center justify-center rounded-lg transition-all active:scale-90 disabled:opacity-40"
             style={{
               background: canSend
                 ? "linear-gradient(135deg, var(--accent), #6d28d9)"
