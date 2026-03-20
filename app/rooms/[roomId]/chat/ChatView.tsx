@@ -107,7 +107,7 @@ export function ChatView({
 
   // メッセージ追加時に自動スクロール
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "instant" });
   }, [messages]);
 
   const currentPlayers = participants.length;

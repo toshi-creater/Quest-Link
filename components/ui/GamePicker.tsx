@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
+import Image from "next/image";
 import { Search, X, Gamepad2, Check, ChevronDown } from "lucide-react";
 import { type Game } from "@/lib/mock-data";
 import clsx from "clsx";
@@ -19,7 +20,7 @@ const coverSizes = {
   lg: "h-24 w-18",
 };
 
-export function GameCover({ game, size = "md", className }: GameCoverProps) {
+export const GameCover = memo(function GameCover({ game, size = "md", className }: GameCoverProps) {
   const [error, setError] = useState(false);
   const sizeClass = coverSizes[size];
 
@@ -40,15 +41,18 @@ export function GameCover({ game, size = "md", className }: GameCoverProps) {
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={game.coverImageUrl}
-      alt={game.name}
-      onError={() => setError(true)}
-      className={clsx("shrink-0 rounded-md object-cover", sizeClass, className)}
-    />
+    <div className={clsx("relative shrink-0 overflow-hidden rounded-md", sizeClass, className)}>
+      <Image
+        src={game.coverImageUrl}
+        alt={game.name}
+        fill
+        className="object-cover"
+        sizes="64px"
+        onError={() => setError(true)}
+      />
+    </div>
   );
-}
+});
 
 // ─── ゲーム検索フック ─────────────────────────────────────────────────────────
 

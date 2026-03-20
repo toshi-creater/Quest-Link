@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Prisma } from "@prisma/client";
+import { connection } from "next/server";
 import { getPopularGames } from "@/lib/games";
 import { prisma } from "@/lib/prisma";
 import { RoomCard } from "@/components/ui/RoomCard";
@@ -55,6 +56,7 @@ function formatRoom(room: RawRoom): RoomSummary {
 }
 
 export default async function HomePage() {
+  await connection();
   const [games, rawRooms] = await Promise.all([
     getPopularGames(6),
     prisma.room.findMany({

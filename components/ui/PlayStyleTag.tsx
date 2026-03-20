@@ -1,3 +1,4 @@
+import { memo } from "react";
 import clsx from "clsx";
 
 type Props = {
@@ -6,7 +7,7 @@ type Props = {
   className?: string;
 };
 
-export function PlayStyleTag({ tag, size = "md", className }: Props) {
+export const PlayStyleTag = memo(function PlayStyleTag({ tag, size = "md", className }: Props) {
   return (
     <span
       className={clsx(
@@ -23,4 +24,4 @@ export function PlayStyleTag({ tag, size = "md", className }: Props) {
       {tag.name}
     </span>
   );
-}
+});

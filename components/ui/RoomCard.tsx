@@ -1,6 +1,8 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Users } from "lucide-react";
 import type { RoomSummary } from "@/lib/api/rooms";
 import { roomStatusConfig, fallbackStatusConfig } from "@/lib/room-status";
@@ -13,7 +15,7 @@ type Props = {
   room: RoomSummary;
 };
 
-export function RoomCard({ room }: Props) {
+export const RoomCard = memo(function RoomCard({ room }: Props) {
   const status = roomStatusConfig[room.status as keyof typeof roomStatusConfig] ?? fallbackStatusConfig;
   const fillRatio = room.currentPlayers / room.maxPlayers;
 
@@ -30,12 +32,13 @@ export function RoomCard({ room }: Props) {
       >
         {/* Blurred cover as background */}
         {room.game.coverImageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={room.game.coverImageUrl}
             alt=""
             aria-hidden
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20 blur-sm scale-110"
+            fill
+            className="pointer-events-none object-cover opacity-20 blur-sm scale-110"
+            sizes="400px"
           />
         )}
         {/* Gradient overlay */}
@@ -117,4 +120,4 @@ export function RoomCard({ room }: Props) {
       </div>
     </Link>
   );
-}
+});

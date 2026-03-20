@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { ArrowLeft, Crown, Loader2, MessageSquare, Users } from "lucide-react";
@@ -80,12 +81,13 @@ export function RoomDetailView({ roomId }: Props) {
               style={{ backgroundColor: "rgba(124,58,237,0.08)" }}
             >
               {room.game.coverImageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={room.game.coverImageUrl}
                   alt=""
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-25 blur-sm scale-110"
+                  fill
+                  className="pointer-events-none object-cover opacity-25 blur-sm scale-110"
+                  sizes="800px"
                 />
               )}
               <div

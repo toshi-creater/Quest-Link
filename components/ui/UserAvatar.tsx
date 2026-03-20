@@ -1,3 +1,7 @@
+"use client";
+
+import { memo, useState } from "react";
+import Image from "next/image";
 import clsx from "clsx";
 
 type Props = {
@@ -28,19 +32,24 @@ function getGradient(username: string): string {
   return gradients[index];
 }
 
-export function UserAvatar({ username, iconUrl, size = "md", className }: Props) {
+export const UserAvatar = memo(function UserAvatar({ username, iconUrl, size = "md", className }: Props) {
+  const [imgError, setImgError] = useState(false);
   const sizeClass = sizeClasses[size];
   const gradient = getGradient(username);
   const initial = username.charAt(0).toUpperCase();
 
-  if (iconUrl) {
+  if (iconUrl && !imgError) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={iconUrl}
-        alt={username}
-        className={clsx("rounded-full object-cover", sizeClass, className)}
-      />
+      <div className={clsx("relative shrink-0 overflow-hidden rounded-full", sizeClass, className)}>
+        <Image
+          src={iconUrl}
+          alt={username}
+          fill
+          className="object-cover"
+          sizes="80px"
+          onError={() => setImgError(true)}
+        />
+      </div>
     );
   }
 
@@ -57,4 +66,4 @@ export function UserAvatar({ username, iconUrl, size = "md", className }: Props)
       {initial}
     </div>
   );
-}
+});
