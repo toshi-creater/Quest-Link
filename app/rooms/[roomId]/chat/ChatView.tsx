@@ -114,12 +114,12 @@ export function ChatView({
 
   return (
     <div
-      className="flex h-[calc(100vh-64px)] flex-col lg:flex-row"
+      className="flex h-[calc(100dvh-64px)] flex-col md:flex-row"
       style={{ backgroundColor: "var(--bg-base)" }}
     >
       {/* Sidebar */}
       <aside
-        className="hidden w-72 shrink-0 flex-col border-r lg:flex"
+        className="hidden w-64 shrink-0 flex-col border-r md:flex"
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
         {/* Room info */}
@@ -200,7 +200,7 @@ export function ChatView({
       <div className="flex flex-1 flex-col min-w-0">
         {/* Mobile header */}
         <div
-          className="flex items-center gap-3 border-b px-4 py-3 lg:hidden"
+          className="flex items-center gap-3 border-b px-4 py-3 md:hidden"
           style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
         >
           <Link href={`/rooms/${roomId}`} style={{ color: "var(--text-secondary)" }}>

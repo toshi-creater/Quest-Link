@@ -105,7 +105,7 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           {rooms.map((room) => (
             <RoomCard key={room.id} room={room} />
           ))}

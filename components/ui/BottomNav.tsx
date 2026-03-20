@@ -29,7 +29,8 @@ export function BottomNav() {
       <nav
         className="fixed bottom-0 inset-x-0 z-40 flex items-center justify-around md:hidden"
         style={{
-          height: "60px",
+          height: "calc(60px + env(safe-area-inset-bottom))",
+          paddingBottom: "env(safe-area-inset-bottom)",
           backgroundColor: "var(--bg-card)",
           borderTop: "1px solid var(--border)",
         }}

@@ -67,7 +67,7 @@ export function RoomDetailView({ roomId }: Props) {
         部屋一覧
       </Link>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-[1fr_260px] lg:grid-cols-3">
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Room Info */}
