@@ -175,7 +175,7 @@ export default function MyProfilePage() {
         style={{ backgroundColor: "rgba(239,68,68,0.04)" }}
       >
         <h3 className="mb-1 text-sm font-semibold text-red-400">アカウント削除</h3>
-        <p className="mb-3 text-xs" style={{ color: "var(--text-muted)" }}>
+        <p className="mb-3 text-sm" style={{ color: "var(--text-muted)" }}>
           アカウントを削除すると、すべてのデータが永久に削除されます。この操作は取り消せません。
         </p>
         <DeleteAccountButton />

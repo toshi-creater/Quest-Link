@@ -17,7 +17,9 @@ html,
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
+  font-family: var(--font-sans), "Hiragino Sans", "Yu Gothic", sans-serif;
+  line-height: 1.7;
+  font-kerning: normal;
   min-height: 100vh;
 }
 

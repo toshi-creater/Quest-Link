@@ -93,7 +93,7 @@ export const RoomCard = memo(function RoomCard({ room }: Props) {
           {room.title}
         </h3>
         {room.description && (
-          <p className="mt-1 text-xs line-clamp-1" style={{ color: "var(--text-secondary)" }}>
+          <p className="mt-1 text-sm line-clamp-1 leading-snug" style={{ color: "var(--text-secondary)" }}>
             {room.description}
           </p>
         )}

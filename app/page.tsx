@@ -73,7 +73,7 @@ export default async function HomePage() {
       {/* ── おすすめゲーム ── */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
+          <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
             おすすめゲーム
           </h2>
           <Link
@@ -92,7 +92,7 @@ export default async function HomePage() {
       {/* ── 募集中の部屋 ── */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
+          <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
             募集中の部屋
           </h2>
           <Link
