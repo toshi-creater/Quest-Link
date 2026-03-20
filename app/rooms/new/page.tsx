@@ -130,7 +130,7 @@ export default function NewRoomPage() {
               placeholder="例: 深夜FPS部屋 スモーク使える方歓迎"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors"
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
               style={inputStyle}
             />
           </div>
@@ -184,7 +184,7 @@ export default function NewRoomPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={500}
-              className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors"
+              className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
               style={inputStyle}
             />
           </div>

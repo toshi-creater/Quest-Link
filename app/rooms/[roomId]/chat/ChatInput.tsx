@@ -39,7 +39,7 @@ export function ChatInput({ roomId }: Props) {
       style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
     >
       <div
-        className="flex items-end gap-3 rounded-xl border p-2 focus-within:border-purple-500 transition-colors"
+        className="flex items-end gap-3 rounded-xl border p-2 focus-within:border-[var(--accent)] transition-colors"
         style={{
           backgroundColor: "var(--bg-input)",
           borderColor: message.length > MAX_LENGTH ? "rgba(239,68,68,0.6)" : "var(--border)",
@@ -52,7 +52,7 @@ export function ChatInput({ roomId }: Props) {
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isDisconnected}
-          className="flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none placeholder:text-gray-600 disabled:opacity-50"
+          className="flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none placeholder:text-[var(--text-muted)] disabled:opacity-50"
           style={{ color: "var(--text-primary)", maxHeight: "120px" }}
         />
         <div className="flex flex-col items-end gap-1 shrink-0">

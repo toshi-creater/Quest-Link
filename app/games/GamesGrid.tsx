@@ -39,10 +39,10 @@ export function GamesGrid({ games, roomCounts }: Props) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="ゲームを検索..."
-            className="w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-[var(--primary)]"
+            className="w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-[var(--accent)]"
             style={{
               background: "var(--bg-card)",
-              borderColor: "rgba(255,255,255,0.08)",
+              borderColor: "var(--border)",
               color: "var(--text-primary)",
             }}
           />
@@ -78,9 +78,9 @@ export function GamesGrid({ games, roomCounts }: Props) {
                   ) : (
                     <div
                       className="flex h-full w-full items-center justify-center"
-                      style={{ background: "var(--bg-elevated)" }}
+                      style={{ background: "var(--bg-card-hover)" }}
                     >
-                      <Gamepad2 className="h-10 w-10 opacity-40" style={{ color: "var(--primary)" }} />
+                      <Gamepad2 className="h-10 w-10 opacity-40" style={{ color: "var(--accent)" }} />
                     </div>
                   )}
 

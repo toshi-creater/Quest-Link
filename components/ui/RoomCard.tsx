@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Users } from "lucide-react";
 import type { RoomSummary } from "@/lib/api/rooms";
+import { roomStatusConfig, fallbackStatusConfig } from "@/lib/room-status";
 import { UserAvatar } from "./UserAvatar";
 import { PlayStyleTag } from "./PlayStyleTag";
 import { RatingDisplay } from "./StarRating";
@@ -12,31 +13,15 @@ type Props = {
   room: RoomSummary;
 };
 
-const statusConfig: Record<string, { label: string; bg: string; color: string; border: string }> = {
-  waiting: { label: "募集中", bg: "rgba(34,197,94,0.15)", color: "#22c55e", border: "rgba(34,197,94,0.3)" },
-  playing: { label: "プレイ中", bg: "rgba(234,179,8,0.15)", color: "#eab308", border: "rgba(234,179,8,0.3)" },
-  closed: { label: "終了", bg: "rgba(100,100,120,0.15)", color: "#8888aa", border: "rgba(100,100,120,0.3)" },
-};
-
-const fallbackStatus = { label: "不明", bg: "rgba(100,100,120,0.15)", color: "#8888aa", border: "rgba(100,100,120,0.3)" };
-
 export function RoomCard({ room }: Props) {
-  const status = statusConfig[room.status] ?? fallbackStatus;
+  const status = roomStatusConfig[room.status as keyof typeof roomStatusConfig] ?? fallbackStatusConfig;
   const fillRatio = room.currentPlayers / room.maxPlayers;
 
   return (
     <Link
       href={`/rooms/${room.id}`}
-      className="group block rounded-xl border transition-all duration-200 hover:-translate-y-0.5 overflow-hidden"
+      className="group block rounded-xl border transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(124,58,237,0.5)] hover:shadow-[0_8px_24px_rgba(124,58,237,0.12)] overflow-hidden"
       style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(124,58,237,0.5)";
-        (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 8px 24px rgba(124,58,237,0.12)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)";
-        (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none";
-      }}
     >
       {/* Game cover banner */}
       <div

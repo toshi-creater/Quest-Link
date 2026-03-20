@@ -5,17 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { ArrowLeft, Crown, Loader2, MessageSquare, Users } from "lucide-react";
 import { fetchRoom } from "@/lib/api/rooms";
+import { roomStatusConfig, fallbackStatusConfig } from "@/lib/room-status";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
 import { GameCover } from "@/components/ui/GamePicker";
 import { RoomActions } from "./RoomActions";
-
-const statusConfig = {
-  waiting: { label: "募集中", bg: "rgba(34,197,94,0.15)", color: "#22c55e", border: "rgba(34,197,94,0.3)" },
-  playing: { label: "プレイ中", bg: "rgba(234,179,8,0.15)", color: "#eab308", border: "rgba(234,179,8,0.3)" },
-  closed: { label: "終了", bg: "rgba(100,100,120,0.15)", color: "#8888aa", border: "rgba(100,100,120,0.3)" },
-};
 
 type Props = { roomId: string };
 
@@ -55,12 +50,7 @@ export function RoomDetailView({ roomId }: Props) {
   }
 
   const room = data.data;
-  const status = statusConfig[room.status as keyof typeof statusConfig] ?? {
-    label: room.status,
-    bg: "rgba(100,100,120,0.15)",
-    color: "#8888aa",
-    border: "rgba(100,100,120,0.3)",
-  };
+  const status = roomStatusConfig[room.status as keyof typeof roomStatusConfig] ?? fallbackStatusConfig;
   const isParticipant = room.participants.some((p) => p.userId === currentUserId);
   const isHost = room.host.id === currentUserId;
 
@@ -160,7 +150,7 @@ export function RoomDetailView({ roomId }: Props) {
           {isParticipant && (
             <Link
               href={`/rooms/${room.id}/chat`}
-              className="flex items-center justify-between rounded-xl border px-5 py-4 transition-all hover:border-purple-500"
+              className="flex items-center justify-between rounded-xl border px-5 py-4 transition-all hover:border-[var(--accent)]"
               style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
             >
               <div className="flex items-center gap-3">
