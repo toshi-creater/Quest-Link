@@ -114,6 +114,7 @@ export function RatingForm({ user, roomId }: Props) {
           placeholder="一言コメントを残しましょう..."
           value={comment}
           onChange={(e) => setComment(e.target.value)}
+          maxLength={500}
           className="w-full resize-none rounded-xl border px-3 py-2 text-sm outline-none focus:border-purple-500 transition-colors"
           style={{
             backgroundColor: "var(--bg-input)",

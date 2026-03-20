@@ -12,14 +12,16 @@ type Props = {
   room: RoomSummary;
 };
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; bg: string; color: string; border: string }> = {
   waiting: { label: "募集中", bg: "rgba(34,197,94,0.15)", color: "#22c55e", border: "rgba(34,197,94,0.3)" },
   playing: { label: "プレイ中", bg: "rgba(234,179,8,0.15)", color: "#eab308", border: "rgba(234,179,8,0.3)" },
   closed: { label: "終了", bg: "rgba(100,100,120,0.15)", color: "#8888aa", border: "rgba(100,100,120,0.3)" },
 };
 
+const fallbackStatus = { label: "不明", bg: "rgba(100,100,120,0.15)", color: "#8888aa", border: "rgba(100,100,120,0.3)" };
+
 export function RoomCard({ room }: Props) {
-  const status = statusConfig[room.status];
+  const status = statusConfig[room.status] ?? fallbackStatus;
   const fillRatio = room.currentPlayers / room.maxPlayers;
 
   return (
