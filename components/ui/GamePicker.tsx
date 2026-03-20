@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
+import Image from "next/image";
 import { Search, X, Gamepad2, Check, ChevronDown } from "lucide-react";
 import { type Game } from "@/lib/mock-data";
 import clsx from "clsx";
@@ -19,7 +20,7 @@ const coverSizes = {
   lg: "h-24 w-18",
 };
 
-export function GameCover({ game, size = "md", className }: GameCoverProps) {
+export const GameCover = memo(function GameCover({ game, size = "md", className }: GameCoverProps) {
   const [error, setError] = useState(false);
   const sizeClass = coverSizes[size];
 
@@ -40,15 +41,18 @@ export function GameCover({ game, size = "md", className }: GameCoverProps) {
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={game.coverImageUrl}
-      alt={game.name}
-      onError={() => setError(true)}
-      className={clsx("shrink-0 rounded-md object-cover", sizeClass, className)}
-    />
+    <div className={clsx("relative shrink-0 overflow-hidden rounded-md", sizeClass, className)}>
+      <Image
+        src={game.coverImageUrl}
+        alt={game.name}
+        fill
+        className="object-cover"
+        sizes="64px"
+        onError={() => setError(true)}
+      />
+    </div>
   );
-}
+});
 
 // ─── ゲーム検索フック ─────────────────────────────────────────────────────────
 
@@ -180,7 +184,7 @@ export function SingleGamePicker({
               placeholder="ゲーム名で検索..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-600"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--text-muted)]"
               style={{ color: "var(--text-primary)" }}
             />
           </div>
@@ -207,14 +211,12 @@ export function SingleGamePicker({
                     <button
                       type="button"
                       onClick={() => { onChange(game); setOpen(false); setQuery(""); }}
-                      className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left"
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left hover:bg-white/[0.04]"
                       style={
                         value?.id === game.id
                           ? { backgroundColor: "rgba(124,58,237,0.15)", color: "var(--accent-light)" }
                           : { color: "var(--text-primary)" }
                       }
-                      onMouseEnter={(e) => { if (value?.id !== game.id) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
-                      onMouseLeave={(e) => { if (value?.id !== game.id) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                     >
                       <GameCover game={game} size="sm" />
                       <span className="flex-1 truncate">{game.name}</span>
@@ -330,7 +332,7 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
                   placeholder="ゲーム名で検索..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-600"
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--text-muted)]"
                   style={{ color: "var(--text-primary)" }}
                 />
               </div>
@@ -358,14 +360,12 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
                           <button
                             type="button"
                             onClick={() => toggle(game)}
-                            className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left"
+                            className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left hover:bg-white/[0.04]"
                             style={
                               isSelected
                                 ? { backgroundColor: "rgba(124,58,237,0.15)", color: "var(--accent-light)" }
                                 : { color: "var(--text-primary)" }
                             }
-                            onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
-                            onMouseLeave={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                           >
                             <GameCover game={game} size="sm" />
                             <span className="flex-1 truncate">{game.name}</span>

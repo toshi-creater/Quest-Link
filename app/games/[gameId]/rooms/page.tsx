@@ -32,12 +32,12 @@ export default async function GameRoomsPage({ params }: Props) {
           ) : (
             <div
               className="flex h-full items-center justify-center rounded-xl"
-              style={{ backgroundColor: "var(--bg-elevated)" }}
+              style={{ backgroundColor: "var(--bg-card-hover)" }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8 opacity-40"
-                style={{ color: "var(--primary)" }}
+                style={{ color: "var(--accent)" }}
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"

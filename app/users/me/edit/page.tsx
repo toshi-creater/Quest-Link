@@ -165,7 +165,7 @@ export default function EditProfilePage() {
                 placeholder="https://example.com/icon.png"
                 value={iconUrl}
                 onChange={(e) => setIconUrl(e.target.value)}
-                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors"
+                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
                 style={inputStyle}
               />
             </div>
@@ -182,7 +182,7 @@ export default function EditProfilePage() {
               maxLength={50}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors"
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
               style={inputStyle}
             />
           </div>
@@ -201,7 +201,7 @@ export default function EditProfilePage() {
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               maxLength={500}
-              className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors"
+              className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
               style={inputStyle}
             />
           </div>

@@ -57,7 +57,7 @@ export default function LoginPage() {
               style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
             >
               <Icon className="mb-1 h-5 w-5" style={{ color: "var(--accent-light)" }} />
-              <span className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>
+              <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                 {label}
               </span>
               <span className="text-xs" style={{ color: "var(--text-muted)" }}>

@@ -57,7 +57,7 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
     <>
       {/* Search */}
       <div
-        className="relative mb-4 flex items-center rounded-xl border px-4 py-2.5 focus-within:border-purple-500 transition-colors"
+        className="relative mb-4 flex items-center rounded-xl border px-4 py-2.5 focus-within:border-[var(--accent)] transition-colors"
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
         <Search className="mr-3 h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
@@ -66,7 +66,7 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
           placeholder="ゲームタイトル・部屋名で検索..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full bg-transparent text-sm outline-none placeholder:text-gray-600"
+          className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--text-muted)]"
           style={{ color: "var(--text-primary)" }}
         />
       </div>
@@ -133,7 +133,7 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           {filtered.map((room) => (
             <RoomCard key={room.id} room={room} />
           ))}

@@ -101,7 +101,10 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
         </button>
         {isHost && (
           <button
-            onClick={() => closeMutation.mutate()}
+            onClick={() => {
+              if (!window.confirm("本当に部屋を解散しますか？この操作は取り消せません。")) return;
+              closeMutation.mutate();
+            }}
             disabled={closeMutation.isPending}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: "rgba(239,68,68,0.05)" }}
@@ -118,6 +121,11 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
       {leaveMutation.isError && (
         <p className="text-center text-xs" style={{ color: "#f87171" }}>
           {leaveMutation.error.message}
+        </p>
+      )}
+      {closeMutation.isError && (
+        <p className="text-center text-xs" style={{ color: "#f87171" }}>
+          {closeMutation.error.message}
         </p>
       )}
     </div>

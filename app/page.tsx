@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Prisma } from "@prisma/client";
+import { connection } from "next/server";
 import { getPopularGames } from "@/lib/games";
 import { prisma } from "@/lib/prisma";
 import { RoomCard } from "@/components/ui/RoomCard";
@@ -55,6 +56,7 @@ function formatRoom(room: RawRoom): RoomSummary {
 }
 
 export default async function HomePage() {
+  await connection();
   const [games, rawRooms] = await Promise.all([
     getPopularGames(6),
     prisma.room.findMany({
@@ -71,7 +73,7 @@ export default async function HomePage() {
       {/* ── おすすめゲーム ── */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
+          <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
             おすすめゲーム
           </h2>
           <Link
@@ -90,7 +92,7 @@ export default async function HomePage() {
       {/* ── 募集中の部屋 ── */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
+          <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
             募集中の部屋
           </h2>
           <Link
@@ -103,7 +105,7 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           {rooms.map((room) => (
             <RoomCard key={room.id} room={room} />
           ))}

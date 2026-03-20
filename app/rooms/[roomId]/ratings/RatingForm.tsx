@@ -69,9 +69,9 @@ export function RatingForm({ user, roomId }: Props) {
           <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
             {user.username}
           </p>
-          <p className="text-xs text-green-400">評価を送信しました</p>
+          <p className="text-xs" style={{ color: "#22c55e" }}>評価を送信しました</p>
         </div>
-        <CheckCircle2 className="h-5 w-5 text-green-400" />
+        <CheckCircle2 className="h-5 w-5" style={{ color: "#22c55e" }} />
       </div>
     );
   }
@@ -114,7 +114,8 @@ export function RatingForm({ user, roomId }: Props) {
           placeholder="一言コメントを残しましょう..."
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          className="w-full resize-none rounded-xl border px-3 py-2 text-sm outline-none focus:border-purple-500 transition-colors"
+          maxLength={500}
+          className="w-full resize-none rounded-xl border px-3 py-2 text-sm outline-none focus:border-[var(--accent)] transition-colors"
           style={{
             backgroundColor: "var(--bg-input)",
             borderColor: "var(--border)",

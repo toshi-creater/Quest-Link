@@ -1,21 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { ArrowLeft, Crown, Loader2, MessageSquare, Users } from "lucide-react";
 import { fetchRoom } from "@/lib/api/rooms";
+import { roomStatusConfig, fallbackStatusConfig } from "@/lib/room-status";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
 import { GameCover } from "@/components/ui/GamePicker";
 import { RoomActions } from "./RoomActions";
-
-const statusConfig = {
-  waiting: { label: "募集中", bg: "rgba(34,197,94,0.15)", color: "#22c55e", border: "rgba(34,197,94,0.3)" },
-  playing: { label: "プレイ中", bg: "rgba(234,179,8,0.15)", color: "#eab308", border: "rgba(234,179,8,0.3)" },
-  closed: { label: "終了", bg: "rgba(100,100,120,0.15)", color: "#8888aa", border: "rgba(100,100,120,0.3)" },
-};
 
 type Props = { roomId: string };
 
@@ -55,12 +51,7 @@ export function RoomDetailView({ roomId }: Props) {
   }
 
   const room = data.data;
-  const status = statusConfig[room.status as keyof typeof statusConfig] ?? {
-    label: room.status,
-    bg: "rgba(100,100,120,0.15)",
-    color: "#8888aa",
-    border: "rgba(100,100,120,0.3)",
-  };
+  const status = roomStatusConfig[room.status as keyof typeof roomStatusConfig] ?? fallbackStatusConfig;
   const isParticipant = room.participants.some((p) => p.userId === currentUserId);
   const isHost = room.host.id === currentUserId;
 
@@ -76,7 +67,7 @@ export function RoomDetailView({ roomId }: Props) {
         部屋一覧
       </Link>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-[1fr_260px] lg:grid-cols-3">
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Room Info */}
@@ -90,12 +81,13 @@ export function RoomDetailView({ roomId }: Props) {
               style={{ backgroundColor: "rgba(124,58,237,0.08)" }}
             >
               {room.game.coverImageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={room.game.coverImageUrl}
                   alt=""
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-25 blur-sm scale-110"
+                  fill
+                  className="pointer-events-none object-cover opacity-25 blur-sm scale-110"
+                  sizes="800px"
                 />
               )}
               <div
@@ -160,7 +152,7 @@ export function RoomDetailView({ roomId }: Props) {
           {isParticipant && (
             <Link
               href={`/rooms/${room.id}/chat`}
-              className="flex items-center justify-between rounded-xl border px-5 py-4 transition-all hover:border-purple-500"
+              className="flex items-center justify-between rounded-xl border px-5 py-4 transition-all hover:border-[var(--accent)]"
               style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
             >
               <div className="flex items-center gap-3">

@@ -36,7 +36,7 @@ export default function MyProfilePage() {
   if (isLoading) {
     return (
       <div className="flex min-h-100 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
       </div>
     );
   }
@@ -83,7 +83,7 @@ export default function MyProfilePage() {
           <div className="flex shrink-0 flex-col gap-2">
             <Link
               href="/users/me/edit"
-              className="flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all hover:border-purple-500"
+              className="flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all hover:border-[var(--accent)]"
               style={{ borderColor: "var(--border)", color: "var(--text-secondary)", backgroundColor: "var(--bg-input)" }}
             >
               <Edit2 className="h-4 w-4" />
@@ -91,7 +91,7 @@ export default function MyProfilePage() {
             </Link>
             <Link
               href="/users/me/history"
-              className="flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all hover:border-purple-500"
+              className="flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all hover:border-[var(--accent)]"
               style={{ borderColor: "var(--border)", color: "var(--text-secondary)", backgroundColor: "var(--bg-input)" }}
             >
               <History className="h-4 w-4" />
@@ -130,7 +130,7 @@ export default function MyProfilePage() {
       )}
 
       {/* Stats */}
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="mb-6 grid grid-cols-2 gap-4">
         {[
           { label: "平均評価", value: user.avgRating > 0 ? user.avgRating.toFixed(1) : "-", sub: "/ 5.0" },
           { label: "評価件数", value: user.ratingCount.toString(), sub: "件" },
@@ -175,7 +175,7 @@ export default function MyProfilePage() {
         style={{ backgroundColor: "rgba(239,68,68,0.04)" }}
       >
         <h3 className="mb-1 text-sm font-semibold text-red-400">アカウント削除</h3>
-        <p className="mb-3 text-xs" style={{ color: "var(--text-muted)" }}>
+        <p className="mb-3 text-sm" style={{ color: "var(--text-muted)" }}>
           アカウントを削除すると、すべてのデータが永久に削除されます。この操作は取り消せません。
         </p>
         <DeleteAccountButton />

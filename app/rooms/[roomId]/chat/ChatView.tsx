@@ -107,19 +107,19 @@ export function ChatView({
 
   // メッセージ追加時に自動スクロール
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "instant" });
   }, [messages]);
 
   const currentPlayers = participants.length;
 
   return (
     <div
-      className="flex h-[calc(100vh-64px)] flex-col lg:flex-row"
+      className="flex h-[calc(100dvh-64px)] flex-col md:flex-row"
       style={{ backgroundColor: "var(--bg-base)" }}
     >
       {/* Sidebar */}
       <aside
-        className="hidden w-72 shrink-0 flex-col border-r lg:flex"
+        className="hidden w-64 shrink-0 flex-col border-r md:flex"
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
         {/* Room info */}
@@ -200,7 +200,7 @@ export function ChatView({
       <div className="flex flex-1 flex-col min-w-0">
         {/* Mobile header */}
         <div
-          className="flex items-center gap-3 border-b px-4 py-3 lg:hidden"
+          className="flex items-center gap-3 border-b px-4 py-3 md:hidden"
           style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
         >
           <Link href={`/rooms/${roomId}`} style={{ color: "var(--text-secondary)" }}>
@@ -235,6 +235,13 @@ export function ChatView({
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          {messages.length === 0 && (
+            <div className="flex h-full items-center justify-center">
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                まだメッセージはありません。最初のメッセージを送りましょう！
+              </p>
+            </div>
+          )}
           {messages.map((msg) => {
             if (msg.isSystem) {
               return (
@@ -262,15 +269,15 @@ export function ChatView({
                   />
                 )}
                 <div
-                  className={`max-w-[70%] ${isMe ? "items-end" : "items-start"} flex flex-col gap-1`}
+                  className={`max-w-[70%] min-w-0 ${isMe ? "items-end" : "items-start"} flex flex-col gap-1`}
                 >
                   {!isMe && msg.user && (
-                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    <span className="truncate text-xs" style={{ color: "var(--text-muted)" }}>
                       {msg.user.username}
                     </span>
                   )}
                   <div
-                    className="rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
+                    className="rounded-2xl px-4 py-2.5 text-sm leading-relaxed break-words"
                     style={
                       isMe
                         ? {
