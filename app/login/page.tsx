@@ -16,7 +16,7 @@ export default async function LoginPage({ searchParams }: Props) {
     >
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="mb-8 flex flex-col items-center">
+        <div className="mb-8 flex flex-col items-center animate-fade-in-up">
           <Zap className="mb-3 h-8 w-8" style={{ color: "var(--accent-light)" }} />
           <h1 className="text-4xl tracking-tight" style={{ color: "var(--text-primary)" }}>
             <span className="font-medium">Quest</span>
@@ -29,10 +29,11 @@ export default async function LoginPage({ searchParams }: Props) {
 
         {/* Login Card */}
         <div
-          className="rounded-2xl border p-8"
+          className="rounded-2xl border p-8 animate-fade-in-up"
           style={{
             backgroundColor: "var(--bg-card)",
             borderColor: "var(--border)",
+            animationDelay: "120ms",
           }}
         >
           <h2
@@ -54,7 +55,7 @@ export default async function LoginPage({ searchParams }: Props) {
           >
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-3 rounded-xl border px-6 py-3.5 text-sm font-medium transition-all hover:shadow-lg"
+              className="flex w-full items-center justify-center gap-3 rounded-xl border px-6 py-3.5 text-sm font-medium transition-all hover:shadow-lg active:scale-[0.97]"
               style={{
                 backgroundColor: "#fff",
                 borderColor: "#dadce0",

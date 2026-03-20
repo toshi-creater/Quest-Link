@@ -61,7 +61,7 @@ export function RatingForm({ user, roomId }: Props) {
   if (mutation.isSuccess) {
     return (
       <div
-        className="flex items-center gap-4 rounded-2xl border p-5 opacity-60"
+        className="flex items-center gap-4 rounded-2xl border p-5 opacity-60 animate-scale-in"
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
         <UserAvatar username={user.username} iconUrl={user.iconUrl} size="md" />
@@ -71,7 +71,7 @@ export function RatingForm({ user, roomId }: Props) {
           </p>
           <p className="text-xs" style={{ color: "#22c55e" }}>評価を送信しました</p>
         </div>
-        <CheckCircle2 className="h-5 w-5" style={{ color: "#22c55e" }} />
+        <CheckCircle2 className="h-5 w-5 animate-scale-in" style={{ color: "#22c55e", animationDelay: "150ms" }} />
       </div>
     );
   }
@@ -125,7 +125,7 @@ export function RatingForm({ user, roomId }: Props) {
       </div>
 
       {mutation.isError && (
-        <p className="mb-3 text-xs text-red-400">
+        <p className="mb-3 text-xs text-red-400 animate-slide-in-bottom">
           {mutation.error instanceof Error ? mutation.error.message : "評価の送信に失敗しました"}
         </p>
       )}
@@ -135,7 +135,7 @@ export function RatingForm({ user, roomId }: Props) {
         disabled={!score || mutation.isPending}
         className={clsx(
           "w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-all",
-          score && !mutation.isPending ? "hover:opacity-90" : "opacity-40 cursor-not-allowed"
+          score && !mutation.isPending ? "hover:opacity-90 active:scale-[0.97]" : "opacity-40 cursor-not-allowed"
         )}
         style={{
           background:

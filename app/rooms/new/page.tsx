@@ -239,7 +239,7 @@ export default function NewRoomPage() {
             <button
               type="submit"
               disabled={!selectedGame || !title || mutation.isPending}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
                 background: "linear-gradient(135deg, var(--accent), #6d28d9)",
                 boxShadow: selectedGame && title ? "0 4px 14px rgba(124,58,237,0.4)" : "none",

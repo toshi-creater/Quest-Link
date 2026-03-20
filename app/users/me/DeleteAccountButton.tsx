@@ -26,7 +26,7 @@ export function DeleteAccountButton() {
 
   if (confirming) {
     return (
-      <div className="flex gap-3">
+      <div className="flex gap-3 animate-fade-in">
         <button
           onClick={() => setConfirming(false)}
           disabled={deleting}

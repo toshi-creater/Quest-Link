@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, Crown, Loader2, MessageSquare, Users } from "lucide-react";
+import { ArrowLeft, Crown, MessageSquare, Users } from "lucide-react";
 import { fetchRoom } from "@/lib/api/rooms";
 import { roomStatusConfig, fallbackStatusConfig } from "@/lib/room-status";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -27,8 +27,36 @@ export function RoomDetailView({ roomId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-32">
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: "var(--accent)" }} />
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <div className="mb-6 h-5 w-20 rounded animate-shimmer" />
+        <div className="grid gap-6 md:grid-cols-[1fr_260px] lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+              <div className="h-32 animate-shimmer" />
+              <div className="px-6 py-5 space-y-3">
+                <div className="h-6 w-2/3 rounded animate-shimmer" />
+                <div className="h-4 w-full rounded animate-shimmer" />
+                <div className="h-4 w-3/4 rounded animate-shimmer" />
+              </div>
+            </div>
+            <div className="h-14 rounded-xl animate-shimmer" />
+          </div>
+          <div>
+            <div className="rounded-2xl border p-5 space-y-3" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+              <div className="h-5 w-20 rounded animate-shimmer" />
+              <div className="h-2 w-full rounded-full animate-shimmer" />
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full animate-shimmer shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 w-24 rounded animate-shimmer" />
+                    <div className="h-2 w-16 rounded animate-shimmer" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -72,7 +100,7 @@ export function RoomDetailView({ roomId }: Props) {
         <div className="lg:col-span-2 space-y-6">
           {/* Room Info */}
           <div
-            className="rounded-2xl border overflow-hidden"
+            className="rounded-2xl border overflow-hidden animate-fade-in-up"
             style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
           >
             {/* Game cover header */}
@@ -141,12 +169,14 @@ export function RoomDetailView({ roomId }: Props) {
           </div>
 
           {/* Actions */}
+          <div className="animate-fade-in-up" style={{ animationDelay: "80ms" }}>
           <RoomActions
             roomId={room.id}
             isParticipant={isParticipant}
             isHost={isHost}
             status={room.status}
           />
+          </div>
 
           {/* Chat shortcut */}
           {isParticipant && (
@@ -177,7 +207,7 @@ export function RoomDetailView({ roomId }: Props) {
         </div>
 
         {/* Sidebar: Participants */}
-        <div className="space-y-4">
+        <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: "160ms" }}>
           <div
             className="rounded-2xl border p-5"
             style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}

@@ -11,6 +11,75 @@
   --text-primary: #f0f0f8;
   --text-secondary: #8888aa;
   --text-muted: #555570;
+
+  --duration-feedback: 100ms;
+  --duration-state: 200ms;
+  --duration-entrance: 350ms;
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to { background-position: 200% center; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-in-bottom {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@utility animate-fade-in-up {
+  animation: fade-in-up var(--duration-entrance) var(--ease-out-quart) both;
+}
+
+@utility animate-fade-in {
+  animation: fade-in var(--duration-state) ease both;
+}
+
+@utility animate-scale-in {
+  animation: scale-in var(--duration-state) var(--ease-out-quart) both;
+}
+
+@utility animate-slide-in-bottom {
+  animation: slide-in-bottom var(--duration-state) var(--ease-out-quart) both;
+}
+
+@utility animate-shimmer {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+@utility animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 html,

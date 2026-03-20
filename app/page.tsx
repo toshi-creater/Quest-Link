@@ -71,7 +71,7 @@ export default async function HomePage() {
   return (
     <main className="mx-auto max-w-screen-xl px-4 py-10 pb-24 md:pb-10 space-y-12">
       {/* ── おすすめゲーム ── */}
-      <section>
+      <section className="animate-fade-in-up">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
             おすすめゲーム
@@ -90,7 +90,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── 募集中の部屋 ── */}
-      <section>
+      <section className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
             募集中の部屋

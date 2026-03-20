@@ -7,6 +7,7 @@ export type ChatMessage = {
   content: string;
   isSystem: boolean;
   createdAt: Date;
+  isNew?: boolean;
 };
 
 export type Participant = {
@@ -36,7 +37,7 @@ export const useChatStore = create<ChatStore>((set) => ({
   addMessage: (msg) =>
     set((state) => {
       if (state.messages.some((m) => m.id === msg.id)) return state;
-      return { messages: [...state.messages, msg] };
+      return { messages: [...state.messages, { ...msg, isNew: true }] };
     }),
   addParticipant: (p) =>
     set((state) => {

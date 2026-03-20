@@ -35,8 +35,22 @@ export default function MyProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-100 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 space-y-6">
+        <div className="rounded-2xl border p-6" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+            <div className="h-20 w-20 rounded-full animate-shimmer shrink-0" />
+            <div className="flex-1 space-y-3 w-full">
+              <div className="h-7 w-40 rounded animate-shimmer" />
+              <div className="h-4 w-28 rounded animate-shimmer" />
+              <div className="h-4 w-full rounded animate-shimmer" />
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="h-20 rounded-xl border animate-shimmer" style={{ borderColor: "var(--border)" }} />
+          ))}
+        </div>
       </div>
     );
   }

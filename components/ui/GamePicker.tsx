@@ -169,8 +169,8 @@ export function SingleGamePicker({
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute z-50 mt-1.5 w-full rounded-xl border shadow-2xl overflow-hidden"
-          style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)" }}
+          className="absolute z-50 mt-1.5 w-full rounded-xl border shadow-2xl overflow-hidden animate-fade-in-up"
+          style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)", animationDuration: "150ms" }}
         >
           {/* Search */}
           <div
@@ -318,8 +318,8 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
 
           {open && (
             <div
-              className="absolute z-50 mt-1.5 w-full rounded-xl border shadow-2xl overflow-hidden"
-              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)" }}
+              className="absolute z-50 mt-1.5 w-full rounded-xl border shadow-2xl overflow-hidden animate-fade-in-up"
+              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)", animationDuration: "150ms" }}
             >
               <div
                 className="flex items-center gap-2 border-b px-3 py-2.5"
