@@ -281,7 +281,7 @@ export function ChatView({
                     style={
                       isMe
                         ? {
-                            background: "linear-gradient(135deg, var(--accent), #6d28d9)",
+                            backgroundColor: "var(--accent)",
                             color: "#fff",
                             borderBottomRightRadius: "4px",
                           }

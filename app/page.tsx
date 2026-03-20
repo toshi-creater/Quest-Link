@@ -96,11 +96,11 @@ export default async function HomePage() {
             募集中の部屋
           </h2>
           <Link
-            href="/games"
+            href="/rooms"
             className="flex items-center gap-1 text-sm transition-colors hover:text-white"
             style={{ color: "var(--accent-light)" }}
           >
-            ゲームから探す
+            もっと見る
             <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
