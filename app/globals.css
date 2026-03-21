@@ -74,6 +74,10 @@
   animation: pulse-dot 1.5s ease-in-out infinite;
 }
 
+@utility animate-scale-in-chip {
+  animation: scale-in 250ms ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

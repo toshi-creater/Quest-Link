@@ -11,7 +11,13 @@ export async function GET() {
   const tags = await prisma.playStyleTag.findMany({
     where: { isActive: true },
     orderBy: { displayOrder: "asc" },
-    select: { id: true, name: true, slug: true, displayOrder: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      displayOrder: true,
+      category: { select: { id: true, name: true, slug: true } },
+    },
   });
 
   return NextResponse.json({ data: tags });

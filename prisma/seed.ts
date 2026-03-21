@@ -7,36 +7,62 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  // ─── 0. タグカテゴリ ──────────────────────────────────────────────────────────
+  const categoryDefs = [
+    { name: "プレイスタイル", slug: "play_style", displayOrder: 1 },
+    { name: "時間帯", slug: "schedule", displayOrder: 2 },
+    { name: "コミュニケーション", slug: "communication", displayOrder: 3 },
+    { name: "参加条件", slug: "restriction", displayOrder: 4 },
+    { name: "プラットフォーム", slug: "platform", displayOrder: 5 },
+  ];
+
+  for (const cat of categoryDefs) {
+    await prisma.tagCategory.upsert({
+      where: { slug: cat.slug },
+      update: {},
+      create: cat,
+    });
+  }
+  console.log(`✓ tag_categories: ${categoryDefs.length}件`);
+
+  const categories = await prisma.tagCategory.findMany({
+    select: { id: true, slug: true },
+  });
+  const categoryId = (slug: string) => {
+    const c = categories.find((c) => c.slug === slug);
+    if (!c) throw new Error(`category not found: ${slug}`);
+    return c.id;
+  };
+
   // ─── 1. プレイスタイルタグ ────────────────────────────────────────────────────
   const tagDefs = [
-    { name: "ガチ勢", slug: "hardcore", displayOrder: 1 },
-    { name: "エンジョイ勢", slug: "casual", displayOrder: 2 },
-    { name: "初心者歓迎", slug: "beginner_friendly", displayOrder: 3 },
-    { name: "上級者向け", slug: "advanced", displayOrder: 4 },
-    { name: "深夜勢", slug: "late_night", displayOrder: 5 },
-    { name: "配信者", slug: "streamer", displayOrder: 6 },
-    // プレイスタイル系
-    { name: "ボイチャあり", slug: "voice_chat", displayOrder: 7 },
-    { name: "テキストのみ", slug: "text_only", displayOrder: 8 },
-    { name: "女性限定", slug: "female_only", displayOrder: 9 },
-    { name: "社会人限定", slug: "adult_only", displayOrder: 10 },
-    { name: "学生歓迎", slug: "student", displayOrder: 11 },
-    { name: "朝活勢", slug: "morning", displayOrder: 12 },
-    { name: "週末限定", slug: "weekend", displayOrder: 13 },
-    { name: "コーチング可", slug: "coach", displayOrder: 14 },
-    // プラットフォーム系
-    { name: "PC", slug: "platform_pc", displayOrder: 15 },
-    { name: "PlayStation", slug: "platform_ps", displayOrder: 16 },
-    { name: "Xbox", slug: "platform_xbox", displayOrder: 17 },
-    { name: "Nintendo Switch", slug: "platform_switch", displayOrder: 18 },
-    { name: "スマホ", slug: "platform_mobile", displayOrder: 19 },
+    { name: "ガチ勢", slug: "hardcore", displayOrder: 1, categorySlug: "play_style" },
+    { name: "エンジョイ勢", slug: "casual", displayOrder: 2, categorySlug: "play_style" },
+    { name: "初心者歓迎", slug: "beginner_friendly", displayOrder: 3, categorySlug: "play_style" },
+    { name: "上級者向け", slug: "advanced", displayOrder: 4, categorySlug: "play_style" },
+    { name: "深夜勢", slug: "late_night", displayOrder: 5, categorySlug: "schedule" },
+    { name: "配信者", slug: "streamer", displayOrder: 6, categorySlug: "communication" },
+    { name: "ボイチャあり", slug: "voice_chat", displayOrder: 7, categorySlug: "communication" },
+    { name: "テキストのみ", slug: "text_only", displayOrder: 8, categorySlug: "communication" },
+    { name: "女性限定", slug: "female_only", displayOrder: 9, categorySlug: "restriction" },
+    { name: "社会人限定", slug: "adult_only", displayOrder: 10, categorySlug: "restriction" },
+    { name: "学生歓迎", slug: "student", displayOrder: 11, categorySlug: "restriction" },
+    { name: "朝活勢", slug: "morning", displayOrder: 12, categorySlug: "schedule" },
+    { name: "週末限定", slug: "weekend", displayOrder: 13, categorySlug: "schedule" },
+    { name: "コーチング可", slug: "coach", displayOrder: 14, categorySlug: "play_style" },
+    { name: "PC", slug: "platform_pc", displayOrder: 15, categorySlug: "platform" },
+    { name: "PlayStation", slug: "platform_ps", displayOrder: 16, categorySlug: "platform" },
+    { name: "Xbox", slug: "platform_xbox", displayOrder: 17, categorySlug: "platform" },
+    { name: "Nintendo Switch", slug: "platform_switch", displayOrder: 18, categorySlug: "platform" },
+    { name: "スマホ", slug: "platform_mobile", displayOrder: 19, categorySlug: "platform" },
   ];
 
   for (const tag of tagDefs) {
+    const { categorySlug, ...rest } = tag;
     await prisma.playStyleTag.upsert({
-      where: { slug: tag.slug },
-      update: {},
-      create: tag,
+      where: { slug: rest.slug },
+      update: { categoryId: categoryId(categorySlug) },
+      create: { ...rest, categoryId: categoryId(categorySlug) },
     });
   }
   console.log(`✓ play_style_tags: ${tagDefs.length}件`);

@@ -3,11 +3,19 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import clsx from "clsx";
 import { fetchRooms, type RoomSummary } from "@/lib/api/rooms";
 import { RoomCard } from "@/components/ui/RoomCard";
+import { TagFilterPrimary, PRIMARY_TAG_COUNT } from "@/components/ui/TagFilterPrimary";
+import { TagFilterPanel } from "@/components/ui/TagFilterPanel";
+import { ActiveFilterBar } from "@/components/ui/ActiveFilterBar";
 
-type Tag = { id: string; name: string; slug: string; displayOrder: number };
+type Tag = {
+  id: string;
+  name: string;
+  slug: string;
+  displayOrder: number;
+  category: { id: string; name: string; slug: string } | null;
+};
 type TagsResponse = { data: Tag[] };
 
 async function fetchTags(): Promise<Tag[]> {
@@ -20,6 +28,7 @@ async function fetchTags(): Promise<Tag[]> {
 export function RoomsFilter({ gameId }: { gameId?: string }) {
   const [query, setQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
 
   const { data: tagsData = [] } = useQuery({
     queryKey: ["play-style-tags"],
@@ -53,6 +62,9 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
     );
   };
 
+  const primarySlugs = tagsData.slice(0, PRIMARY_TAG_COUNT).map((t) => t.slug);
+  const extraSelectedCount = selectedTags.filter((s) => !primarySlugs.includes(s)).length;
+
   return (
     <>
       {/* Search */}
@@ -72,41 +84,27 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
       </div>
 
       {/* Tag filters */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {tagsData.map((tag) => {
-          const active = selectedTags.includes(tag.slug);
-          return (
-            <button
-              key={tag.id}
-              onClick={() => toggleTag(tag.slug)}
-              className={clsx("rounded-full px-3 py-1.5 text-xs font-medium transition-all")}
-              style={
-                active
-                  ? {
-                      backgroundColor: "rgba(124,58,237,0.3)",
-                      color: "var(--accent-light)",
-                      border: "1px solid rgba(124,58,237,0.6)",
-                    }
-                  : {
-                      backgroundColor: "var(--bg-card)",
-                      color: "var(--text-secondary)",
-                      border: "1px solid var(--border)",
-                    }
-              }
-            >
-              {tag.name}
-            </button>
-          );
-        })}
-        {selectedTags.length > 0 && (
-          <button
-            onClick={() => setSelectedTags([])}
-            className="rounded-full px-3 py-1.5 text-xs transition-all"
-            style={{ color: "var(--text-muted)" }}
-          >
-            クリア
-          </button>
-        )}
+      <div className="mb-6">
+        <TagFilterPrimary
+          tags={tagsData}
+          selectedTags={selectedTags}
+          onToggle={toggleTag}
+          panelOpen={moreFiltersOpen}
+          onPanelToggle={() => setMoreFiltersOpen((prev) => !prev)}
+          extraSelectedCount={extraSelectedCount}
+        />
+        <TagFilterPanel
+          tags={tagsData}
+          selectedTags={selectedTags}
+          onToggle={toggleTag}
+          open={moreFiltersOpen}
+        />
+        <ActiveFilterBar
+          selectedTags={selectedTags}
+          allTags={tagsData}
+          onRemove={toggleTag}
+          onClearAll={() => setSelectedTags([])}
+        />
       </div>
 
       {/* Room grid */}
