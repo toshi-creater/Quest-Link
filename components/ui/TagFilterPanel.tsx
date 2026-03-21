@@ -15,9 +15,11 @@ type TagFilterPanelProps = {
   selectedTags: string[];
   onToggle: (slug: string) => void;
   open: boolean;
+  onApply?: () => void;
+  applyLabel?: string;
 };
 
-export function TagFilterPanel({ tags, selectedTags, onToggle, open }: TagFilterPanelProps) {
+export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, applyLabel }: TagFilterPanelProps) {
   if (!open) return null;
 
   const categoryMap = new Map<string, { name: string; tags: Tag[] }>();
@@ -82,6 +84,18 @@ export function TagFilterPanel({ tags, selectedTags, onToggle, open }: TagFilter
           </div>
         ))}
       </div>
+
+      {onApply && (
+        <div className="mt-4 flex justify-end">
+          <button
+            onClick={onApply}
+            className="rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97]"
+            style={{ background: "linear-gradient(135deg, var(--accent), #6d28d9)" }}
+          >
+            {applyLabel ?? "絞り込む"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

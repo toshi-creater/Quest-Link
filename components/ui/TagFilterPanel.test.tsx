@@ -36,4 +36,34 @@ describe("TagFilterPanel", () => {
     fireEvent.click(screen.getByText("ガチ勢"));
     expect(onToggle).toHaveBeenCalledWith("hardcore");
   });
+
+  it("does not render apply button when onApply is not provided", () => {
+    render(
+      <TagFilterPanel tags={tags} selectedTags={[]} onToggle={vi.fn()} open={true} />
+    );
+    expect(screen.queryByText("絞り込む")).toBeNull();
+  });
+
+  it("renders apply button with default label when onApply is provided", () => {
+    render(
+      <TagFilterPanel tags={tags} selectedTags={[]} onToggle={vi.fn()} open={true} onApply={vi.fn()} />
+    );
+    expect(screen.getByText("絞り込む")).toBeTruthy();
+  });
+
+  it("renders apply button with custom label when applyLabel is provided", () => {
+    render(
+      <TagFilterPanel tags={tags} selectedTags={[]} onToggle={vi.fn()} open={true} onApply={vi.fn()} applyLabel="決定" />
+    );
+    expect(screen.getByText("決定")).toBeTruthy();
+  });
+
+  it("calls onApply when apply button is clicked", () => {
+    const onApply = vi.fn();
+    render(
+      <TagFilterPanel tags={tags} selectedTags={[]} onToggle={vi.fn()} open={true} onApply={onApply} />
+    );
+    fireEvent.click(screen.getByText("絞り込む"));
+    expect(onApply).toHaveBeenCalledOnce();
+  });
 });

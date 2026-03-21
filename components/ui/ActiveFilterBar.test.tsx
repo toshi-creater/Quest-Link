@@ -1,6 +1,14 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ActiveFilterBar } from "./ActiveFilterBar";
+
+beforeAll(() => {
+  global.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+});
 
 const allTags = [
   { id: "1", name: "ガチ勢", slug: "hardcore" },
@@ -9,11 +17,11 @@ const allTags = [
 ];
 
 describe("ActiveFilterBar", () => {
-  it("renders nothing when no tags are selected", () => {
-    const { container } = render(
-      <ActiveFilterBar selectedTags={[]} allTags={allTags} onRemove={vi.fn()} onClearAll={vi.fn()} />
+  it("renders placeholder text when no tags are selected", () => {
+    render(
+      <ActiveFilterBar selectedTags={[]} allTags={allTags} onRemove={vi.fn()} />
     );
-    expect(container.firstChild).toBeNull();
+    expect(screen.getByText("タグの選択なし")).toBeTruthy();
   });
 
   it("renders selected tag chips", () => {
@@ -22,7 +30,6 @@ describe("ActiveFilterBar", () => {
         selectedTags={["hardcore", "late_night"]}
         allTags={allTags}
         onRemove={vi.fn()}
-        onClearAll={vi.fn()}
       />
     );
     expect(screen.getByText("ガチ勢")).toBeTruthy();
@@ -37,24 +44,9 @@ describe("ActiveFilterBar", () => {
         selectedTags={["hardcore"]}
         allTags={allTags}
         onRemove={onRemove}
-        onClearAll={vi.fn()}
       />
     );
     fireEvent.click(screen.getByLabelText("ガチ勢を解除"));
     expect(onRemove).toHaveBeenCalledWith("hardcore");
-  });
-
-  it("calls onClearAll when すべてクリア is clicked", () => {
-    const onClearAll = vi.fn();
-    render(
-      <ActiveFilterBar
-        selectedTags={["hardcore"]}
-        allTags={allTags}
-        onRemove={vi.fn()}
-        onClearAll={onClearAll}
-      />
-    );
-    fireEvent.click(screen.getByText("すべてクリア"));
-    expect(onClearAll).toHaveBeenCalledOnce();
   });
 });

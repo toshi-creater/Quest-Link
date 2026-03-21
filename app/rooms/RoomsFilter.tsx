@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { fetchRooms, type RoomSummary } from "@/lib/api/rooms";
 import { RoomCard } from "@/components/ui/RoomCard";
-import { TagFilterPrimary, PRIMARY_TAG_COUNT } from "@/components/ui/TagFilterPrimary";
+import { TagFilterToggle } from "@/components/ui/TagFilterToggle";
 import { TagFilterPanel } from "@/components/ui/TagFilterPanel";
 import { ActiveFilterBar } from "@/components/ui/ActiveFilterBar";
 
@@ -27,15 +27,16 @@ async function fetchTags(): Promise<Tag[]> {
 
 export function RoomsFilter({ gameId }: { gameId?: string }) {
   const [query, setQuery] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  const [appliedTags, setAppliedTags] = useState<string[]>([]);
+  const [pendingTags, setPendingTags] = useState<string[]>([]);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const { data: tagsData = [] } = useQuery({
     queryKey: ["play-style-tags"],
     queryFn: fetchTags,
   });
 
-  const tagSlugsParam = selectedTags.length > 0 ? selectedTags.join(",") : undefined;
+  const tagSlugsParam = appliedTags.length > 0 ? appliedTags.join(",") : undefined;
 
   const {
     data: roomsData,
@@ -56,14 +57,23 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
     );
   });
 
-  const toggleTag = (slug: string) => {
-    setSelectedTags((prev) =>
+  const togglePendingTag = (slug: string) => {
+    setPendingTags((prev) =>
       prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
     );
   };
 
-  const primarySlugs = tagsData.slice(0, PRIMARY_TAG_COUNT).map((t) => t.slug);
-  const extraSelectedCount = selectedTags.filter((s) => !primarySlugs.includes(s)).length;
+  const handlePanelToggle = () => {
+    if (!panelOpen) {
+      setPendingTags(appliedTags);
+    }
+    setPanelOpen((prev) => !prev);
+  };
+
+  const handleApply = () => {
+    setAppliedTags(pendingTags);
+    setPanelOpen(false);
+  };
 
   return (
     <>
@@ -85,25 +95,35 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
 
       {/* Tag filters */}
       <div className="mb-6">
-        <TagFilterPrimary
-          tags={tagsData}
-          selectedTags={selectedTags}
-          onToggle={toggleTag}
-          panelOpen={moreFiltersOpen}
-          onPanelToggle={() => setMoreFiltersOpen((prev) => !prev)}
-          extraSelectedCount={extraSelectedCount}
-        />
+        <div className="flex items-center gap-2">
+          <TagFilterToggle
+            selectedCount={appliedTags.length}
+            panelOpen={panelOpen}
+            onPanelToggle={handlePanelToggle}
+          />
+          {appliedTags.length > 0 && (
+            <button
+              onClick={() => setAppliedTags([])}
+              className="shrink-0 text-xs transition-opacity hover:opacity-70"
+              style={{ color: "var(--text-muted)" }}
+            >
+              すべてクリア
+            </button>
+          )}
+        </div>
+        <div className="mt-2 min-w-0">
+          <ActiveFilterBar
+            selectedTags={appliedTags}
+            allTags={tagsData}
+            onRemove={(slug) => setAppliedTags((prev) => prev.filter((s) => s !== slug))}
+          />
+        </div>
         <TagFilterPanel
           tags={tagsData}
-          selectedTags={selectedTags}
-          onToggle={toggleTag}
-          open={moreFiltersOpen}
-        />
-        <ActiveFilterBar
-          selectedTags={selectedTags}
-          allTags={tagsData}
-          onRemove={toggleTag}
-          onClearAll={() => setSelectedTags([])}
+          selectedTags={pendingTags}
+          onToggle={togglePendingTag}
+          open={panelOpen}
+          onApply={handleApply}
         />
       </div>
 
