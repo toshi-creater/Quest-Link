@@ -3,11 +3,19 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import clsx from "clsx";
 import { fetchRooms, type RoomSummary } from "@/lib/api/rooms";
 import { RoomCard } from "@/components/ui/RoomCard";
+import { TagFilterToggle } from "@/components/ui/TagFilterToggle";
+import { TagFilterPanel } from "@/components/ui/TagFilterPanel";
+import { ActiveFilterBar } from "@/components/ui/ActiveFilterBar";
 
-type Tag = { id: string; name: string; slug: string; displayOrder: number };
+type Tag = {
+  id: string;
+  name: string;
+  slug: string;
+  displayOrder: number;
+  category: { id: string; name: string; slug: string } | null;
+};
 type TagsResponse = { data: Tag[] };
 
 async function fetchTags(): Promise<Tag[]> {
@@ -19,14 +27,16 @@ async function fetchTags(): Promise<Tag[]> {
 
 export function RoomsFilter({ gameId }: { gameId?: string }) {
   const [query, setQuery] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [appliedTags, setAppliedTags] = useState<string[]>([]);
+  const [pendingTags, setPendingTags] = useState<string[]>([]);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const { data: tagsData = [] } = useQuery({
     queryKey: ["play-style-tags"],
     queryFn: fetchTags,
   });
 
-  const tagSlugsParam = selectedTags.length > 0 ? selectedTags.join(",") : undefined;
+  const tagSlugsParam = appliedTags.length > 0 ? appliedTags.join(",") : undefined;
 
   const {
     data: roomsData,
@@ -47,10 +57,22 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
     );
   });
 
-  const toggleTag = (slug: string) => {
-    setSelectedTags((prev) =>
+  const togglePendingTag = (slug: string) => {
+    setPendingTags((prev) =>
       prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
     );
+  };
+
+  const handlePanelToggle = () => {
+    if (!panelOpen) {
+      setPendingTags(appliedTags);
+    }
+    setPanelOpen((prev) => !prev);
+  };
+
+  const handleApply = () => {
+    setAppliedTags(pendingTags);
+    setPanelOpen(false);
   };
 
   return (
@@ -72,41 +94,37 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
       </div>
 
       {/* Tag filters */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {tagsData.map((tag) => {
-          const active = selectedTags.includes(tag.slug);
-          return (
+      <div className="mb-6">
+        <div className="flex items-center gap-2">
+          <TagFilterToggle
+            selectedCount={appliedTags.length}
+            panelOpen={panelOpen}
+            onPanelToggle={handlePanelToggle}
+          />
+          {appliedTags.length > 0 && (
             <button
-              key={tag.id}
-              onClick={() => toggleTag(tag.slug)}
-              className={clsx("rounded-full px-3 py-1.5 text-xs font-medium transition-all")}
-              style={
-                active
-                  ? {
-                      backgroundColor: "rgba(124,58,237,0.3)",
-                      color: "var(--accent-light)",
-                      border: "1px solid rgba(124,58,237,0.6)",
-                    }
-                  : {
-                      backgroundColor: "var(--bg-card)",
-                      color: "var(--text-secondary)",
-                      border: "1px solid var(--border)",
-                    }
-              }
+              onClick={() => setAppliedTags([])}
+              className="shrink-0 text-xs transition-opacity hover:opacity-70"
+              style={{ color: "var(--text-muted)" }}
             >
-              {tag.name}
+              すべてクリア
             </button>
-          );
-        })}
-        {selectedTags.length > 0 && (
-          <button
-            onClick={() => setSelectedTags([])}
-            className="rounded-full px-3 py-1.5 text-xs transition-all"
-            style={{ color: "var(--text-muted)" }}
-          >
-            クリア
-          </button>
-        )}
+          )}
+        </div>
+        <TagFilterPanel
+          tags={tagsData}
+          selectedTags={pendingTags}
+          onToggle={togglePendingTag}
+          open={panelOpen}
+          onApply={handleApply}
+        />
+        <div className="mt-2 min-w-0">
+          <ActiveFilterBar
+            selectedTags={appliedTags}
+            allTags={tagsData}
+            onRemove={(slug) => setAppliedTags((prev) => prev.filter((s) => s !== slug))}
+          />
+        </div>
       </div>
 
       {/* Room grid */}

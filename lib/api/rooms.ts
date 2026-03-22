@@ -17,6 +17,7 @@ export type RoomTag = {
   id: string;
   name: string;
   slug: string;
+  category: { id: string; name: string; slug: string } | null;
 };
 
 export type RoomParticipant = {

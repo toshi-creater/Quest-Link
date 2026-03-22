@@ -7,9 +7,18 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Loader2 } from "lucide-react";
 import type { Game } from "@/lib/mock-data";
 import { SingleGamePicker } from "@/components/ui/GamePicker";
+import { TagFilterToggle } from "@/components/ui/TagFilterToggle";
+import { TagFilterPanel } from "@/components/ui/TagFilterPanel";
+import { ActiveFilterBar } from "@/components/ui/ActiveFilterBar";
 import { createRoom } from "@/lib/api/rooms";
 
-type Tag = { id: string; name: string; slug: string; displayOrder: number };
+type Tag = {
+  id: string;
+  name: string;
+  slug: string;
+  displayOrder: number;
+  category: { id: string; name: string; slug: string } | null;
+};
 type TagsResponse = { data: Tag[] };
 
 async function fetchTags(): Promise<Tag[]> {
@@ -25,7 +34,9 @@ export default function NewRoomPage() {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [description, setDescription] = useState("");
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
+  const [pendingSlugs, setPendingSlugs] = useState<string[]>([]);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { data: tags = [] } = useQuery({
@@ -43,22 +54,37 @@ export default function NewRoomPage() {
     },
   });
 
-  const toggleTag = (id: string) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+  const togglePendingSlug = (slug: string) => {
+    setPendingSlugs((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
     );
+  };
+
+  const handlePanelToggle = () => {
+    if (!panelOpen) {
+      setPendingSlugs(selectedSlugs);
+    }
+    setPanelOpen((o) => !o);
+  };
+
+  const handleApply = () => {
+    setSelectedSlugs(pendingSlugs);
+    setPanelOpen(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGame) return;
     setErrorMessage(null);
+    const playStyleTagIds = tags
+      .filter((t) => selectedSlugs.includes(t.slug))
+      .map((t) => t.id);
     mutation.mutate({
       title,
       gameId: selectedGame.id,
       maxPlayers,
       description: description || undefined,
-      playStyleTagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+      playStyleTagIds: playStyleTagIds.length > 0 ? playStyleTagIds : undefined,
     });
   };
 
@@ -197,33 +223,38 @@ export default function NewRoomPage() {
                 （複数選択可）
               </span>
             </label>
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => {
-                const active = selectedTagIds.includes(tag.id);
-                return (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    onClick={() => toggleTag(tag.id)}
-                    className="rounded-full px-3 py-1.5 text-xs font-medium border transition-all"
-                    style={
-                      active
-                        ? {
-                            backgroundColor: "rgba(124,58,237,0.3)",
-                            color: "var(--accent-light)",
-                            borderColor: "rgba(124,58,237,0.6)",
-                          }
-                        : {
-                            backgroundColor: "transparent",
-                            color: "var(--text-secondary)",
-                            borderColor: "var(--border)",
-                          }
-                    }
-                  >
-                    {tag.name}
-                  </button>
-                );
-              })}
+            <div className="flex items-center gap-2">
+              <TagFilterToggle
+                selectedCount={selectedSlugs.length}
+                panelOpen={panelOpen}
+                onPanelToggle={handlePanelToggle}
+                label="タグを選択"
+              />
+              {selectedSlugs.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedSlugs([])}
+                  className="shrink-0 text-xs transition-opacity hover:opacity-70"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  すべてクリア
+                </button>
+              )}
+            </div>
+            <TagFilterPanel
+              tags={tags}
+              selectedTags={pendingSlugs}
+              onToggle={togglePendingSlug}
+              open={panelOpen}
+              onApply={handleApply}
+              applyLabel="決定"
+            />
+            <div className="mt-2 min-w-0">
+              <ActiveFilterBar
+                selectedTags={selectedSlugs}
+                allTags={tags}
+                onRemove={(slug) => setSelectedSlugs((prev) => prev.filter((s) => s !== slug))}
+              />
             </div>
           </div>
 

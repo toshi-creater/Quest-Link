@@ -43,6 +43,11 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slide-down {
+  from { max-height: 0; opacity: 0; overflow: hidden; }
+  to { max-height: 500px; opacity: 1; overflow: hidden; }
+}
+
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
@@ -64,6 +69,10 @@
   animation: slide-in-bottom var(--duration-state) var(--ease-out-quart) both;
 }
 
+@utility animate-slide-down {
+  animation: slide-down 150ms var(--ease-out-quart) both;
+}
+
 @utility animate-shimmer {
   background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
   background-size: 200% 100%;
@@ -72,6 +81,10 @@
 
 @utility animate-pulse-dot {
   animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@utility animate-scale-in-chip {
+  animation: scale-in 250ms ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
