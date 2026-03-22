@@ -111,13 +111,6 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
             </button>
           )}
         </div>
-        <div className="mt-2 min-w-0">
-          <ActiveFilterBar
-            selectedTags={appliedTags}
-            allTags={tagsData}
-            onRemove={(slug) => setAppliedTags((prev) => prev.filter((s) => s !== slug))}
-          />
-        </div>
         <TagFilterPanel
           tags={tagsData}
           selectedTags={pendingTags}
@@ -125,6 +118,13 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
           open={panelOpen}
           onApply={handleApply}
         />
+        <div className="mt-2 min-w-0">
+          <ActiveFilterBar
+            selectedTags={appliedTags}
+            allTags={tagsData}
+            onRemove={(slug) => setAppliedTags((prev) => prev.filter((s) => s !== slug))}
+          />
+        </div>
       </div>
 
       {/* Room grid */}

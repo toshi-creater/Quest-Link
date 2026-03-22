@@ -43,7 +43,7 @@ export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, ap
 
   return (
     <div
-      className="animate-fade-in-up mt-2 rounded-xl border p-4"
+      className="animate-slide-down mt-2 rounded-xl border p-4"
       style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
     >
       <div className="flex flex-col gap-4">
@@ -86,7 +86,7 @@ export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, ap
       </div>
 
       {onApply && (
-        <div className="mt-4 flex justify-end">
+        <div className="mt-6 flex justify-start">
           <button
             onClick={onApply}
             className="rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97]"

@@ -241,13 +241,6 @@ export default function NewRoomPage() {
                 </button>
               )}
             </div>
-            <div className="mt-2 min-w-0">
-              <ActiveFilterBar
-                selectedTags={selectedSlugs}
-                allTags={tags}
-                onRemove={(slug) => setSelectedSlugs((prev) => prev.filter((s) => s !== slug))}
-              />
-            </div>
             <TagFilterPanel
               tags={tags}
               selectedTags={pendingSlugs}
@@ -256,6 +249,13 @@ export default function NewRoomPage() {
               onApply={handleApply}
               applyLabel="決定"
             />
+            <div className="mt-2 min-w-0">
+              <ActiveFilterBar
+                selectedTags={selectedSlugs}
+                allTags={tags}
+                onRemove={(slug) => setSelectedSlugs((prev) => prev.filter((s) => s !== slug))}
+              />
+            </div>
           </div>
 
           {/* Submit */}

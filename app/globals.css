@@ -43,6 +43,11 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slide-down {
+  from { max-height: 0; opacity: 0; overflow: hidden; }
+  to { max-height: 500px; opacity: 1; overflow: hidden; }
+}
+
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
@@ -62,6 +67,10 @@
 
 @utility animate-slide-in-bottom {
   animation: slide-in-bottom var(--duration-state) var(--ease-out-quart) both;
+}
+
+@utility animate-slide-down {
+  animation: slide-down 150ms var(--ease-out-quart) both;
 }
 
 @utility animate-shimmer {
