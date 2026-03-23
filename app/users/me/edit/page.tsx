@@ -124,11 +124,11 @@ export default function EditProfilePage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-2xl px-4 py-4 sm:py-8 sm:px-6">
       {!isInitialSetup && (
         <Link
           href="/users/me"
-          className="mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
+          className="mb-3 sm:mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
           style={{ color: "var(--text-secondary)" }}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -137,19 +137,14 @@ export default function EditProfilePage() {
       )}
 
       <div
-        className="rounded-2xl border p-8"
+        className="rounded-2xl border p-4 sm:p-8"
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
-        <h1 className="mb-2 text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+        <h1 className="mb-2 text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
           {isInitialSetup ? "プロフィールを設定してください" : "プロフィール編集"}
         </h1>
-        {isInitialSetup && (
-          <p className="mb-6 text-sm" style={{ color: "var(--text-secondary)" }}>
-            ユーザー名を設定するとQuestLinkを利用できます
-          </p>
-        )}
 
-        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 sm:space-y-6">
           {/* Avatar preview */}
           <div className="flex items-center gap-4">
             <UserAvatar username={username || "?"} iconUrl={iconUrl || null} size="xl" />
@@ -196,7 +191,7 @@ export default function EditProfilePage() {
               </span>
             </label>
             <textarea
-              rows={4}
+              rows={3}
               placeholder="プレイスタイルや得意なゲームについて教えてください..."
               value={bio}
               onChange={(e) => setBio(e.target.value)}
@@ -266,7 +261,7 @@ export default function EditProfilePage() {
           )}
 
           {/* Buttons */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-1 sm:pt-2">
             {!isInitialSetup && (
               <Link
                 href="/users/me"

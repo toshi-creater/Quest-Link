@@ -114,7 +114,7 @@ export function ChatView({
 
   return (
     <div
-      className="flex h-[calc(100dvh-64px)] flex-col md:flex-row"
+      className="fixed inset-x-0 top-0 bottom-[calc(60px_+_env(safe-area-inset-bottom))] z-30 flex flex-col md:top-16 md:bottom-0 md:flex-row"
       style={{ backgroundColor: "var(--bg-base)" }}
     >
       {/* Sidebar */}
@@ -197,7 +197,7 @@ export function ChatView({
       </aside>
 
       {/* Chat area */}
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className="flex flex-1 flex-col min-w-0 min-h-0">
         {/* Mobile header */}
         <div
           className="flex items-center gap-3 border-b px-4 py-3 md:hidden"
@@ -259,49 +259,57 @@ export function ChatView({
             return (
               <div
                 key={msg.id}
-                className={`flex items-end gap-2 ${isMe ? "flex-row-reverse" : "flex-row"} ${msg.isNew ? "animate-slide-in-bottom" : ""}`}
+                className={`flex flex-col gap-1 ${isMe ? "items-end" : "items-start"} ${msg.isNew ? "animate-slide-in-bottom" : ""}`}
               >
-                {!isMe && msg.user && (
-                  <UserAvatar
-                    username={msg.user.username}
-                    iconUrl={msg.user.iconUrl}
-                    size="sm"
-                  />
-                )}
-                <div
-                  className={`max-w-[70%] min-w-0 ${isMe ? "items-end" : "items-start"} flex flex-col gap-1`}
-                >
+                <div className={`flex items-end gap-2 max-w-[70%] ${isMe ? "flex-row-reverse" : "flex-row"}`}>
                   {!isMe && msg.user && (
-                    <span className="truncate text-xs" style={{ color: "var(--text-muted)" }}>
-                      {msg.user.username}
-                    </span>
+                    <UserAvatar
+                      username={msg.user.username}
+                      iconUrl={msg.user.iconUrl}
+                      size="sm"
+                    />
                   )}
                   <div
-                    className="rounded-2xl px-4 py-2.5 text-sm leading-relaxed break-words"
-                    style={
-                      isMe
-                        ? {
-                            backgroundColor: "var(--accent)",
-                            color: "#fff",
-                            borderBottomRightRadius: "4px",
-                          }
-                        : {
-                            backgroundColor: "var(--bg-card)",
-                            color: "var(--text-primary)",
-                            border: "1px solid var(--border)",
-                            borderBottomLeftRadius: "4px",
-                          }
-                    }
+                    className={`min-w-0 ${isMe ? "items-end" : "items-start"} flex flex-col gap-1`}
                   >
-                    {msg.content}
+                    {!isMe && msg.user && (
+                      <span className="truncate text-xs" style={{ color: "var(--text-muted)" }}>
+                        {msg.user.username}
+                      </span>
+                    )}
+                    <div
+                      className="rounded-2xl px-3 py-2 text-sm leading-relaxed break-words"
+                      style={
+                        isMe
+                          ? {
+                              backgroundColor: "var(--accent)",
+                              color: "#fff",
+                              borderBottomRightRadius: "4px",
+                            }
+                          : {
+                              backgroundColor: "var(--bg-card)",
+                              color: "var(--text-primary)",
+                              border: "1px solid var(--border)",
+                              borderBottomLeftRadius: "4px",
+                            }
+                      }
+                    >
+                      {msg.content}
+                    </div>
                   </div>
-                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    {new Date(msg.createdAt).toLocaleTimeString("ja-JP", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
                 </div>
+                <span
+                  className="text-xs"
+                  style={{
+                    color: "var(--text-muted)",
+                    paddingLeft: isMe ? undefined : "40px",
+                  }}
+                >
+                  {new Date(msg.createdAt).toLocaleTimeString("ja-JP", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
               </div>
             );
           })}

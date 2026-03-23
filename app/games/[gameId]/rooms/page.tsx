@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getGameById } from "@/lib/games";
-import { prisma } from "@/lib/prisma";
 import { RoomsFilter } from "@/app/rooms/RoomsFilter";
 
 type Props = {
@@ -13,13 +12,9 @@ export default async function GameRoomsPage({ params }: Props) {
   const game = await getGameById(gameId);
   if (!game) notFound();
 
-  const roomCount = await prisma.room.count({
-    where: { gameId, status: "waiting" },
-  });
-
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-8 flex items-end gap-5">
+      <div className="mb-8 flex items-center gap-5">
         <div className="h-24 w-16 shrink-0 overflow-hidden rounded-xl">
           {game.coverImageUrl ? (
             <Image
@@ -60,12 +55,9 @@ export default async function GameRoomsPage({ params }: Props) {
           >
             ゲーム別部屋一覧
           </p>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+          <h1 className="md:text-2xl text-xl font-bold" style={{ color: "var(--text-primary)" }}>
             {game.name}
           </h1>
-          <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-            {roomCount > 0 ? `${roomCount} 部屋が参加者を募集中` : "現在募集中の部屋はありません"}
-          </p>
         </div>
       </div>
 
