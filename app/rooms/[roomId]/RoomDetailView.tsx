@@ -27,13 +27,13 @@ export function RoomDetailView({ roomId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-5xl px-4 py-4 sm:py-8 sm:px-6">
         <div className="mb-6 h-5 w-20 rounded animate-shimmer" />
         <div className="grid gap-6 md:grid-cols-[1fr_260px] lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
               <div className="h-32 animate-shimmer" />
-              <div className="px-6 py-5 space-y-3">
+              <div className="px-4 py-4 sm:px-6 sm:py-5 space-y-3">
                 <div className="h-6 w-2/3 rounded animate-shimmer" />
                 <div className="h-4 w-full rounded animate-shimmer" />
                 <div className="h-4 w-3/4 rounded animate-shimmer" />
@@ -84,8 +84,8 @@ export function RoomDetailView({ roomId }: Props) {
   const isHost = room.host.id === currentUserId;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      {/* Back */}
+    <div className="mx-auto max-w-5xl px-4 py-4 sm:py-8 sm:px-6">
+      {/* Back
       <Link
         href="/rooms"
         className="mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
@@ -93,11 +93,11 @@ export function RoomDetailView({ roomId }: Props) {
       >
         <ArrowLeft className="h-4 w-4" />
         部屋一覧
-      </Link>
+      </Link> */}
 
-      <div className="grid gap-6 md:grid-cols-[1fr_260px] lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-[1fr_260px] lg:grid-cols-3">
         {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Room Info */}
           <div
             className="rounded-2xl border overflow-hidden animate-fade-in-up"
@@ -105,7 +105,7 @@ export function RoomDetailView({ roomId }: Props) {
           >
             {/* Game cover header */}
             <div
-              className="relative h-32 flex items-end px-6 pb-4 overflow-hidden"
+              className="relative h-32 flex items-end px-4 pb-3 sm:px-6 sm:pb-4 overflow-hidden"
               style={{ backgroundColor: "rgba(124,58,237,0.08)" }}
             >
               {room.game.coverImageUrl && (
@@ -149,8 +149,8 @@ export function RoomDetailView({ roomId }: Props) {
             </div>
 
             {/* Room details */}
-            <div className="px-6 py-5">
-              <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
+            <div className="px-4 py-4 sm:px-6 sm:py-5">
+              <h1 className="text-lg sm:text-xl font-bold" style={{ color: "var(--text-primary)" }}>
                 {room.title}
               </h1>
               {room.description && (
@@ -196,9 +196,6 @@ export function RoomDetailView({ roomId }: Props) {
                   <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                     チャットルームへ
                   </p>
-                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    リアルタイムでメッセージを送受信
-                  </p>
                 </div>
               </div>
               <ArrowLeft className="h-4 w-4 rotate-180" style={{ color: "var(--text-muted)" }} />
@@ -209,7 +206,7 @@ export function RoomDetailView({ roomId }: Props) {
         {/* Sidebar: Participants */}
         <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: "160ms" }}>
           <div
-            className="rounded-2xl border p-5"
+            className="rounded-2xl border p-4 sm:p-5"
             style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
           >
             <div className="flex items-center justify-between mb-4">

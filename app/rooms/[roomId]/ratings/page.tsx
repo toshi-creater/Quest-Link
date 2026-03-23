@@ -71,9 +71,6 @@ export default async function RatingsPage({ params }: Props) {
         <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
           セッション終了
         </h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-          一緒にプレイした仲間を評価しましょう（任意）
-        </p>
         <div
           className="mt-3 flex items-center justify-center gap-1.5 text-xs"
           style={{ color: hoursLeft <= 6 ? "#f97316" : "var(--text-muted)" }}

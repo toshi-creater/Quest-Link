@@ -95,30 +95,18 @@ export default function NewRoomPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
-      {/* Back */}
-      <Link
-        href="/rooms"
-        className="mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
-        style={{ color: "var(--text-secondary)" }}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        部屋一覧に戻る
-      </Link>
+    <div className="mx-auto max-w-2xl px-4 py-4 sm:py-8 sm:px-6">
+
+      <div className="mb-4 sm:mb-8 md:text-left text-center">
+        <h1 className="text-lg sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+          部屋作成
+        </h1>
+      </div>
 
       <div
-        className="rounded-2xl border p-8"
+        className="rounded-2xl border p-4 sm:p-8"
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-            部屋を作る
-          </h1>
-          <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-            一緒にプレイする仲間を募集しましょう
-          </p>
-        </div>
-
         {errorMessage && (
           <div
             className="mb-4 rounded-xl border px-4 py-3 text-sm"
@@ -128,7 +116,7 @@ export default function NewRoomPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Game Picker */}
           <div>
             <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
@@ -137,11 +125,8 @@ export default function NewRoomPage() {
             <SingleGamePicker
               value={selectedGame}
               onChange={setSelectedGame}
-              placeholder="ゲームを選択（IGDBから検索）"
+              placeholder="ゲームを選択"
             />
-            <p className="mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-              ゲーム名を入力して検索し、リストから選択してください
-            </p>
           </div>
 
           {/* Title */}
@@ -153,7 +138,7 @@ export default function NewRoomPage() {
               type="text"
               required
               maxLength={100}
-              placeholder="例: 深夜FPS部屋 スモーク使える方歓迎"
+              placeholder=""
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
@@ -191,28 +176,9 @@ export default function NewRoomPage() {
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
+            {/* <p className="mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
               選択中: {maxPlayers}人
-            </p>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-              部屋の説明{" "}
-              <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
-                （任意）
-              </span>
-            </label>
-            <textarea
-              rows={3}
-              placeholder="参加条件・使用ロール・プレイ方針などを記入..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength={500}
-              className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
-              style={inputStyle}
-            />
+            </p> */}
           </div>
 
           {/* Play Style Tags */}
@@ -258,8 +224,27 @@ export default function NewRoomPage() {
             </div>
           </div>
 
+          {/* Description */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              部屋の説明{" "}
+              <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
+                （任意）
+              </span>
+            </label>
+            <textarea
+              rows={2}
+              placeholder=""
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={500}
+              className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
+              style={inputStyle}
+            />
+          </div>
+
           {/* Submit */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-1 sm:pt-2">
             <Link
               href="/rooms"
               className="flex-1 rounded-xl border px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"

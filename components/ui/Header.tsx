@@ -25,7 +25,7 @@ export function Header() {
 
   return (
     <header
-      className="sticky top-0 z-50 h-16 border-b block"
+      className={`sticky top-0 z-50 h-16 border-b${pathname !== "/" ? " hidden md:block" : ""}`}
       style={{
         backgroundColor: "var(--bg-base)",
         borderColor: "var(--border)",

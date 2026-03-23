@@ -30,28 +30,25 @@ export default async function HistoryPage() {
   });
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl px-4 py-4 sm:py-8 sm:px-6">
       <Link
         href="/users/me"
-        className="mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
+        className="mb-3 sm:mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
         style={{ color: "var(--text-secondary)" }}
       >
         <ArrowLeft className="h-4 w-4" />
         プロフィールに戻る
       </Link>
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
           参加履歴
         </h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-          過去に参加した部屋の一覧
-        </p>
       </div>
 
       {participations.length === 0 ? (
         <div
-          className="rounded-2xl border px-6 py-16 text-center"
+          className="rounded-2xl border px-4 py-10 sm:px-6 sm:py-16 text-center"
           style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
         >
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
@@ -76,7 +73,7 @@ export default async function HistoryPage() {
               return (
                 <li
                   key={`${p.room.id}-${idx}`}
-                  className="flex items-center gap-4 px-5 py-4"
+                  className="flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4"
                   style={{ borderColor: "var(--border)" }}
                 >
                   <GameCover game={p.room.game} size="md" />

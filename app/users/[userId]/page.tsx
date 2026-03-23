@@ -39,8 +39,8 @@ export default function UserProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 space-y-6">
-        <div className="rounded-2xl border p-6" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+      <div className="mx-auto max-w-3xl px-4 py-4 sm:py-8 sm:px-6 space-y-6">
+        <div className="rounded-2xl border p-4 sm:p-6" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
             <div className="h-20 w-20 rounded-full animate-shimmer shrink-0" />
             <div className="flex-1 space-y-3 w-full">
@@ -70,10 +70,10 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl px-4 py-4 sm:py-8 sm:px-6">
       <Link
         href="/rooms"
-        className="mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
+        className="mb-3 sm:mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
         style={{ color: "var(--text-secondary)" }}
       >
         <ArrowLeft className="h-4 w-4" />
@@ -82,13 +82,13 @@ export default function UserProfilePage() {
 
       {/* Profile Card */}
       <div
-        className="mb-6 rounded-2xl border p-6"
+        className="mb-4 sm:mb-6 rounded-2xl border p-4 sm:p-6"
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
           <UserAvatar username={user.username} iconUrl={user.iconUrl} size="xl" />
           <div className="flex-1 text-center sm:text-left">
-            <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+            <h1 className="text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
               {user.username}
             </h1>
             <div className="mt-1.5">
@@ -120,12 +120,12 @@ export default function UserProfilePage() {
           className="mb-6 rounded-2xl border"
           style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
         >
-          <div className="border-b px-6 py-4" style={{ borderColor: "var(--border)" }}>
+          <div className="border-b px-4 py-3 sm:px-6 sm:py-4" style={{ borderColor: "var(--border)" }}>
             <h2 className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>
               プレイしているゲーム
             </h2>
           </div>
-          <div className="flex flex-wrap gap-3 p-5">
+          <div className="flex flex-wrap gap-3 p-3 sm:p-5">
             {user.games.map((game) => (
               <div
                 key={game.id}
@@ -143,20 +143,20 @@ export default function UserProfilePage() {
       )}
 
       {/* Stats */}
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
           { label: "平均評価", value: user.avgRating > 0 ? user.avgRating.toFixed(1) : "-", sub: "/ 5.0" },
           { label: "評価件数", value: user.ratingCount.toString(), sub: "件" },
         ].map(({ label, value, sub }) => (
           <div
             key={label}
-            className="rounded-xl border p-4 text-center"
+            className="rounded-xl border p-3 sm:p-4 text-center"
             style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
           >
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
               {label}
             </p>
-            <p className="mt-1 text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+            <p className="mt-1 text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
               {value}
               <span className="text-sm font-normal" style={{ color: "var(--text-secondary)" }}>
                 {sub}
@@ -171,13 +171,13 @@ export default function UserProfilePage() {
         className="rounded-2xl border"
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
-        <div className="flex items-center gap-2 border-b px-6 py-4" style={{ borderColor: "var(--border)" }}>
+        <div className="flex items-center gap-2 border-b px-4 py-3 sm:px-6 sm:py-4" style={{ borderColor: "var(--border)" }}>
           <Star className="h-4 w-4" style={{ fill: "#eab308", color: "#eab308" }} />
           <h2 className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>
             受け取った評価
           </h2>
         </div>
-        <div className="px-6 py-8 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+        <div className="px-4 py-6 sm:px-6 sm:py-8 text-center text-sm" style={{ color: "var(--text-muted)" }}>
           まだ評価がありません
         </div>
       </div>

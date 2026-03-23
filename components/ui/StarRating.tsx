@@ -61,12 +61,15 @@ type DisplayProps = {
 export function RatingDisplay({ avgRating, ratingCount, size = "md" }: DisplayProps) {
   if (ratingCount === 0 || avgRating === null) {
     return (
-      <span
-        className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
-        style={{ backgroundColor: "rgba(34,197,94,0.15)", color: "#4ade80" }}
-      >
-        NEW
-      </span>
+      <div className="flex items-center gap-1.5">
+        <Star
+          className={size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"}
+          style={{ fill: "transparent", color: "var(--text-muted)" }}
+        />
+        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+          評価なし
+        </span>
+      </div>
     );
   }
 

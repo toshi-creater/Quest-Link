@@ -14,15 +14,12 @@ export default async function GamesPage() {
   const roomCounts = Object.fromEntries(rawCounts.map((r) => [r.gameId, r._count.id]));
 
   return (
-    <main className="mx-auto max-w-screen-xl px-4 py-10 pb-24 md:pb-10">
+    <main className="mx-auto max-w-screen-xl px-4 md:py-10 py-5 pb-24 md:pb-10">
       {/* Page header */}
-      <div className="mb-8 space-y-1">
-        <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-          ゲームを選んで仲間を見つけよう
+      <div className="mb-4 sm:mb-8 md:text-left text-center">
+        <h1 className="text-lg sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+          ゲームを選択
         </h1>
-        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-          プレイしたいゲームを選択して、部屋を探そう
-        </p>
       </div>
 
       <GamesGrid games={games} roomCounts={roomCounts} />
