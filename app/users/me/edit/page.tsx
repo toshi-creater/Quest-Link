@@ -43,8 +43,8 @@ export default function EditProfilePage() {
   const router = useRouter();
   const { data: session, update, status } = useSession();
 
-  const currentUsername = session?.user?.username ?? "";
-  const isInitialSetup = status === "authenticated" && /^\d{15,}$/.test(currentUsername);
+  const isInitialSetup =
+    status === "authenticated" && (session?.user?.needsProfileSetup ?? false);
 
   const { data: profile } = useQuery({
     queryKey: ["users", "me"],
@@ -57,7 +57,7 @@ export default function EditProfilePage() {
     queryFn: fetchPlayStyleTags,
   });
 
-  const [username, setUsername] = useState(isInitialSetup ? "" : currentUsername);
+  const [username, setUsername] = useState(isInitialSetup ? "" : (session?.user?.username ?? ""));
   const [iconUrl, setIconUrl] = useState(session?.user?.iconUrl ?? "");
   const [bio, setBio] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);

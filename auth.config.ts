@@ -1,8 +1,16 @@
 import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
+import Twitter from "next-auth/providers/twitter";
+import Discord from "next-auth/providers/discord";
 
 export const authConfig = {
-  providers: [Google],
+  providers: [
+    Google,
+    Twitter,
+    Discord({
+      authorization: { params: { scope: "identify email" } },
+    }),
+  ],
   pages: {
     signIn: "/login",
   },
@@ -12,6 +20,7 @@ export const authConfig = {
       if (token["username"]) {
         session.user.username = token["username"] as string;
       }
+      session.user.needsProfileSetup = (token["needsProfileSetup"] as boolean | undefined) ?? false;
       return session;
     },
     authorized({ auth, request: { nextUrl } }) {
@@ -30,9 +39,8 @@ export const authConfig = {
 
       if (!isLoggedIn) return false;
 
-      // Google sub IDのまま（初回ログイン未設定）→ プロフィール設定画面へ強制
-      const username = auth?.user?.username ?? "";
-      const needsProfileSetup = /^\d{15,}$/.test(username);
+      // 初回ログイン未設定 → プロフィール設定画面へ強制
+      const needsProfileSetup = auth?.user?.needsProfileSetup ?? false;
       if (needsProfileSetup && !isEditPage) {
         return Response.redirect(new URL("/users/me/edit", nextUrl));
       }
