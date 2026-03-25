@@ -40,7 +40,7 @@ describe("chatStore", () => {
     it("messages に追加される", () => {
       const msg = makeMsg("1");
       useChatStore.getState().addMessage(msg);
-      expect(useChatStore.getState().messages).toEqual([msg]);
+      expect(useChatStore.getState().messages).toEqual([{ ...msg, isNew: true }]);
     });
 
     it("複数回呼ぶと順序が保たれる", () => {
@@ -50,7 +50,11 @@ describe("chatStore", () => {
       useChatStore.getState().addMessage(msg1);
       useChatStore.getState().addMessage(msg2);
       useChatStore.getState().addMessage(msg3);
-      expect(useChatStore.getState().messages).toEqual([msg1, msg2, msg3]);
+      expect(useChatStore.getState().messages).toEqual([
+        { ...msg1, isNew: true },
+        { ...msg2, isNew: true },
+        { ...msg3, isNew: true },
+      ]);
     });
 
     it("同一 id のメッセージは重複追加されない", () => {
