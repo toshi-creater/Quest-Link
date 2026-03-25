@@ -7,6 +7,7 @@ declare module "next-auth" {
       username: string;
       iconUrl: string | null;
       avgRating: number;
+      needsProfileSetup: boolean;
     } & DefaultSession["user"];
   }
 }
@@ -17,5 +18,6 @@ declare module "next-auth/jwt" {
     username?: string;
     iconUrl?: string | null;
     avgRating?: number;
+    needsProfileSetup?: boolean;
   }
 }
