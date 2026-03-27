@@ -10,18 +10,10 @@ import { type Game } from "@/lib/mock-data";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { MultiGamePicker } from "@/components/ui/GamePicker";
 
-type PlayStyleTag = {
-  id: string;
-  name: string;
-  slug: string;
-  displayOrder: number;
-};
-
 type UserProfile = {
   username: string;
   iconUrl: string | null;
   bio: string | null;
-  playStyleTags: { id: string; name: string; slug: string }[];
   games: Game[];
 };
 
@@ -32,56 +24,33 @@ async function fetchMyProfile(): Promise<UserProfile> {
   return json.data;
 }
 
-async function fetchPlayStyleTags(): Promise<PlayStyleTag[]> {
-  const res = await fetch("/api/v1/play-style-tags");
-  if (!res.ok) throw new Error("failed");
-  const json = (await res.json()) as { data: PlayStyleTag[] };
-  return json.data;
-}
-
 export default function EditProfilePage() {
   const router = useRouter();
   const { data: session, update, status } = useSession();
 
-  const isInitialSetup =
-    status === "authenticated" && (session?.user?.needsProfileSetup ?? false);
-
   const { data: profile } = useQuery({
     queryKey: ["users", "me"],
     queryFn: fetchMyProfile,
-    enabled: status === "authenticated" && !isInitialSetup,
+    enabled: status === "authenticated",
   });
 
-  const { data: availableTags = [] } = useQuery({
-    queryKey: ["play-style-tags"],
-    queryFn: fetchPlayStyleTags,
-  });
-
-  const [username, setUsername] = useState(isInitialSetup ? "" : (session?.user?.username ?? ""));
+  const [username, setUsername] = useState(session?.user?.username ?? "");
   const [iconUrl, setIconUrl] = useState(session?.user?.iconUrl ?? "");
   const [bio, setBio] = useState("");
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [selectedGames, setSelectedGames] = useState<Game[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (profile && !initialized && !isInitialSetup) {
+    if (profile && !initialized) {
       setUsername(profile.username);
       setIconUrl(profile.iconUrl ?? "");
       setBio(profile.bio ?? "");
-      setSelectedTagIds(profile.playStyleTags.map((t) => t.id));
       setSelectedGames(profile.games);
       setInitialized(true);
     }
-  }, [profile, initialized, isInitialSetup]);
-
-  const toggleTag = (id: string) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
-    );
-  };
+  }, [profile, initialized]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -96,7 +65,6 @@ export default function EditProfilePage() {
           username: username.trim(),
           bio: bio || null,
           iconUrl: iconUrl || null,
-          playStyleTagIds: selectedTagIds,
           gameIds: selectedGames.map((g) => g.id),
         }),
       });
@@ -109,7 +77,7 @@ export default function EditProfilePage() {
       }
 
       await update({ username: username.trim() });
-      router.push(isInitialSetup ? "/rooms" : "/users/me");
+      router.push("/users/me");
     } catch {
       setError("通信エラーが発生しました。再度お試しください");
     } finally {
@@ -125,23 +93,21 @@ export default function EditProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-4 sm:py-8 sm:px-6">
-      {!isInitialSetup && (
-        <Link
-          href="/users/me"
-          className="mb-3 sm:mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          プロフィールに戻る
-        </Link>
-      )}
+      <Link
+        href="/users/me"
+        className="mb-3 sm:mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
+        style={{ color: "var(--text-secondary)" }}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        プロフィールに戻る
+      </Link>
 
       <div
         className="rounded-2xl border p-4 sm:p-8"
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
         <h1 className="mb-2 text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-          {isInitialSetup ? "プロフィールを設定してください" : "プロフィール編集"}
+          プロフィール編集
         </h1>
 
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 sm:space-y-6">
@@ -201,44 +167,6 @@ export default function EditProfilePage() {
             />
           </div>
 
-          {/* Play Style Tags */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-              プレイスタイル{" "}
-              <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
-                （複数選択可）
-              </span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {availableTags.map((tag) => {
-                const active = selectedTagIds.includes(tag.id);
-                return (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    onClick={() => toggleTag(tag.id)}
-                    className="rounded-full border px-3 py-1.5 text-xs font-medium transition-all"
-                    style={
-                      active
-                        ? {
-                            backgroundColor: "rgba(124,58,237,0.3)",
-                            color: "var(--accent-light)",
-                            borderColor: "rgba(124,58,237,0.6)",
-                          }
-                        : {
-                            backgroundColor: "transparent",
-                            color: "var(--text-secondary)",
-                            borderColor: "var(--border)",
-                          }
-                    }
-                  >
-                    {tag.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Game Picker */}
           <div>
             <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
@@ -262,15 +190,13 @@ export default function EditProfilePage() {
 
           {/* Buttons */}
           <div className="flex gap-3 pt-1 sm:pt-2">
-            {!isInitialSetup && (
-              <Link
-                href="/users/me"
-                className="flex-1 rounded-xl border px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"
-                style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
-              >
-                キャンセル
-              </Link>
-            )}
+            <Link
+              href="/users/me"
+              className="flex-1 rounded-xl border px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"
+              style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+            >
+              キャンセル
+            </Link>
             <button
               type="submit"
               disabled={saving}
@@ -281,7 +207,7 @@ export default function EditProfilePage() {
               }}
             >
               <Save className="h-4 w-4" />
-              {saving ? "保存中..." : isInitialSetup ? "はじめる" : "保存する"}
+              {saving ? "保存中..." : "保存する"}
             </button>
           </div>
         </form>
