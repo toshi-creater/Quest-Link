@@ -11,7 +11,7 @@ export function Header() {
   const pathname = usePathname();
   const { status } = useSession();
 
-  if (pathname === "/login") return null;
+  if (pathname === "/login" || pathname === "/onboarding") return null;
 
   const isAuthenticated = status === "authenticated";
 

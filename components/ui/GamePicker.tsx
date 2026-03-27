@@ -384,3 +384,149 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
     </div>
   );
 }
+
+// ─── ゲーム複数選択（グリッド型・オンボーディング用）─────────────────────────
+
+type GridGamePickerProps = {
+  value: Game[];
+  onChange: (games: Game[]) => void;
+  max?: number;
+};
+
+export function GridGamePicker({ value, onChange, max = 20 }: GridGamePickerProps) {
+  const [query, setQuery] = useState("");
+  const [allGames, setAllGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    fetch("/api/v1/games")
+      .then((r) => r.json())
+      .then((json: { data: Game[] }) => setAllGames(json.data))
+      .catch(() => setAllGames([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = query.trim()
+    ? allGames.filter((g) => g.name.toLowerCase().includes(query.trim().toLowerCase()))
+    : allGames;
+
+  const toggle = (game: Game) => {
+    const selected = value.some((g) => g.id === game.id);
+    if (selected) {
+      onChange(value.filter((g) => g.id !== game.id));
+    } else if (value.length < max) {
+      onChange([...value, game]);
+    }
+  };
+
+  const handleImgError = (gameId: string) => {
+    setImgErrors((prev) => new Set(prev).add(gameId));
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* 検索バー + カウンタ */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+            style={{ color: "var(--text-secondary)" }}
+          />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="ゲームを検索..."
+            className="w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-[var(--accent)]"
+            style={{
+              backgroundColor: "var(--bg-input)",
+              borderColor: "var(--border)",
+              color: "var(--text-primary)",
+            }}
+          />
+        </div>
+        <span className="shrink-0 text-sm" style={{ color: "var(--text-secondary)" }}>
+          {value.length}/{max}
+        </span>
+      </div>
+
+      {/* グリッド（スクロール可能） */}
+      <div className="overflow-y-auto rounded-xl" style={{ maxHeight: "320px" }}>
+        {loading ? (
+          <p className="py-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+            読み込み中...
+          </p>
+        ) : filtered.length === 0 ? (
+          <p className="py-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+            見つかりませんでした
+          </p>
+        ) : (
+          <div className="grid grid-cols-3 gap-3 p-0.5">
+            {filtered.map((game) => {
+              const isSelected = value.some((g) => g.id === game.id);
+              const hasError = imgErrors.has(game.id);
+              return (
+                <button
+                  key={game.id}
+                  type="button"
+                  onClick={() => toggle(game)}
+                  className="group text-left"
+                >
+                  {/* カバー画像（選択枠はここのみ） */}
+                  <div
+                    className={clsx(
+                      "relative aspect-[3/4] w-full overflow-hidden rounded-xl transition-all",
+                      isSelected && "ring-2 ring-[var(--accent)]"
+                    )}
+                  >
+                    {!hasError && game.coverImageUrl ? (
+                      <Image
+                        src={game.coverImageUrl}
+                        alt={game.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 33vw, 20vw"
+                        onError={() => handleImgError(game.id)}
+                      />
+                    ) : (
+                      <div
+                        className="flex h-full w-full items-center justify-center"
+                        style={{ backgroundColor: "rgba(124,58,237,0.15)" }}
+                      >
+                        <Gamepad2 className="h-8 w-8 opacity-40" style={{ color: "var(--accent)" }} />
+                      </div>
+                    )}
+
+                    {/* 選択オーバーレイ */}
+                    {isSelected && (
+                      <div
+                        className="absolute inset-0 flex items-center justify-center"
+                        style={{ backgroundColor: "rgba(124,58,237,0.5)" }}
+                      >
+                        <Check className="h-8 w-8 text-white" />
+                      </div>
+                    )}
+
+                    {/* ホバーオーバーレイ（未選択時） */}
+                    {!isSelected && (
+                      <div className="absolute inset-0 bg-black/30 opacity-0 transition-opacity group-hover:opacity-100" />
+                    )}
+                  </div>
+
+                  {/* ゲーム名 */}
+                  <p
+                    className="mt-1.5 truncate text-xs"
+                    style={{ color: isSelected ? "var(--accent-light)" : "var(--text-secondary)" }}
+                  >
+                    {game.name}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
