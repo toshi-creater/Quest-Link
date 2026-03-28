@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Clock, CheckCircle } from "@phosphor-icons/react";
+import { Clock, CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { RatingForm } from "./RatingForm";

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CaretRight } from "@phosphor-icons/react";
+import { CaretRight } from "@phosphor-icons/react/dist/ssr";
 import { Prisma } from "@prisma/client";
 import { connection } from "next/server";
 import { getPopularGames } from "@/lib/games";

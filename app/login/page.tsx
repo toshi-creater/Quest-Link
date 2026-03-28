@@ -1,4 +1,4 @@
-import { Lightning } from "@phosphor-icons/react";
+import { Lightning } from "@phosphor-icons/react/dist/ssr";
 import { signIn } from "@/auth";
 
 type Props = {

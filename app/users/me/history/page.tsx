@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Calendar } from "@phosphor-icons/react";
+import { ArrowLeft, Calendar } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
