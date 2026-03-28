@@ -429,7 +429,7 @@ export function GridGamePicker({ value, onChange, max = 20 }: GridGamePickerProp
       {/* 検索バー + カウンタ */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search
+          <MagnifyingGlass
             className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
             style={{ color: "var(--text-secondary)" }}
           />
@@ -494,7 +494,7 @@ export function GridGamePicker({ value, onChange, max = 20 }: GridGamePickerProp
                         className="flex h-full w-full items-center justify-center"
                         style={{ backgroundColor: "rgba(124,58,237,0.15)" }}
                       >
-                        <Gamepad2 className="h-8 w-8 opacity-40" style={{ color: "var(--accent)" }} />
+                        <GameController className="h-8 w-8 opacity-40" style={{ color: "var(--accent)" }} />
                       </div>
                     )}
 
