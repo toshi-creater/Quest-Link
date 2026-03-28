@@ -2,8 +2,9 @@
 
 export type RoomGame = {
   id: string;
+  igdbId: number;
   name: string;
-  coverImageUrl: string | null;
+  coverUrl: string | null;
 };
 
 export type RoomHost = {
@@ -17,7 +18,6 @@ export type RoomTag = {
   id: string;
   name: string;
   slug: string;
-  category: { id: string; name: string; slug: string } | null;
 };
 
 export type RoomParticipant = {
@@ -154,15 +154,11 @@ export async function leaveRoom(roomId: string): Promise<void> {
   }
 }
 
-export type CurrentRoomResponse = {
-  data: RoomDetail | null;
-};
-
-export async function fetchCurrentRoom(): Promise<CurrentRoomResponse> {
+export async function fetchCurrentRoom(): Promise<RoomDetailResponse | null> {
   const res = await fetch("/api/v1/rooms/current", {
     credentials: "include",
   });
-  if (res.status === 401) return { data: null };
+  if (res.status === 404) return null;
   if (!res.ok) throw new Error("参加中の部屋の取得に失敗しました");
-  return res.json() as Promise<CurrentRoomResponse>;
+  return res.json() as Promise<RoomDetailResponse>;
 }

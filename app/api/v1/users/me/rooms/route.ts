@@ -9,6 +9,44 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
+  const active = searchParams.get("active") === "true";
+
+  if (active) {
+    const participation = await prisma.roomParticipant.findFirst({
+      where: { userId: session.user.id, leftAt: null },
+      orderBy: { joinedAt: "desc" },
+      select: {
+        isHost: true,
+        joinedAt: true,
+        leftAt: true,
+        room: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            game: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    const data = participation
+      ? [
+          {
+            roomId: participation.room.id,
+            title: participation.room.title,
+            gameTitle: participation.room.game.name,
+            status: participation.room.status,
+            isHost: participation.isHost,
+            joinedAt: participation.joinedAt,
+            leftAt: participation.leftAt,
+          },
+        ]
+      : [];
+
+    return NextResponse.json({ data, meta: { total: data.length, page: 1, limit: 1 } });
+  }
+
   const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
   const limit = Math.min(
     100,

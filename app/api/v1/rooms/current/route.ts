@@ -11,7 +11,7 @@ const roomSelect = {
   status: true,
   createdAt: true,
   closedAt: true,
-  game: { select: { id: true, name: true, coverImageUrl: true } },
+  game: { select: { id: true, igdbId: true, name: true, coverImageUrl: true } },
   host: { select: { id: true, username: true, iconUrl: true, avgRating: true } },
   playStyleTags: {
     select: { tag: { select: { id: true, name: true, slug: true } } },
@@ -49,9 +49,9 @@ function formatRoom(room: RawRoom) {
     playStyleTags: room.playStyleTags.map((t) => t.tag),
     participants: room.participants.map((p) => ({
       userId: p.userId,
-      username: p.user?.username ?? "",
-      iconUrl: p.user?.iconUrl ?? null,
-      avgRating: p.user?.avgRating !== null && p.user?.avgRating !== undefined ? Number(p.user.avgRating) : null,
+      username: p.user.username,
+      iconUrl: p.user.iconUrl,
+      avgRating: p.user.avgRating !== null ? Number(p.user.avgRating) : null,
       isHost: p.isHost,
       joinedAt: p.joinedAt,
     })),
@@ -61,23 +61,35 @@ function formatRoom(room: RawRoom) {
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "認証が必要です" } }, { status: 401 });
+    return NextResponse.json(
+      { error: { code: "UNAUTHORIZED", message: "認証が必要です" } },
+      { status: 401 }
+    );
   }
 
-  const participant = await prisma.roomParticipant.findFirst({
-    where: {
-      userId: session.user.id,
-      leftAt: null,
-      room: { status: { not: "closed" } },
-    },
-    select: {
-      room: { select: roomSelect },
-    },
+  const participation = await prisma.roomParticipant.findFirst({
+    where: { userId: session.user.id, leftAt: null },
+    select: { roomId: true },
   });
 
-  if (!participant) {
-    return NextResponse.json({ data: null });
+  if (!participation) {
+    return NextResponse.json(
+      { error: { code: "NOT_IN_ROOM", message: "現在参加中の部屋はありません" } },
+      { status: 404 }
+    );
   }
 
-  return NextResponse.json({ data: formatRoom(participant.room) });
+  const room = await prisma.room.findUnique({
+    where: { id: participation.roomId },
+    select: roomSelect,
+  });
+
+  if (!room) {
+    return NextResponse.json(
+      { error: { code: "ROOM_NOT_FOUND", message: "部屋が存在しません" } },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json({ data: formatRoom(room) });
 }

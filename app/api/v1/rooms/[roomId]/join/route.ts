@@ -43,13 +43,20 @@ export async function POST(_request: Request, { params }: RouteParams) {
         // SELECT FOR UPDATE でロックを取得し競合状態を防ぐ
         await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${roomId}::uuid FOR UPDATE`;
 
-        const [currentCount, existing] = await Promise.all([
+        const [currentCount, existing, activeInAnotherRoom] = await Promise.all([
           tx.roomParticipant.count({ where: { roomId, leftAt: null } }),
           tx.roomParticipant.findFirst({ where: { roomId, userId, leftAt: null } }),
+          tx.roomParticipant.findFirst({
+            where: { userId, leftAt: null, roomId: { not: roomId } },
+          }),
         ]);
 
         if (existing) {
           throw new Error("ALREADY_JOINED");
+        }
+
+        if (activeInAnotherRoom) {
+          throw new Error("ALREADY_IN_ANOTHER_ROOM");
         }
 
         if (currentCount >= room.maxPlayers) {
@@ -117,6 +124,17 @@ export async function POST(_request: Request, { params }: RouteParams) {
       if (error.message === "ALREADY_JOINED") {
         return NextResponse.json(
           { error: { code: "ALREADY_JOINED", message: "既にこの部屋に参加しています" } },
+          { status: 409 }
+        );
+      }
+      if (error.message === "ALREADY_IN_ANOTHER_ROOM") {
+        return NextResponse.json(
+          {
+            error: {
+              code: "ALREADY_IN_ANOTHER_ROOM",
+              message: "既に別の部屋に参加中です（同時参加は1部屋まで）",
+            },
+          },
           { status: 409 }
         );
       }
