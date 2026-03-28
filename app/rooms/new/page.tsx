@@ -112,9 +112,9 @@ export default function NewRoomPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-0">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5 sm:gap-6">
         {/* Game Picker */}
-        <div className="py-5 sm:py-6">
+        <div>
           <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
             ゲーム <span className="text-red-400">*</span>
           </label>
@@ -126,7 +126,7 @@ export default function NewRoomPage() {
         </div>
 
         {/* Title */}
-        <div className="py-5 sm:py-6">
+        <div>
           <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
             部屋タイトル <span className="text-red-400">*</span>
           </label>
@@ -143,7 +143,7 @@ export default function NewRoomPage() {
         </div>
 
         {/* Max Players */}
-        <div className="py-5 sm:py-6">
+        <div>
           <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
             最大人数 <span className="text-red-400">*</span>
           </label>
@@ -175,7 +175,7 @@ export default function NewRoomPage() {
         </div>
 
         {/* Play Style Tags */}
-        <div className="py-5 sm:py-6">
+        <div>
           <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
             プレイスタイル{" "}
             <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
@@ -218,7 +218,7 @@ export default function NewRoomPage() {
         </div>
 
         {/* Description */}
-        <div className="py-5 sm:py-6">
+        <div>
           <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
             部屋の説明{" "}
             <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
@@ -237,7 +237,7 @@ export default function NewRoomPage() {
         </div>
 
         {/* Submit */}
-        <div className="flex gap-3 pt-5 sm:pt-6">
+        <div className="flex gap-3">
           <Link
             href="/rooms"
             className="flex-1 rounded-xl border px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"
