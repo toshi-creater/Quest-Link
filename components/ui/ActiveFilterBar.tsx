@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { CaretLeft, CaretRight, X } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 
 type Tag = {
@@ -105,7 +105,7 @@ export function ActiveFilterBar({
           }}
           aria-label="左にスクロール"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <CaretLeft className="h-5 w-5" />
         </button>
       )}
 
@@ -124,7 +124,7 @@ export function ActiveFilterBar({
           }}
           aria-label="右にスクロール"
         >
-          <ChevronRight className="h-5 w-5" />
+          <CaretRight className="h-5 w-5" />
         </button>
       )}
     </div>

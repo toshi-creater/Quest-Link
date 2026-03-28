@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, CircleNotch } from "@phosphor-icons/react";
 import type { Game } from "@/lib/mock-data";
 import { SingleGamePicker } from "@/components/ui/GamePicker";
 import { TagFilterToggle } from "@/components/ui/TagFilterToggle";
@@ -255,7 +255,7 @@ export default function NewRoomPage() {
             }}
           >
             {mutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <CircleNotch className="h-4 w-4 animate-spin" />
             ) : (
               <Plus className="h-4 w-4" />
             )}

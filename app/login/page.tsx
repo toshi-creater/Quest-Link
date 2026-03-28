@@ -1,4 +1,4 @@
-import { Zap } from "lucide-react";
+import { Lightning } from "@phosphor-icons/react/dist/ssr";
 import { signIn } from "@/auth";
 
 type Props = {
@@ -17,7 +17,7 @@ export default async function LoginPage({ searchParams }: Props) {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center animate-fade-in-up">
-          <Zap className="mb-3 h-8 w-8" style={{ color: "var(--accent-light)" }} />
+          <Lightning className="mb-3 h-8 w-8" style={{ color: "var(--accent-light)" }} />
           <h1 className="text-4xl tracking-tight" style={{ color: "var(--text-primary)" }}>
             <span className="font-medium">Quest</span>
             <span className="font-bold">Link</span>
