@@ -22,7 +22,7 @@ vi.mock("./UserAvatar", () => ({
   UserAvatar: () => <div data-testid="user-avatar" />,
 }));
 
-vi.mock("lucide-react", () => ({
+vi.mock("@phosphor-icons/react", () => ({
   Users: () => <span />,
 }));
 

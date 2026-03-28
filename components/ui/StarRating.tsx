@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Star } from "@phosphor-icons/react";
 import clsx from "clsx";
 
 type Props = {

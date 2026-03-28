@@ -3,7 +3,7 @@
 import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Users } from "lucide-react";
+import { Users } from "@phosphor-icons/react";
 import type { RoomSummary } from "@/lib/api/rooms";
 import { roomStatusConfig, fallbackStatusConfig } from "@/lib/room-status";
 import { UserAvatar } from "./UserAvatar";

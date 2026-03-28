@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, FloppyDisk } from "@phosphor-icons/react";
 import { type Game } from "@/lib/mock-data";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { MultiGamePicker } from "@/components/ui/GamePicker";
@@ -206,7 +206,7 @@ export default function EditProfilePage() {
                 boxShadow: "0 4px 14px rgba(124,58,237,0.4)",
               }}
             >
-              <Save className="h-4 w-4" />
+              <FloppyDisk className="h-4 w-4" />
               {saving ? "保存中..." : "保存する"}
             </button>
           </div>

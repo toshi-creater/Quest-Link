@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Gamepad2 } from "lucide-react";
+import { GameController } from "@phosphor-icons/react";
 import type { GameResult } from "@/lib/games";
 
 type Props = {
@@ -44,7 +44,7 @@ export function HomeGameGrid({ games }: Props) {
                   className="flex h-full w-full items-center justify-center"
                   style={{ background: "var(--bg-card-hover)" }}
                 >
-                  <Gamepad2 className="h-8 w-8 opacity-40" style={{ color: "var(--accent)" }} />
+                  <GameController className="h-8 w-8 opacity-40" style={{ color: "var(--accent)" }} />
                 </div>
               )}
               <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-transparent p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
