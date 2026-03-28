@@ -125,8 +125,6 @@ export default function NewRoomPage() {
           />
         </div>
 
-        <hr className="border-t" style={{ borderColor: "var(--border)" }} />
-
         {/* Title */}
         <div className="py-5 sm:py-6">
           <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
@@ -143,8 +141,6 @@ export default function NewRoomPage() {
             style={inputStyle}
           />
         </div>
-
-        <hr className="border-t" style={{ borderColor: "var(--border)" }} />
 
         {/* Max Players */}
         <div className="py-5 sm:py-6">
@@ -177,8 +173,6 @@ export default function NewRoomPage() {
             ))}
           </div>
         </div>
-
-        <hr className="border-t" style={{ borderColor: "var(--border)" }} />
 
         {/* Play Style Tags */}
         <div className="py-5 sm:py-6">
@@ -223,8 +217,6 @@ export default function NewRoomPage() {
           </div>
         </div>
 
-        <hr className="border-t" style={{ borderColor: "var(--border)" }} />
-
         {/* Description */}
         <div className="py-5 sm:py-6">
           <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
@@ -245,10 +237,7 @@ export default function NewRoomPage() {
         </div>
 
         {/* Submit */}
-        <div
-          className="flex gap-3 pt-5 sm:pt-6 border-t"
-          style={{ borderColor: "var(--border)" }}
-        >
+        <div className="flex gap-3 pt-5 sm:pt-6">
           <Link
             href="/rooms"
             className="flex-1 rounded-xl border px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"
