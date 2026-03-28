@@ -45,7 +45,7 @@ export function BottomNav() {
               className="relative flex flex-1 flex-col items-center gap-1 px-2 py-2 text-[11px] whitespace-nowrap transition-colors"
               style={{ color: "var(--text-secondary)" }}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-7 w-7" />
               {label}
             </Link>
           );
@@ -57,7 +57,7 @@ export function BottomNav() {
             className="relative flex flex-1 flex-col items-center gap-1 px-2 py-2 text-[11px] whitespace-nowrap transition-colors"
             style={linkStyle}
           >
-            <Icon className="h-5 w-5" />
+            <Icon className="h-7 w-7" />
             {label}
             {isActive && (
               <span
