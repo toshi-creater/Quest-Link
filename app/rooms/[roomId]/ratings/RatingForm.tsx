@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StarRating, RatingDisplay } from "@/components/ui/StarRating";
 import clsx from "clsx";
@@ -71,7 +71,7 @@ export function RatingForm({ user, roomId }: Props) {
           </p>
           <p className="text-xs" style={{ color: "#22c55e" }}>評価を送信しました</p>
         </div>
-        <CheckCircle2 className="h-5 w-5 animate-scale-in" style={{ color: "#22c55e", animationDelay: "150ms" }} />
+        <CheckCircle className="h-5 w-5 animate-scale-in" style={{ color: "#22c55e", animationDelay: "150ms" }} />
       </div>
     );
   }

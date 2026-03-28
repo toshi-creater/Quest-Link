@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Gamepad2, Users, Menu, X, Zap, DoorOpen } from "lucide-react";
+import { GameController, Users, List, X, Lightning, DoorOpen } from "@phosphor-icons/react";
 import clsx from "clsx";
 import { SignOutButton } from "@/components/ui/SignOutButton";
 
@@ -11,14 +11,13 @@ export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isLoginPage = pathname === "/login";
-  if (isLoginPage) return null;
+  if (pathname === "/login" || pathname === "/onboarding") return null;
 
   const navLinks = [
     {
       href: "/rooms",
       label: "部屋一覧",
-      icon: Gamepad2,
+      icon: GameController,
       isActive: (p: string) => p.startsWith("/rooms") && p !== "/rooms/current",
     },
     {
@@ -51,7 +50,7 @@ export function Header() {
             className="flex h-8 w-8 items-center justify-center rounded-lg transition-all group-hover:scale-110"
             style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-light))" }}
           >
-            <Zap className="h-4 w-4 text-white" />
+            <Lightning className="h-4 w-4 text-white" />
           </div>
           <span className="text-lg font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
             Quest<span style={{ color: "var(--accent-light)" }}>Link</span>
@@ -89,7 +88,7 @@ export function Header() {
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="メニュー"
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileOpen ? <X className="h-5 w-5" /> : <List className="h-5 w-5" />}
         </button>
       </div>
 

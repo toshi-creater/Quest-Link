@@ -27,7 +27,7 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
       const isLoginPage = pathname === "/login";
-      const isEditPage = pathname === "/users/me/edit";
+      const isOnboardingPage = pathname === "/onboarding";
 
       if (isLoginPage) {
         if (isLoggedIn) return Response.redirect(new URL("/", nextUrl));
@@ -41,8 +41,8 @@ export const authConfig = {
 
       // 初回ログイン未設定 → プロフィール設定画面へ強制
       const needsProfileSetup = auth?.user?.needsProfileSetup ?? false;
-      if (needsProfileSetup && !isEditPage) {
-        return Response.redirect(new URL("/users/me/edit", nextUrl));
+      if (needsProfileSetup && !isOnboardingPage) {
+        return Response.redirect(new URL("/onboarding", nextUrl));
       }
 
       return true;

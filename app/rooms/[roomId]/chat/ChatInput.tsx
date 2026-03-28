@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send } from "lucide-react";
+import { PaperPlaneTilt } from "@phosphor-icons/react";
 import { getSocket } from "@/lib/socket";
 import { useChatStore } from "@/lib/stores/chatStore";
 
@@ -76,7 +76,7 @@ export function ChatInput({ roomId }: Props) {
             }}
             aria-label="送信"
           >
-            <Send className="h-4 w-4" />
+            <PaperPlaneTilt className="h-4 w-4" />
           </button>
         </div>
       </div>

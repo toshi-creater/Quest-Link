@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { DoorOpen, LogOut, Loader2, Trash2 } from "lucide-react";
+import { DoorOpen, SignOut, CircleNotch, Trash } from "@phosphor-icons/react";
 import { joinRoom, leaveRoom, closeRoom } from "@/lib/api/rooms";
 
 type Props = {
@@ -64,7 +64,7 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
           }}
         >
           {joinMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <CircleNotch className="h-4 w-4 animate-spin" />
           ) : (
             <DoorOpen className="h-4 w-4" />
           )}
@@ -93,9 +93,9 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
           }}
         >
           {leaveMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <CircleNotch className="h-4 w-4 animate-spin" />
           ) : (
-            <LogOut className="h-4 w-4" />
+            <SignOut className="h-4 w-4" />
           )}
           退室する
         </button>
@@ -110,9 +110,9 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
             style={{ backgroundColor: "rgba(239,68,68,0.05)" }}
           >
             {closeMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <CircleNotch className="h-4 w-4 animate-spin" />
             ) : (
-              <Trash2 className="h-4 w-4" />
+              <Trash className="h-4 w-4" />
             )}
             解散する
           </button>

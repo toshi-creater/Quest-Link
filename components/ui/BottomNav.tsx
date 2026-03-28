@@ -3,21 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Home, PlusCircle, MessageSquare, User, Users } from "lucide-react";
+import { House, PlusCircle, Chat, User, Users } from "@phosphor-icons/react";
 
 export function BottomNav() {
   const pathname = usePathname();
   const { status } = useSession();
 
-  if (pathname === "/login") return null;
+  if (pathname === "/login" || pathname === "/onboarding") return null;
 
   const isAuthenticated = status === "authenticated";
 
   const staticItems = [
-    { href: "/", label: "トップ", icon: Home },
+    { href: "/", label: "トップ", icon: House },
     { href: "/games", label: "探す", icon: Users, requiresAuth: false },
     { href: "/rooms/new", label: "部屋作成", icon: PlusCircle, requiresAuth: true },
-    { href: "/rooms/current/chat", label: "参加中", icon: MessageSquare, requiresAuth: true },
+    { href: "/rooms/current/chat", label: "参加中", icon: Chat, requiresAuth: true },
     { href: "/users/me", label: "プロフィール", icon: User, requiresAuth: true },
   ];
 
@@ -45,7 +45,7 @@ export function BottomNav() {
               className="relative flex flex-1 flex-col items-center gap-1 px-2 py-2 text-[11px] whitespace-nowrap transition-colors"
               style={{ color: "var(--text-secondary)" }}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-6 w-6" />
               {label}
             </Link>
           );
@@ -54,17 +54,11 @@ export function BottomNav() {
           <Link
             key={href}
             href={href}
-            className="relative flex flex-1 flex-col items-center gap-1 px-2 py-2 text-[11px] whitespace-nowrap transition-colors"
+            className="flex flex-1 flex-col items-center gap-1 px-2 py-2 text-[11px] whitespace-nowrap transition-colors"
             style={linkStyle}
           >
-            <Icon className="h-5 w-5" />
+            <Icon className="h-6 w-6" />
             {label}
-            {isActive && (
-              <span
-                className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full animate-scale-in"
-                style={{ backgroundColor: "var(--accent-light)" }}
-              />
-            )}
           </Link>
         );
       })}

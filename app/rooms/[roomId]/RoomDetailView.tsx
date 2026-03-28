@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, Crown, Loader2, MessageSquare, Users } from "lucide-react";
+import { ArrowLeft, Crown, Chat, Users, CircleNotch } from "@phosphor-icons/react";
 import { fetchRoom } from "@/lib/api/rooms";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
@@ -47,7 +47,7 @@ export function RoomDetailView({ roomId }: Props) {
   if (isLoading || isParticipantOnOtherPage) {
     return (
       <div className="flex justify-center py-32">
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: "var(--accent)" }} />
+        <CircleNotch className="h-8 w-8 animate-spin" style={{ color: "var(--accent)" }} />
       </div>
     );
   }
@@ -178,7 +178,7 @@ export function RoomDetailView({ roomId }: Props) {
                   className="flex h-10 w-10 items-center justify-center rounded-xl"
                   style={{ backgroundColor: "rgba(124,58,237,0.15)" }}
                 >
-                  <MessageSquare className="h-5 w-5" style={{ color: "var(--accent-light)" }} />
+                  <Chat className="h-5 w-5" style={{ color: "var(--accent-light)" }} />
                 </div>
                 <div>
                   <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>

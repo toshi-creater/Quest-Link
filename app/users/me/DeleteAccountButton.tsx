@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
-import { Trash2 } from "lucide-react";
+import { Trash } from "@phosphor-icons/react";
 
 export function DeleteAccountButton() {
   const [confirming, setConfirming] = useState(false);
@@ -51,7 +51,7 @@ export function DeleteAccountButton() {
       onClick={() => setConfirming(true)}
       className="flex items-center gap-2 rounded-xl border border-red-500/30 px-4 py-2 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10"
     >
-      <Trash2 className="h-4 w-4" />
+      <Trash className="h-4 w-4" />
       アカウントを削除する
     </button>
   );

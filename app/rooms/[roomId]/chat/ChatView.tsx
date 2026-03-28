@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowLeft, Crown } from "lucide-react";
+import { ArrowLeft, Crown } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
