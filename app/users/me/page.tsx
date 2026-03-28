@@ -1,12 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Edit2, History, Star } from "lucide-react";
+import { Edit2, History, Star, Gamepad2 } from "lucide-react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
-import { GameCover } from "@/components/ui/GamePicker";
 import { DeleteAccountButton } from "./DeleteAccountButton";
 
 type UserProfile = {
@@ -28,6 +28,7 @@ async function fetchMyProfile(): Promise<UserProfile> {
 }
 
 export default function MyProfilePage() {
+
   const { data: user, isLoading, isError } = useQuery({
     queryKey: ["users", "me"],
     queryFn: fetchMyProfile,
@@ -35,21 +36,24 @@ export default function MyProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-4 sm:py-8 sm:px-6 space-y-6">
-        <div className="rounded-2xl border p-4 sm:p-6" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-            <div className="h-20 w-20 rounded-full animate-shimmer shrink-0" />
-            <div className="flex-1 space-y-3 w-full">
-              <div className="h-7 w-40 rounded animate-shimmer" />
-              <div className="h-4 w-28 rounded animate-shimmer" />
-              <div className="h-4 w-full rounded animate-shimmer" />
-            </div>
+      <div className="mx-auto max-w-3xl pb-8 sm:mt-6 sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
+        <div className="relative h-[200px] rounded-b-3xl sm:rounded-none sm:border-b sm:border-[var(--border)]" style={{ backgroundColor: "var(--bg-card)" }}>
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
+            <div className="h-20 w-20 rounded-full animate-shimmer" />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          {[1, 2].map((i) => (
-            <div key={i} className="h-20 rounded-xl border animate-shimmer" style={{ borderColor: "var(--border)" }} />
-          ))}
+        <div className="pt-14 pb-4 text-center space-y-3 px-4 sm:px-6">
+          <div className="h-7 w-40 rounded animate-shimmer mx-auto" />
+          <div className="h-4 w-28 rounded animate-shimmer mx-auto" />
+          <div className="h-4 w-64 rounded animate-shimmer mx-auto" />
+        </div>
+        <div className="flex justify-center gap-12 px-4 sm:px-6 py-6">
+          <div className="h-12 w-20 rounded animate-shimmer" />
+          <div className="h-12 w-20 rounded animate-shimmer" />
+        </div>
+        <div className="mx-4 sm:mx-6 space-y-4">
+          <div className="h-36 rounded-2xl animate-shimmer" />
+          <div className="h-24 rounded-2xl animate-shimmer" />
         </div>
       </div>
     );
@@ -66,24 +70,34 @@ export default function MyProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-4 sm:py-8 sm:px-6">
-      {/* Profile Card */}
-      <div
-        className="mb-4 sm:mb-6 rounded-2xl border p-4 sm:p-6"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
-      >
-        {/* 上段: アバター + 名前・評価 | ボタン */}
-        <div className="flex items-start gap-3">
-          <UserAvatar username={user.username} iconUrl={user.iconUrl} size="xl" />
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-              {user.username}
-            </h1>
-            <div className="mt-1.5">
-              <RatingDisplay avgRating={user.avgRating} ratingCount={user.ratingCount} />
-            </div>
+    <div className="mx-auto max-w-3xl pb-8 sm:mt-6 sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
+      {/* Hero + Avatar wrapper — relative so avatar can overflow hero */}
+      <div className="relative">
+        {/* Hero Banner */}
+        <div
+          className="min-h-[200px] overflow-hidden sm:rounded-t-2xl"
+          style={{ backgroundColor: "var(--bg-card)" }}
+        >
+          {/* Background image */}
+          <div className="absolute inset-0">
+            {user.games[0]?.coverImageUrl ? (
+              <Image
+                src={user.games[0].coverImageUrl}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="768px"
+                aria-hidden="true"
+              />
+            ) : (
+              <div
+                className="h-full w-full"
+                style={{ background: "linear-gradient(135deg, #1e1030 0%, #2d1b69 50%, #1a0f2e 100%)" }}
+              />
+            )}
           </div>
-          <div className="flex shrink-0 gap-2">
+          {/* Action buttons — top right */}
+          <div className="relative z-10 flex justify-end gap-2 px-4 pt-4 sm:px-6">
             <Link
               href="/users/me/edit"
               className="flex items-center gap-2 rounded-xl border p-2 sm:px-4 sm:py-2 text-sm font-medium transition-all hover:border-[var(--accent)]"
@@ -101,92 +115,111 @@ export default function MyProfilePage() {
               <span className="hidden sm:inline">参加履歴</span>
             </Link>
           </div>
+          {/* Spacer for hero height */}
+          <div className="pb-10 pt-14" />
         </div>
-        {/* 下段: 自己紹介 + タグ */}
-        {user.bio && (
-          <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            {user.bio}
-          </p>
-        )}
+        {/* Avatar — centered at hero bottom, outside overflow-hidden */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-10">
+          <UserAvatar username={user.username} iconUrl={user.iconUrl} size="xl" />
+        </div>
+      </div>
+
+      {/* Profile Info — centered */}
+      <div className="px-4 sm:px-6 pt-14 pb-4 text-center">
+        <h1 className="text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+          {user.username}
+        </h1>
+        <div className="mt-1.5 flex justify-center">
+          <RatingDisplay avgRating={user.avgRating} ratingCount={user.ratingCount} />
+        </div>
         {user.playStyleTags.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
             {user.playStyleTags.map((tag) => (
               <PlayStyleTag key={tag.id} tag={tag} />
             ))}
           </div>
         )}
+        {user.bio && (
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            {user.bio}
+          </p>
+        )}
+      </div>
+
+      {/* Stats — inline with dividers */}
+      <div className="flex justify-center px-4 sm:px-6 py-4">
+        {[
+          { label: "平均評価", value: user.avgRating > 0 ? user.avgRating.toFixed(1) : "-", sub: "/ 5.0" },
+          { label: "評価件数", value: user.ratingCount.toString(), sub: "件" },
+        ].map(({ label, value, sub }, i) => (
+          <div key={label} className="flex">
+            {i > 0 && (
+              <div className="mx-6 w-px self-stretch" style={{ backgroundColor: "var(--border)" }} />
+            )}
+            <div className="text-center">
+              <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+                {value}
+                <span className="ml-1 text-sm font-normal" style={{ color: "var(--text-secondary)" }}>
+                  {sub}
+                </span>
+              </p>
+              <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>
+                {label}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* My Games */}
-      {user.games.length > 0 && (
-        <div
-          className="mb-4 sm:mb-6 rounded-2xl border"
-          style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
-        >
-          <div className="border-b px-4 py-3 sm:px-6 sm:py-4" style={{ borderColor: "var(--border)" }}>
-            <h2 className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>
-              プレイしているゲーム
-            </h2>
-          </div>
-          <div className="flex flex-wrap gap-3 p-3 sm:p-5">
+      <div className="mt-4">
+        <h2 className="mb-3 px-4 sm:px-6 text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+          プレイしているゲーム
+        </h2>
+        {user.games.length > 0 ? (
+          <div className="flex gap-3 overflow-x-auto px-4 sm:px-6 pb-2 scrollbar-none">
             {user.games.map((game) => (
-              <div
-                key={game.id}
-                className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5"
-                style={{ backgroundColor: "rgba(124,58,237,0.06)", borderColor: "rgba(124,58,237,0.2)" }}
-              >
-                <GameCover game={game} size="sm" />
-                <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              <div key={game.id} className="flex shrink-0 flex-col items-center gap-2">
+                <div
+                  className="relative h-36 w-28 overflow-hidden rounded-lg"
+                  style={{ backgroundColor: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.2)" }}
+                >
+                  {game.coverImageUrl ? (
+                    <Image src={game.coverImageUrl} alt={game.name} fill className="object-cover" sizes="112px" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <Gamepad2 className="h-6 w-6" style={{ color: "var(--accent-light)" }} />
+                    </div>
+                  )}
+                </div>
+                <span className="w-28 truncate text-center text-xs" style={{ color: "var(--text-secondary)" }}>
                   {game.name}
                 </span>
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Stats */}
-      <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-3 sm:gap-4">
-        {[
-          { label: "平均評価", value: user.avgRating > 0 ? user.avgRating.toFixed(1) : "-", sub: "/ 5.0" },
-          { label: "評価件数", value: user.ratingCount.toString(), sub: "件" },
-        ].map(({ label, value, sub }) => (
-          <div
-            key={label}
-            className="rounded-xl border p-3 sm:p-4 text-center"
-            style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
-          >
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              {label}
-            </p>
-            <p className="mt-1 text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-              {value}
-              <span className="text-sm font-normal" style={{ color: "var(--text-secondary)" }}>
-                {sub}
-              </span>
-            </p>
-          </div>
-        ))}
+        ) : (
+          <p className="px-4 sm:px-6 text-sm" style={{ color: "var(--text-muted)" }}>
+            ゲームが設定されていません
+          </p>
+        )}
       </div>
 
       {/* Received Ratings */}
-      <div
-        className="mb-6 rounded-2xl border"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
-      >
-        <div className="flex items-center gap-2 border-b px-4 py-3 sm:px-6 sm:py-4" style={{ borderColor: "var(--border)" }}>
-          <Star className="h-4 w-4" style={{ fill: "#eab308", color: "#eab308" }} />
-          <h2 className="text-base font-semibold" style={{ color: "var(--text-primary)" }}>
-            受け取った評価
-          </h2>
-        </div>
-        <div className="px-4 py-6 sm:px-6 sm:py-8 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+      <div className="mt-8 px-4 sm:px-6">
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+          <Star className="h-3.5 w-3.5" style={{ fill: "#eab308", color: "#eab308" }} />
+          受け取った評価
+        </h2>
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
           まだ評価がありません
-        </div>
+        </p>
       </div>
 
       {/* Danger Zone */}
-      <DeleteAccountButton />
+      <div className="mx-4 sm:mx-6 mt-8">
+        <DeleteAccountButton />
+      </div>
     </div>
   );
 }
