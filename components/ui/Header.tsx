@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { House, PlusCircle, ChatSquare, User, Lightning, Users } from "@phosphor-icons/react";
+import { House, PlusCircle, Chat, User, Lightning, Users } from "@phosphor-icons/react";
 import clsx from "clsx";
 import { SignOutButton } from "@/components/ui/SignOutButton";
 
@@ -19,7 +19,7 @@ export function Header() {
     { href: "/", label: "トップ", icon: House, requiresAuth: false },
     { href: "/games", label: "部屋を探す", icon: Users, requiresAuth: false },
     { href: "/rooms/new", label: "部屋作成", icon: PlusCircle, requiresAuth: true },
-    { href: "/rooms/current/chat", label: "参加中の部屋", icon: ChatSquare, requiresAuth: true },
+    { href: "/rooms/current/chat", label: "参加中の部屋", icon: Chat, requiresAuth: true },
     { href: "/users/me", label: "プロフィール", icon: User, requiresAuth: true },
   ];
 
