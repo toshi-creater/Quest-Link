@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Home, PlusCircle, MessageSquare, User, Zap, Users } from "lucide-react";
+import { House, PlusCircle, ChatSquare, User, Lightning, Users } from "@phosphor-icons/react";
 import clsx from "clsx";
 import { SignOutButton } from "@/components/ui/SignOutButton";
 
@@ -16,10 +16,10 @@ export function Header() {
   const isAuthenticated = status === "authenticated";
 
   const staticNavItems = [
-    { href: "/", label: "トップ", icon: Home, requiresAuth: false },
+    { href: "/", label: "トップ", icon: House, requiresAuth: false },
     { href: "/games", label: "部屋を探す", icon: Users, requiresAuth: false },
     { href: "/rooms/new", label: "部屋作成", icon: PlusCircle, requiresAuth: true },
-    { href: "/rooms/current/chat", label: "参加中の部屋", icon: MessageSquare, requiresAuth: true },
+    { href: "/rooms/current/chat", label: "参加中の部屋", icon: ChatSquare, requiresAuth: true },
     { href: "/users/me", label: "プロフィール", icon: User, requiresAuth: true },
   ];
 
@@ -34,7 +34,7 @@ export function Header() {
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <Zap className="h-5 w-5" style={{ color: "var(--accent-light)" }} />
+          <Lightning className="h-5 w-5" style={{ color: "var(--accent-light)" }} />
           <span className="text-lg tracking-tight" style={{ color: "var(--text-primary)" }}>
             <span className="font-medium">Quest</span>
             <span className="font-bold">Link</span>

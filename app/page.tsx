@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { CaretRight } from "@phosphor-icons/react";
 import { Prisma } from "@prisma/client";
 import { connection } from "next/server";
 import { getPopularGames } from "@/lib/games";
@@ -82,7 +82,7 @@ export default async function HomePage() {
             style={{ color: "var(--accent-light)" }}
           >
             すべて見る
-            <ChevronRight className="h-4 w-4" />
+            <CaretRight className="h-4 w-4" />
           </Link>
         </div>
 
@@ -101,7 +101,7 @@ export default async function HomePage() {
             style={{ color: "var(--accent-light)" }}
           >
             もっと見る
-            <ChevronRight className="h-4 w-4" />
+            <CaretRight className="h-4 w-4" />
           </Link>
         </div>
 

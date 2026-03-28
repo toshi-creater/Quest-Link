@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Edit2, History, Star } from "lucide-react";
+import { PencilSimple, ClockCounterClockwise, Star } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
@@ -89,7 +89,7 @@ export default function MyProfilePage() {
               className="flex items-center gap-2 rounded-xl border p-2 sm:px-4 sm:py-2 text-sm font-medium transition-all hover:border-[var(--accent)]"
               style={{ borderColor: "var(--border)", color: "var(--text-secondary)", backgroundColor: "var(--bg-input)" }}
             >
-              <Edit2 className="h-4 w-4" />
+              <PencilSimple className="h-4 w-4" />
               <span className="hidden sm:inline">プロフィール編集</span>
             </Link>
             <Link
@@ -97,7 +97,7 @@ export default function MyProfilePage() {
               className="flex items-center gap-2 rounded-xl border p-2 sm:px-4 sm:py-2 text-sm font-medium transition-all hover:border-[var(--accent)]"
               style={{ borderColor: "var(--border)", color: "var(--text-secondary)", backgroundColor: "var(--bg-input)" }}
             >
-              <History className="h-4 w-4" />
+              <ClockCounterClockwise className="h-4 w-4" />
               <span className="hidden sm:inline">参加履歴</span>
             </Link>
           </div>

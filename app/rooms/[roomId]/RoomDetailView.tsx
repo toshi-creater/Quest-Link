@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, Crown, MessageSquare, Users } from "lucide-react";
+import { ArrowLeft, Crown, ChatSquare, Users } from "@phosphor-icons/react";
 import { fetchRoom } from "@/lib/api/rooms";
 import { roomStatusConfig, fallbackStatusConfig } from "@/lib/room-status";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -190,7 +190,7 @@ export function RoomDetailView({ roomId }: Props) {
                   className="flex h-10 w-10 items-center justify-center rounded-xl"
                   style={{ backgroundColor: "rgba(124,58,237,0.15)" }}
                 >
-                  <MessageSquare className="h-5 w-5" style={{ color: "var(--accent-light)" }} />
+                  <ChatSquare className="h-5 w-5" style={{ color: "var(--accent-light)" }} />
                 </div>
                 <div>
                   <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Clock, CheckCircle2 } from "lucide-react";
+import { Clock, CheckCircle } from "@phosphor-icons/react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { RatingForm } from "./RatingForm";
@@ -66,7 +66,7 @@ export default async function RatingsPage({ params }: Props) {
           className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full"
           style={{ backgroundColor: "rgba(34,197,94,0.15)" }}
         >
-          <CheckCircle2 className="h-7 w-7 text-green-400" />
+          <CheckCircle className="h-7 w-7 text-green-400" />
         </div>
         <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
           セッション終了

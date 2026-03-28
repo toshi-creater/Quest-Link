@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Home, PlusCircle, MessageSquare, User, Users } from "lucide-react";
+import { House, PlusCircle, ChatSquare, User, Users } from "@phosphor-icons/react";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -14,10 +14,10 @@ export function BottomNav() {
   const isAuthenticated = status === "authenticated";
 
   const staticItems = [
-    { href: "/", label: "トップ", icon: Home },
+    { href: "/", label: "トップ", icon: House },
     { href: "/games", label: "探す", icon: Users, requiresAuth: false },
     { href: "/rooms/new", label: "部屋作成", icon: PlusCircle, requiresAuth: true },
-    { href: "/rooms/current/chat", label: "参加中", icon: MessageSquare, requiresAuth: true },
+    { href: "/rooms/current/chat", label: "参加中", icon: ChatSquare, requiresAuth: true },
     { href: "/users/me", label: "プロフィール", icon: User, requiresAuth: true },
   ];
 

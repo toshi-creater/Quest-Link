@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, memo } from "react";
 import Image from "next/image";
-import { Search, X, Gamepad2, Check, ChevronDown } from "lucide-react";
+import { MagnifyingGlass, X, GameController, Check, CaretDown } from "@phosphor-icons/react";
 import { type Game } from "@/lib/mock-data";
 import clsx from "clsx";
 
@@ -35,7 +35,7 @@ export const GameCover = memo(function GameCover({ game, size = "md", className 
         style={{ backgroundColor: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.2)" }}
         title={game.name}
       >
-        <Gamepad2 className="h-4 w-4" style={{ color: "var(--accent-light)" }} />
+        <GameController className="h-4 w-4" style={{ color: "var(--accent-light)" }} />
       </div>
     );
   }
@@ -156,9 +156,9 @@ export function SingleGamePicker({
           </>
         ) : (
           <>
-            <Gamepad2 className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
+            <GameController className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
             <span className="flex-1">{placeholder}</span>
-            <ChevronDown
+            <CaretDown
               className={clsx("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")}
               style={{ color: "var(--text-muted)" }}
             />
@@ -177,7 +177,7 @@ export function SingleGamePicker({
             className="flex items-center gap-2 border-b px-3 py-2.5"
             style={{ borderColor: "var(--border)" }}
           >
-            <Search className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
+            <MagnifyingGlass className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
             <input
               type="text"
               autoFocus
@@ -309,7 +309,7 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
                 : { backgroundColor: "var(--bg-input)", borderColor: "var(--border)", color: "var(--text-muted)" }
             }
           >
-            <Search className="h-4 w-4 shrink-0" />
+            <MagnifyingGlass className="h-4 w-4 shrink-0" />
             <span>ゲームを追加...</span>
             <span className="ml-auto text-xs" style={{ color: "var(--text-muted)" }}>
               {value.length}/{max}
@@ -325,7 +325,7 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
                 className="flex items-center gap-2 border-b px-3 py-2.5"
                 style={{ borderColor: "var(--border)" }}
               >
-                <Search className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
+                <MagnifyingGlass className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
                 <input
                   type="text"
                   autoFocus

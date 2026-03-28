@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import { fetchRooms, type RoomSummary } from "@/lib/api/rooms";
 import { RoomCard } from "@/components/ui/RoomCard";
 import { TagFilterToggle } from "@/components/ui/TagFilterToggle";
@@ -77,12 +77,12 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
 
   return (
     <>
-      {/* Search */}
+      {/* MagnifyingGlass */}
       <div
         className="relative mb-4 flex items-center rounded-xl border px-4 py-2.5 focus-within:border-[var(--accent)] transition-colors"
         style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
       >
-        <Search className="mr-3 h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
+        <MagnifyingGlass className="mr-3 h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
         <input
           type="text"
           placeholder="ゲームタイトル・部屋名で検索..."

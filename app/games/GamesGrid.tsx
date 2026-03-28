@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Search, Gamepad2 } from "lucide-react";
+import { MagnifyingGlass, GameController } from "@phosphor-icons/react";
 import type { GameResult } from "@/lib/games";
 
 type Props = {
@@ -31,7 +31,7 @@ export function GamesGrid({ games, roomCounts }: Props) {
       {/* Search bar */}
       <div className="mb-6 flex items-center gap-3">
         <div className="relative flex-1">
-          <Search
+          <MagnifyingGlass
             className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
             style={{ color: "var(--text-secondary)" }}
           />
@@ -83,7 +83,7 @@ export function GamesGrid({ games, roomCounts }: Props) {
                       className="flex h-full w-full items-center justify-center"
                       style={{ background: "var(--bg-card-hover)" }}
                     >
-                      <Gamepad2 className="h-10 w-10 opacity-40" style={{ color: "var(--accent)" }} />
+                      <GameController className="h-10 w-10 opacity-40" style={{ color: "var(--accent)" }} />
                     </div>
                   )}
 

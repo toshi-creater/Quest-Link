@@ -1,6 +1,6 @@
 "use client";
 
-import { Filter, ChevronDown } from "lucide-react";
+import { Funnel, CaretDown } from "@phosphor-icons/react";
 
 type Props = {
   selectedCount: number;
@@ -20,7 +20,7 @@ export function TagFilterToggle({ selectedCount, panelOpen, onPanelToggle, label
         border: `1px solid ${panelOpen ? "rgba(124,58,237,0.4)" : "var(--border)"}`,
       }}
     >
-      <Filter className="h-4 w-4" />
+      <Funnel className="h-4 w-4" />
       <span>{label}</span>
       {selectedCount > 0 && (
         <span
@@ -30,7 +30,7 @@ export function TagFilterToggle({ selectedCount, panelOpen, onPanelToggle, label
           {selectedCount}
         </span>
       )}
-      <ChevronDown
+      <CaretDown
         className="h-4 w-4 transition-transform duration-200"
         style={{ transform: panelOpen ? "rotate(180deg)" : "rotate(0deg)" }}
       />
