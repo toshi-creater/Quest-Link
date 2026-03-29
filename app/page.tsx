@@ -2,7 +2,8 @@ import Link from "next/link";
 import { CaretRight } from "@phosphor-icons/react/dist/ssr";
 import { Prisma } from "@prisma/client";
 import { connection } from "next/server";
-import { getPopularGames } from "@/lib/games";
+import { auth } from "@/auth";
+import { getPopularGames, getPopularGamesExcluding, type GameResult } from "@/lib/games";
 import { prisma } from "@/lib/prisma";
 import { RoomCard } from "@/components/ui/RoomCard";
 import { type RoomSummary } from "@/lib/api/rooms";
@@ -57,16 +58,65 @@ function formatRoom(room: RawRoom): RoomSummary {
 
 export default async function HomePage() {
   await connection();
-  const [games, rawRooms] = await Promise.all([
-    getPopularGames(6),
-    prisma.room.findMany({
-      where: { status: "waiting" },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-      select: roomSelect,
-    }),
-  ]);
-  const rooms = rawRooms.map(formatRoom);
+
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+
+  let games: GameResult[];
+  let rooms: RoomSummary[];
+
+  if (!userId) {
+    const [popularGames, rawRooms] = await Promise.all([
+      getPopularGames(6),
+      prisma.room.findMany({
+        where: { status: "waiting" },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        select: roomSelect,
+      }),
+    ]);
+    games = popularGames;
+    rooms = rawRooms.map(formatRoom);
+  } else {
+    const userGameRows = await prisma.userGame.findMany({
+      where: { userId },
+      select: { game: { select: { id: true, name: true, coverImageUrl: true } } },
+    });
+    const userGames = userGameRows.map((r) => r.game);
+    const userGameIds = userGames.map((g) => g.id);
+    const userGamesSlice = userGames.slice(0, 6);
+    const fillGamesCount = 6 - userGamesSlice.length;
+
+    const [fillGames, userRawRooms, fillRawRooms] = await Promise.all([
+      fillGamesCount > 0
+        ? getPopularGamesExcluding(userGameIds, fillGamesCount)
+        : Promise.resolve([] as GameResult[]),
+      prisma.room.findMany({
+        where: { status: "waiting", gameId: { in: userGameIds } },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        select: roomSelect,
+      }),
+      prisma.room.findMany({
+        where: {
+          status: "waiting",
+          ...(userGameIds.length > 0 ? { gameId: { notIn: userGameIds } } : {}),
+        },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        select: roomSelect,
+      }),
+    ]);
+
+    games = [...userGamesSlice, ...fillGames];
+
+    const userRoomIds = new Set(userRawRooms.map((r) => r.id));
+    const mergedRawRooms = [
+      ...userRawRooms,
+      ...fillRawRooms.filter((r) => !userRoomIds.has(r.id)),
+    ].slice(0, 6);
+    rooms = mergedRawRooms.map(formatRoom);
+  }
 
   return (
     <main className="mx-auto max-w-screen-xl px-4 py-10 pb-24 md:pb-10 space-y-12">
