@@ -934,6 +934,77 @@ async function main() {
   console.log(
     `✓ rooms: ${roomDefs.length}件（waiting×${waitingCount}, full×${fullCount}, closed×${closedCount}）`
   );
+
+  // ─── 5. UserGame ──────────────────────────────────────────────────────────────
+  const gameCount = games.length;
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i]!;
+    const assignCount = (i % 4) + 1;
+    const assignedGames = Array.from({ length: assignCount }, (_, k) =>
+      games[(i * 3 + k) % gameCount]!
+    );
+    await prisma.userGame.createMany({
+      data: assignedGames.map((g) => ({ userId: user.id, gameId: g.id })),
+      skipDuplicates: true,
+    });
+  }
+  console.log(`✓ user_games: 各ユーザーに1〜4タイトル割り当て`);
+
+  // ─── 6. Rating ────────────────────────────────────────────────────────────────
+  const closedRooms = await prisma.room.findMany({
+    where: { status: "closed" },
+    include: { participants: { select: { userId: true } } },
+  });
+
+  const pastDate = new Date("2025-01-01T00:00:00Z");
+  let ratingTotal = 0;
+
+  for (const room of closedRooms) {
+    const participantIds = room.participants.map((p) => p.userId);
+    for (let ri = 0; ri < participantIds.length; ri++) {
+      for (let ei = 0; ei < participantIds.length; ei++) {
+        if (ri === ei) continue;
+        const score = ((ri + ei) % 3) + 3; // 3〜5
+        await prisma.rating.upsert({
+          where: {
+            roomId_reviewerId_revieweeId: {
+              roomId: room.id,
+              reviewerId: participantIds[ri]!,
+              revieweeId: participantIds[ei]!,
+            },
+          },
+          update: {},
+          create: {
+            roomId: room.id,
+            reviewerId: participantIds[ri]!,
+            revieweeId: participantIds[ei]!,
+            score,
+            expiresAt: pastDate,
+          },
+        });
+        ratingTotal++;
+      }
+    }
+  }
+  console.log(`✓ ratings: ${ratingTotal}件`);
+
+  // avgRating / ratingCount を再集計
+  const ratingStats = await prisma.rating.groupBy({
+    by: ["revieweeId"],
+    _avg: { score: true },
+    _count: { score: true },
+  });
+
+  for (const stat of ratingStats) {
+    await prisma.user.update({
+      where: { id: stat.revieweeId },
+      data: {
+        avgRating: stat._avg.score ?? 0,
+        ratingCount: stat._count.score,
+      },
+    });
+  }
+  console.log(`✓ users.avgRating/ratingCount 更新: ${ratingStats.length}件`);
 }
 
 main()
