@@ -11,6 +11,7 @@ vi.mock("@/lib/prisma", () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    rating: { findMany: vi.fn() },
     playStyleTag: { findMany: vi.fn() },
     game: { findMany: vi.fn() },
     userPlayStyleTag: { deleteMany: vi.fn() },
@@ -25,8 +26,9 @@ import { GET } from "./route";
 
 const mockAuth = vi.mocked(auth);
 const mockFindUnique = vi.mocked(prisma.user.findUnique);
+const mockRatingFindMany = vi.mocked(prisma.rating.findMany);
 
-const makeUser = (overrides: Record<string, unknown> = {}) => ({
+const makeUser = () => ({
   id: "user-1",
   username: "testuser",
   iconUrl: null,
@@ -36,24 +38,24 @@ const makeUser = (overrides: Record<string, unknown> = {}) => ({
   createdAt: new Date("2026-01-01T00:00:00Z"),
   playStyleTags: [],
   games: [],
-  receivedRatings: [
-    {
-      id: "rating-1",
-      score: 5,
-      comment: "また一緒にやりましょう！",
-      createdAt: new Date("2026-02-01T00:00:00Z"),
-      reviewer: { username: "reviewer1", iconUrl: null },
-    },
-    {
-      id: "rating-2",
-      score: 3,
-      comment: null,
-      createdAt: new Date("2026-01-15T00:00:00Z"),
-      reviewer: { username: "reviewer2", iconUrl: "https://example.com/icon.jpg" },
-    },
-  ],
-  ...overrides,
 });
+
+const makeRatings = () => [
+  {
+    id: "rating-1",
+    score: 5,
+    comment: "また一緒にやりましょう！",
+    createdAt: new Date("2026-02-01T00:00:00Z"),
+    reviewer: { username: "reviewer1", iconUrl: null },
+  },
+  {
+    id: "rating-2",
+    score: 3,
+    comment: null,
+    createdAt: new Date("2026-01-15T00:00:00Z"),
+    reviewer: { username: "reviewer2", iconUrl: "https://example.com/icon.jpg" },
+  },
+];
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -73,6 +75,7 @@ describe("GET /api/v1/users/me", () => {
   it("ユーザーが存在しない場合 404 USER_NOT_FOUND を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockFindUnique.mockResolvedValue(null);
+    mockRatingFindMany.mockResolvedValue([]);
 
     const res = await GET();
     const body = await res.json();
@@ -84,6 +87,7 @@ describe("GET /api/v1/users/me", () => {
   it("正常取得の場合 200 とユーザーデータを返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockFindUnique.mockResolvedValue(makeUser() as never);
+    mockRatingFindMany.mockResolvedValue([]);
 
     const res = await GET();
     const body = await res.json();
@@ -96,6 +100,7 @@ describe("GET /api/v1/users/me", () => {
   it("receivedRatings が配列として含まれる", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockFindUnique.mockResolvedValue(makeUser() as never);
+    mockRatingFindMany.mockResolvedValue(makeRatings() as never);
 
     const res = await GET();
     const body = await res.json();
@@ -107,6 +112,7 @@ describe("GET /api/v1/users/me", () => {
   it("receivedRatings の各要素に score, comment, createdAt, reviewer が含まれる", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockFindUnique.mockResolvedValue(makeUser() as never);
+    mockRatingFindMany.mockResolvedValue(makeRatings() as never);
 
     const res = await GET();
     const body = await res.json();
@@ -127,7 +133,8 @@ describe("GET /api/v1/users/me", () => {
 
   it("receivedRatings が 0 件の場合は空配列を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue(makeUser({ receivedRatings: [] }) as never);
+    mockFindUnique.mockResolvedValue(makeUser() as never);
+    mockRatingFindMany.mockResolvedValue([]);
 
     const res = await GET();
     const body = await res.json();

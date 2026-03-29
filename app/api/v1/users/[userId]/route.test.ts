@@ -23,7 +23,7 @@ const makeParams = (userId = "user-2") => ({
   params: Promise.resolve({ userId }),
 });
 
-const makeUser = (overrides: Record<string, unknown> = {}) => ({
+const makeUser = () => ({
   id: "user-2",
   username: "otheruser",
   iconUrl: null,
@@ -33,15 +33,6 @@ const makeUser = (overrides: Record<string, unknown> = {}) => ({
   createdAt: new Date("2026-01-01T00:00:00Z"),
   playStyleTags: [],
   games: [],
-  receivedRatings: [
-    {
-      id: "rating-1",
-      score: 4,
-      comment: "楽しかったです",
-      createdAt: new Date("2026-02-01T00:00:00Z"),
-    },
-  ],
-  ...overrides,
 });
 
 beforeEach(() => {
@@ -82,7 +73,7 @@ describe("GET /api/v1/users/[userId]", () => {
     expect(body.data.username).toBe("otheruser");
   });
 
-  it("receivedRatings が配列として含まれる", async () => {
+  it("レスポンスに receivedRatings が含まれない", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockFindUnique.mockResolvedValue(makeUser() as never);
 
@@ -90,31 +81,6 @@ describe("GET /api/v1/users/[userId]", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.data.receivedRatings).toHaveLength(1);
-  });
-
-  it("receivedRatings の各要素に score, comment, createdAt が含まれ reviewer は含まれない（匿名）", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue(makeUser() as never);
-
-    const res = await GET(new Request("http://localhost"), makeParams());
-    const body = await res.json();
-
-    const [first] = body.data.receivedRatings as Array<Record<string, unknown>>;
-    expect(first.id).toBe("rating-1");
-    expect(first.score).toBe(4);
-    expect(first.comment).toBe("楽しかったです");
-    expect(first.reviewer).toBeUndefined();
-  });
-
-  it("receivedRatings が 0 件の場合は空配列を返す", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue(makeUser({ receivedRatings: [] }) as never);
-
-    const res = await GET(new Request("http://localhost"), makeParams());
-    const body = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(body.data.receivedRatings).toEqual([]);
+    expect(body.data.receivedRatings).toBeUndefined();
   });
 });
