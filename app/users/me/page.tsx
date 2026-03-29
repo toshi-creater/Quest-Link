@@ -2,12 +2,21 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PencilSimple, ClockCounterClockwise, Star, GameController } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
-import { RatingDisplay } from "@/components/ui/StarRating";
+import { RatingDisplay, StarRating } from "@/components/ui/StarRating";
 import { DeleteAccountButton } from "./DeleteAccountButton";
+
+type ReceivedRating = {
+  id: string;
+  score: number;
+  comment: string | null;
+  createdAt: string;
+  reviewer: { username: string | null; iconUrl: string | null };
+};
 
 type UserProfile = {
   id: string;
@@ -18,6 +27,7 @@ type UserProfile = {
   ratingCount: number;
   playStyleTags: { id: string; name: string; slug: string }[];
   games: { id: string; igdbId: number; name: string; coverImageUrl: string | null }[];
+  receivedRatings: ReceivedRating[];
 };
 
 async function fetchMyProfile(): Promise<UserProfile> {
@@ -27,7 +37,10 @@ async function fetchMyProfile(): Promise<UserProfile> {
   return json.data;
 }
 
+const RATINGS_PREVIEW_COUNT = 3;
+
 export default function MyProfilePage() {
+  const [showAllRatings, setShowAllRatings] = useState(false);
 
   const { data: user, isLoading, isError } = useQuery({
     queryKey: ["users", "me"],
@@ -211,9 +224,68 @@ export default function MyProfilePage() {
           <Star className="h-3.5 w-3.5" style={{ fill: "#eab308", color: "#eab308" }} />
           受け取った評価
         </h2>
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          まだ評価がありません
-        </p>
+        {user.receivedRatings.length === 0 ? (
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            まだ評価がありません
+          </p>
+        ) : (
+          <>
+            <div className="space-y-3">
+              {(showAllRatings
+                ? user.receivedRatings
+                : user.receivedRatings.slice(0, RATINGS_PREVIEW_COUNT)
+              ).map((rating) => (
+                <div
+                  key={rating.id}
+                  className="rounded-xl p-4"
+                  style={{ backgroundColor: "var(--bg-input)", border: "1px solid var(--border)" }}
+                >
+                  <div className="flex items-start gap-3">
+                    <UserAvatar
+                      username={rating.reviewer.username}
+                      iconUrl={rating.reviewer.iconUrl}
+                      size="sm"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>
+                          {rating.reviewer.username ?? "退会済みユーザー"}
+                        </span>
+                        <span className="text-xs shrink-0" style={{ color: "var(--text-muted)" }}>
+                          {new Date(rating.createdAt).toLocaleDateString("ja-JP")}
+                        </span>
+                      </div>
+                      <div className="mt-1">
+                        <StarRating value={rating.score} readonly size="sm" />
+                      </div>
+                      {rating.comment && (
+                        <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                          {rating.comment}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {user.receivedRatings.length > RATINGS_PREVIEW_COUNT && (
+              <button
+                type="button"
+                onClick={() => setShowAllRatings((prev) => !prev)}
+                className="mt-3 w-full rounded-xl py-2.5 text-sm font-medium transition-colors hover:opacity-80"
+                style={{
+                  backgroundColor: "var(--bg-input)",
+                  border: "1px solid var(--border)",
+                  color: "var(--accent-light)",
+                }}
+              >
+                {showAllRatings
+                  ? "折りたたむ"
+                  : `すべて見る（${user.receivedRatings.length}件）`}
+              </button>
+            )}
+          </>
+        )}
       </div>
 
       {/* Danger Zone */}

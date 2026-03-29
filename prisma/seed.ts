@@ -1005,6 +1005,136 @@ async function main() {
     });
   }
   console.log(`✓ users.avgRating/ratingCount 更新: ${ratingStats.length}件`);
+
+  // ─── 7. テスト用評価データ（特定ユーザー向け） ─────────────────────────────────
+  const TEST_USER_ID = "4ebc9fc7-0c59-476f-bb2b-c4049e8da154";
+  const TEST_ROOM_ID = "00000000-0000-0000-0000-000000000001";
+
+  const testUser = await prisma.user.findUnique({ where: { id: TEST_USER_ID } });
+  if (testUser) {
+    // テスト用クローズ済み部屋を upsert
+    await prisma.room.upsert({
+      where: { id: TEST_ROOM_ID },
+      update: {},
+      create: {
+        id: TEST_ROOM_ID,
+        title: "【評価テスト用】クローズ済み部屋",
+        gameId: games[0]!.id,
+        hostId: userId("gamer_alice"),
+        maxPlayers: 6,
+        description: "評価UIのテスト用クローズ済み部屋",
+        status: "closed",
+        closedAt: new Date("2026-03-01T00:00:00Z"),
+      },
+    });
+
+    // 参加者を追加（テストユーザー + シードユーザー5名）
+    const reviewerUsernames = [
+      "gamer_alice",
+      "player_bob",
+      "thunder_kai",
+      "neon_taka",
+      "pixel_luna",
+    ];
+    await prisma.roomParticipant.createMany({
+      data: [
+        {
+          roomId: TEST_ROOM_ID,
+          userId: TEST_USER_ID,
+          isHost: false,
+          leftAt: new Date("2026-03-01T00:00:00Z"),
+        },
+        ...reviewerUsernames.map((username) => ({
+          roomId: TEST_ROOM_ID,
+          userId: userId(username),
+          isHost: username === "gamer_alice",
+          leftAt: new Date("2026-03-01T00:00:00Z"),
+        })),
+      ],
+      skipDuplicates: true,
+    });
+
+    // シードユーザーからテストユーザーへの評価（コメント付き）
+    const testRatingDefs = [
+      {
+        reviewerUsername: "gamer_alice",
+        score: 5,
+        comment: "連携がすごく上手で、一緒にやってて楽しかったです！また組みたいです。",
+        createdAt: new Date("2026-03-15T10:00:00Z"),
+      },
+      {
+        reviewerUsername: "player_bob",
+        score: 4,
+        comment: "フレンドリーで話しやすい方でした。次回もよろしくお願いします！",
+        createdAt: new Date("2026-03-10T20:00:00Z"),
+      },
+      {
+        reviewerUsername: "thunder_kai",
+        score: 5,
+        comment: "動きが読みやすくてとても頼りになりました。ありがとう！",
+        createdAt: new Date("2026-03-08T15:00:00Z"),
+      },
+      {
+        reviewerUsername: "neon_taka",
+        score: 3,
+        comment: "楽しかったですが、もう少しコミュニケーション取れると良いかも。",
+        createdAt: new Date("2026-03-05T22:00:00Z"),
+      },
+      {
+        reviewerUsername: "pixel_luna",
+        score: 4,
+        comment: "初めてご一緒しましたが、丁寧な方で良かったです。",
+        createdAt: new Date("2026-03-02T18:00:00Z"),
+      },
+    ];
+
+    const expiredAt = new Date("2025-01-01T00:00:00Z");
+    let testRatingTotal = 0;
+    for (const r of testRatingDefs) {
+      await prisma.rating.upsert({
+        where: {
+          roomId_reviewerId_revieweeId: {
+            roomId: TEST_ROOM_ID,
+            reviewerId: userId(r.reviewerUsername),
+            revieweeId: TEST_USER_ID,
+          },
+        },
+        update: { score: r.score, comment: r.comment },
+        create: {
+          roomId: TEST_ROOM_ID,
+          reviewerId: userId(r.reviewerUsername),
+          revieweeId: TEST_USER_ID,
+          score: r.score,
+          comment: r.comment,
+          createdAt: r.createdAt,
+          expiresAt: expiredAt,
+        },
+      });
+      testRatingTotal++;
+    }
+
+    // テストユーザーの avgRating / ratingCount を再集計
+    const testStats = await prisma.rating.aggregate({
+      where: { revieweeId: TEST_USER_ID },
+      _avg: { score: true },
+      _count: { score: true },
+    });
+    await prisma.user.update({
+      where: { id: TEST_USER_ID },
+      data: {
+        avgRating: testStats._avg.score ?? 0,
+        ratingCount: testStats._count.score,
+      },
+    });
+
+    console.log(
+      `✓ テスト用評価データ: ${testRatingTotal}件 → ユーザー ${TEST_USER_ID}`
+    );
+  } else {
+    console.log(
+      `⚠ テストユーザー ${TEST_USER_ID} が存在しないためスキップ`
+    );
+  }
 }
 
 main()

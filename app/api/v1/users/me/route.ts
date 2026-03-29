@@ -32,9 +32,20 @@ const profileSelect = {
   },
 } satisfies Prisma.UserSelect;
 
-type RawUser = Prisma.UserGetPayload<{ select: typeof profileSelect }>;
+const receivedRatingsSelect = {
+  id: true,
+  score: true,
+  comment: true,
+  createdAt: true,
+  reviewer: {
+    select: { username: true, iconUrl: true },
+  },
+} satisfies Prisma.RatingSelect;
 
-function formatUser(user: RawUser) {
+type RawUser = Prisma.UserGetPayload<{ select: typeof profileSelect }>;
+type RawRating = Prisma.RatingGetPayload<{ select: typeof receivedRatingsSelect }>;
+
+function formatUser(user: RawUser, receivedRatings: RawRating[]) {
   return {
     id: user.id,
     username: user.username,
@@ -45,6 +56,13 @@ function formatUser(user: RawUser) {
     createdAt: user.createdAt,
     playStyleTags: user.playStyleTags.map((t) => t.tag),
     games: user.games.map((g) => g.game),
+    receivedRatings: receivedRatings.map((r) => ({
+      id: r.id,
+      score: r.score,
+      comment: r.comment,
+      createdAt: r.createdAt,
+      reviewer: r.reviewer,
+    })),
   };
 }
 
@@ -54,16 +72,21 @@ export async function GET() {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: profileSelect,
-  });
+  const [user, receivedRatings] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.user.id }, select: profileSelect }),
+    prisma.rating.findMany({
+      where: { revieweeId: session.user.id },
+      select: receivedRatingsSelect,
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+  ]);
 
   if (!user) {
     return NextResponse.json({ error: "USER_NOT_FOUND" }, { status: 404 });
   }
 
-  return NextResponse.json({ data: formatUser(user) });
+  return NextResponse.json({ data: formatUser(user, receivedRatings) });
 }
 
 export async function PATCH(request: Request) {

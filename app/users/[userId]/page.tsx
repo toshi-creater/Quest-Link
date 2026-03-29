@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Star, GameController } from "@phosphor-icons/react";
+import { ArrowLeft, GameController } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
@@ -204,16 +204,6 @@ export default function UserProfilePage() {
         )}
       </div>
 
-      {/* Received Ratings */}
-      <div className="mt-8 px-4 sm:px-6">
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
-          <Star className="h-3.5 w-3.5" style={{ fill: "#eab308", color: "#eab308" }} />
-          受け取った評価
-        </h2>
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          まだ評価がありません
-        </p>
-      </div>
     </div>
   );
 }
