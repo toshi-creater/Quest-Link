@@ -30,6 +30,19 @@ const profileSelect = {
       game: { select: { id: true, name: true, coverImageUrl: true } },
     },
   },
+  receivedRatings: {
+    select: {
+      id: true,
+      score: true,
+      comment: true,
+      createdAt: true,
+      reviewer: {
+        select: { username: true, iconUrl: true },
+      },
+    },
+    orderBy: { createdAt: "desc" as const },
+    take: 20,
+  },
 } satisfies Prisma.UserSelect;
 
 type RawUser = Prisma.UserGetPayload<{ select: typeof profileSelect }>;
@@ -45,6 +58,13 @@ function formatUser(user: RawUser) {
     createdAt: user.createdAt,
     playStyleTags: user.playStyleTags.map((t) => t.tag),
     games: user.games.map((g) => g.game),
+    receivedRatings: user.receivedRatings.map((r) => ({
+      id: r.id,
+      score: r.score,
+      comment: r.comment,
+      createdAt: r.createdAt,
+      reviewer: r.reviewer,
+    })),
   };
 }
 

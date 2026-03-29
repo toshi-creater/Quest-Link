@@ -7,7 +7,14 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Star, GameController } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
-import { RatingDisplay } from "@/components/ui/StarRating";
+import { RatingDisplay, StarRating } from "@/components/ui/StarRating";
+
+type ReceivedRating = {
+  id: string;
+  score: number;
+  comment: string | null;
+  createdAt: string;
+};
 
 type UserProfile = {
   id: string;
@@ -18,6 +25,7 @@ type UserProfile = {
   ratingCount: number;
   playStyleTags: { id: string; name: string; slug: string }[];
   games: { id: string; igdbId: number; name: string; coverImageUrl: string | null }[];
+  receivedRatings: ReceivedRating[];
 };
 
 async function fetchUserProfile(userId: string): Promise<UserProfile> {
@@ -210,9 +218,37 @@ export default function UserProfilePage() {
           <Star className="h-3.5 w-3.5" style={{ fill: "#eab308", color: "#eab308" }} />
           受け取った評価
         </h2>
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          まだ評価がありません
-        </p>
+        {user.receivedRatings.length === 0 ? (
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            まだ評価がありません
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {user.receivedRatings.map((rating) => (
+              <div
+                key={rating.id}
+                className="rounded-xl p-4"
+                style={{ backgroundColor: "var(--bg-input)", border: "1px solid var(--border)" }}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    <StarRating value={rating.score} readonly size="sm" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {new Date(rating.createdAt).toLocaleDateString("ja-JP")}
+                    </span>
+                    {rating.comment && (
+                      <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                        {rating.comment}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
