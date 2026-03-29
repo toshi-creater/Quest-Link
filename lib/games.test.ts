@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { searchGames, getPopularGames, getGameById } from "@/lib/games";
+import { searchGames, getPopularGames, getPopularGamesExcluding, getGameById } from "@/lib/games";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -97,6 +97,54 @@ describe("getPopularGames", () => {
         where: expect.objectContaining({ isActive: true }),
       })
     );
+  });
+});
+
+describe("getPopularGamesExcluding", () => {
+  it("excludeIds が空のとき notIn フィルターなしで呼ばれる", async () => {
+    mockFindMany.mockResolvedValueOnce(sampleGames);
+
+    const result = await getPopularGamesExcluding([], 6);
+
+    expect(mockFindMany).toHaveBeenCalledWith({
+      where: { isActive: true },
+      orderBy: { displayOrder: "asc" },
+      take: 6,
+      select: { id: true, name: true, coverImageUrl: true },
+    });
+    expect(result).toEqual(sampleGames);
+  });
+
+  it("excludeIds に値があるとき id: { notIn } フィルターが付く", async () => {
+    mockFindMany.mockResolvedValueOnce([sampleGames[1]]);
+
+    const result = await getPopularGamesExcluding(["1"], 5);
+
+    expect(mockFindMany).toHaveBeenCalledWith({
+      where: { isActive: true, id: { notIn: ["1"] } },
+      orderBy: { displayOrder: "asc" },
+      take: 5,
+      select: { id: true, name: true, coverImageUrl: true },
+    });
+    expect(result).toEqual([sampleGames[1]]);
+  });
+
+  it("limit が take に反映される", async () => {
+    mockFindMany.mockResolvedValueOnce([]);
+
+    await getPopularGamesExcluding(["1", "2"], 3);
+
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 3 })
+    );
+  });
+
+  it("結果が空配列のとき空配列を返す", async () => {
+    mockFindMany.mockResolvedValueOnce([]);
+
+    const result = await getPopularGamesExcluding(["1", "2"], 6);
+
+    expect(result).toEqual([]);
   });
 });
 
