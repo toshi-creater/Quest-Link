@@ -1,31 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, Crown, Chat, Users, CircleNotch } from "@phosphor-icons/react";
+import { ArrowLeft, Crown, Chat, Users } from "@phosphor-icons/react";
 import { fetchRoom } from "@/lib/api/rooms";
+import { roomStatusConfig, fallbackStatusConfig } from "@/lib/room-status";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
 import { GameCover } from "@/components/ui/GamePicker";
 import { RoomActions } from "./RoomActions";
 
-const statusConfig = {
-  waiting: { label: "募集中", bg: "rgba(34,197,94,0.15)", color: "#22c55e", border: "rgba(34,197,94,0.3)" },
-  playing: { label: "プレイ中", bg: "rgba(234,179,8,0.15)", color: "#eab308", border: "rgba(234,179,8,0.3)" },
-  closed: { label: "終了", bg: "rgba(100,100,120,0.15)", color: "#8888aa", border: "rgba(100,100,120,0.3)" },
-};
-
 type Props = { roomId: string };
 
 export function RoomDetailView({ roomId }: Props) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
-  const router = useRouter();
-  const pathname = usePathname();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["room", roomId],
@@ -33,21 +25,38 @@ export function RoomDetailView({ roomId }: Props) {
     enabled: !!currentUserId,
   });
 
-  const isParticipantOnOtherPage =
-    pathname !== "/rooms/current" &&
-    !!data &&
-    data.data.participants.some((p) => p.userId === currentUserId);
-
-  useEffect(() => {
-    if (isParticipantOnOtherPage) {
-      router.replace("/rooms/current");
-    }
-  }, [isParticipantOnOtherPage, router]);
-
-  if (isLoading || isParticipantOnOtherPage) {
+  if (isLoading) {
     return (
-      <div className="flex justify-center py-32">
-        <CircleNotch className="h-8 w-8 animate-spin" style={{ color: "var(--accent)" }} />
+      <div className="mx-auto max-w-5xl px-4 py-4 sm:py-8 sm:px-6">
+        <div className="mb-6 h-5 w-20 rounded animate-shimmer" />
+        <div className="grid gap-6 md:grid-cols-[1fr_260px] lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+              <div className="h-32 animate-shimmer" />
+              <div className="px-4 py-4 sm:px-6 sm:py-5 space-y-3">
+                <div className="h-6 w-2/3 rounded animate-shimmer" />
+                <div className="h-4 w-full rounded animate-shimmer" />
+                <div className="h-4 w-3/4 rounded animate-shimmer" />
+              </div>
+            </div>
+            <div className="h-14 rounded-xl animate-shimmer" />
+          </div>
+          <div>
+            <div className="rounded-2xl border p-5 space-y-3" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+              <div className="h-5 w-20 rounded animate-shimmer" />
+              <div className="h-2 w-full rounded-full animate-shimmer" />
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full animate-shimmer shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 w-24 rounded animate-shimmer" />
+                    <div className="h-2 w-16 rounded animate-shimmer" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -70,13 +79,13 @@ export function RoomDetailView({ roomId }: Props) {
   }
 
   const room = data.data;
-  const status = statusConfig[room.status];
+  const status = roomStatusConfig[room.status as keyof typeof roomStatusConfig] ?? fallbackStatusConfig;
   const isParticipant = room.participants.some((p) => p.userId === currentUserId);
   const isHost = room.host.id === currentUserId;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      {/* Back */}
+    <div className="mx-auto max-w-5xl px-4 py-4 sm:py-8 sm:px-6">
+      {/* Back
       <Link
         href="/rooms"
         className="mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
@@ -84,28 +93,29 @@ export function RoomDetailView({ roomId }: Props) {
       >
         <ArrowLeft className="h-4 w-4" />
         部屋一覧
-      </Link>
+      </Link> */}
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-[1fr_260px] lg:grid-cols-3">
         {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Room Info */}
           <div
-            className="rounded-2xl border overflow-hidden"
+            className="rounded-2xl border overflow-hidden animate-fade-in-up"
             style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
           >
             {/* Game cover header */}
             <div
-              className="relative h-32 flex items-end px-6 pb-4 overflow-hidden"
+              className="relative h-32 flex items-end px-4 pb-3 sm:px-6 sm:pb-4 overflow-hidden"
               style={{ backgroundColor: "rgba(124,58,237,0.08)" }}
             >
-              {room.game.coverUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={room.game.coverUrl}
+              {room.game.coverImageUrl && (
+                <Image
+                  src={room.game.coverImageUrl}
                   alt=""
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-25 blur-sm scale-110"
+                  fill
+                  className="pointer-events-none object-cover opacity-25 blur-sm scale-110"
+                  sizes="800px"
                 />
               )}
               <div
@@ -139,8 +149,8 @@ export function RoomDetailView({ roomId }: Props) {
             </div>
 
             {/* Room details */}
-            <div className="px-6 py-5">
-              <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
+            <div className="px-4 py-4 sm:px-6 sm:py-5">
+              <h1 className="text-lg sm:text-xl font-bold" style={{ color: "var(--text-primary)" }}>
                 {room.title}
               </h1>
               {room.description && (
@@ -159,18 +169,20 @@ export function RoomDetailView({ roomId }: Props) {
           </div>
 
           {/* Actions */}
+          <div className="animate-fade-in-up" style={{ animationDelay: "80ms" }}>
           <RoomActions
             roomId={room.id}
             isParticipant={isParticipant}
             isHost={isHost}
             status={room.status}
           />
+          </div>
 
           {/* Chat shortcut */}
           {isParticipant && (
             <Link
               href={`/rooms/${room.id}/chat`}
-              className="flex items-center justify-between rounded-xl border px-5 py-4 transition-all hover:border-purple-500"
+              className="flex items-center justify-between rounded-xl border px-5 py-4 transition-all hover:border-[var(--accent)]"
               style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
             >
               <div className="flex items-center gap-3">
@@ -184,9 +196,6 @@ export function RoomDetailView({ roomId }: Props) {
                   <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                     チャットルームへ
                   </p>
-                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    リアルタイムでメッセージを送受信
-                  </p>
                 </div>
               </div>
               <ArrowLeft className="h-4 w-4 rotate-180" style={{ color: "var(--text-muted)" }} />
@@ -195,9 +204,9 @@ export function RoomDetailView({ roomId }: Props) {
         </div>
 
         {/* Sidebar: Participants */}
-        <div className="space-y-4">
+        <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: "160ms" }}>
           <div
-            className="rounded-2xl border p-5"
+            className="rounded-2xl border p-4 sm:p-5"
             style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
           >
             <div className="flex items-center justify-between mb-4">
