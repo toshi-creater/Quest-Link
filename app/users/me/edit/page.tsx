@@ -92,30 +92,39 @@ export default function EditProfilePage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-4 sm:py-8 sm:px-6">
+    <div className="mx-auto max-w-2xl px-4 py-4 sm:px-6 sm:py-8">
       <Link
         href="/users/me"
-        className="mb-3 sm:mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
+        className="mb-3 flex items-center gap-2 text-sm transition-colors hover:text-white sm:mb-6"
         style={{ color: "var(--text-secondary)" }}
       >
         <ArrowLeft className="h-4 w-4" />
         プロフィールに戻る
       </Link>
 
-      <div
-        className="rounded-2xl border p-4 sm:p-8"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+      <h1
+        className="mb-2 text-xl font-bold sm:text-2xl"
+        style={{ color: "var(--text-primary)" }}
       >
-        <h1 className="mb-2 text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-          プロフィール編集
-        </h1>
+        プロフィール編集
+      </h1>
 
-        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 sm:space-y-6">
-          {/* Avatar preview */}
+      <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-6 sm:gap-8">
+        {/* Avatar section */}
+        <div>
+          <p
+            className="mb-4 text-sm font-medium"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            アイコン
+          </p>
           <div className="flex items-center gap-4">
             <UserAvatar username={username || "?"} iconUrl={iconUrl || null} size="xl" />
             <div className="flex-1">
-              <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              <label
+                className="mb-1.5 block text-sm font-medium"
+                style={{ color: "var(--text-primary)" }}
+              >
                 アイコン URL{" "}
                 <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
                   （任意）
@@ -126,92 +135,110 @@ export default function EditProfilePage() {
                 placeholder="https://example.com/icon.png"
                 value={iconUrl}
                 onChange={(e) => setIconUrl(e.target.value)}
-                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
+                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--accent)]"
                 style={inputStyle}
               />
             </div>
           </div>
+        </div>
 
-          {/* Username */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-              ユーザー名 <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              maxLength={50}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
-              style={inputStyle}
-            />
-          </div>
+        {/* Username section */}
+        <div>
+          <label
+            className="mb-3 block text-sm font-medium"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            ユーザー名
+          </label>
+          <input
+            type="text"
+            required
+            maxLength={50}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--accent)]"
+            style={inputStyle}
+          />
+          <p className="mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
+            必須 · 50文字以内
+          </p>
+        </div>
 
-          {/* Bio */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-              自己紹介{" "}
-              <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
-                （任意・500文字以内）
-              </span>
-            </label>
-            <textarea
-              rows={3}
-              placeholder="プレイスタイルや得意なゲームについて教えてください..."
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              maxLength={500}
-              className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
-              style={inputStyle}
-            />
-          </div>
+        {/* Bio section */}
+        <div>
+          <label
+            className="mb-3 block text-sm font-medium"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            自己紹介{" "}
+            <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
+              （任意）
+            </span>
+          </label>
+          <textarea
+            rows={3}
+            placeholder="プレイスタイルや得意なゲームについて教えてください..."
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            maxLength={500}
+            className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--accent)]"
+            style={inputStyle}
+          />
+          <p className="mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
+            500文字以内
+          </p>
+        </div>
 
-          {/* Game Picker */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-              プレイしているゲーム{" "}
-              <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
-                （最大20件・IGDBから検索）
-              </span>
-            </label>
-            <MultiGamePicker value={selectedGames} onChange={setSelectedGames} max={20} />
-            <p className="mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-              ゲーム名を入力して検索し、プレイしているゲームを登録できます
-            </p>
-          </div>
+        {/* Games section */}
+        <div>
+          <label
+            className="mb-3 block text-sm font-medium"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            プレイしているゲーム{" "}
+            <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
+              （最大20件）
+            </span>
+          </label>
+          <MultiGamePicker value={selectedGames} onChange={setSelectedGames} max={20} />
+          <p className="mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
+            ゲーム名を入力して検索し、プレイしているゲームを登録できます
+          </p>
+        </div>
 
-          {/* Error */}
-          {error && (
-            <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-              {error}
-            </p>
-          )}
+        {/* Error */}
+        {error && (
+          <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            {error}
+          </p>
+        )}
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-1 sm:pt-2">
-            <Link
-              href="/users/me"
-              className="flex-1 rounded-xl border px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"
-              style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
-            >
-              キャンセル
-            </Link>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
-              style={{
-                background: "linear-gradient(135deg, var(--accent), #6d28d9)",
-                boxShadow: "0 4px 14px rgba(124,58,237,0.4)",
-              }}
-            >
-              <FloppyDisk className="h-4 w-4" />
-              {saving ? "保存中..." : "保存する"}
-            </button>
-          </div>
-        </form>
-      </div>
+        {/* Sticky buttons */}
+        <div
+          className="sticky bottom-0 flex gap-3 py-4"
+          style={{ backgroundColor: "var(--bg-base)" }}
+        >
+          <Link
+            href="/users/me"
+            className="flex-1 rounded-xl border px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"
+            style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+          >
+            キャンセル
+          </Link>
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
+            style={{
+              background: "linear-gradient(135deg, var(--accent), #6d28d9)",
+              boxShadow: "0 4px 14px rgba(124,58,237,0.4)",
+            }}
+          >
+            <FloppyDisk className="h-4 w-4" />
+            {saving ? "保存中..." : "保存する"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
