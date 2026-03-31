@@ -163,7 +163,7 @@ export async function PATCH(request: Request) {
       });
     });
 
-    return NextResponse.json({ data: formatUser(user) });
+    return NextResponse.json({ data: formatUser(user, []) });
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

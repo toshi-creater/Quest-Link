@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Lightning, Check, ArrowLeft, CaretRight } from "@phosphor-icons/react";
+import { Lightning, Check, ArrowLeft, CaretRight, Camera } from "@phosphor-icons/react";
 import { type Game } from "@/lib/mock-data";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { GridGamePicker } from "@/components/ui/GamePicker";
@@ -16,13 +16,23 @@ export default function OnboardingPage() {
   const callbackUrl = searchParams.get("callbackUrl");
   const { data: session, update, status } = useSession();
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [username, setUsername] = useState("");
-  const [iconUrl, setIconUrl] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [selectedGames, setSelectedGames] = useState<Game[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!avatarFile) return;
+    const url = URL.createObjectURL(avatarFile);
+    setAvatarPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [avatarFile]);
 
   useEffect(() => {
     if (status === "authenticated" && !session?.user?.needsProfileSetup) {
@@ -35,13 +45,25 @@ export default function OnboardingPage() {
     setError(null);
 
     try {
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append("file", avatarFile);
+        const uploadRes = await fetch("/api/v1/users/me/avatar", {
+          method: "POST",
+          body: formData,
+        });
+        if (!uploadRes.ok) {
+          setError("画像のアップロードに失敗しました");
+          return;
+        }
+      }
+
       const res = await fetch("/api/v1/users/me", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: username.trim(),
           bio: bio || null,
-          iconUrl: iconUrl || null,
           gameIds: selectedGames.map((g) => g.id),
         }),
       });
@@ -303,31 +325,30 @@ export default function OnboardingPage() {
                   プロフィール画像を設定
                 </h1>
                 <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
-                  アイコンとして表示される画像のURLを入力してください。後から変更できます。
+                  アイコン画像を設定してください。後から変更できます。
                 </p>
               </div>
 
-              <div className="flex items-center gap-4">
-                <UserAvatar username={username || "?"} iconUrl={iconUrl || null} size="xl" />
-                <div className="flex-1">
-                  <label
-                    className="mb-1.5 block text-sm font-medium"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    画像 URL{" "}
-                    <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
-                      （任意）
-                    </span>
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://example.com/icon.png"
-                    value={iconUrl}
-                    onChange={(e) => setIconUrl(e.target.value)}
-                    className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
-                    style={inputStyle}
-                  />
-                </div>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="group relative flex-shrink-0"
+                  aria-label="アイコン画像を選択"
+                >
+                  <UserAvatar username={username || "?"} iconUrl={avatarPreview} size="xl" />
+                  <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <div className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-black/80">
+                    <Camera className="h-3.5 w-3.5 text-white" />
+                  </div>
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) setAvatarFile(f); }}
+                  className="hidden"
+                />
               </div>
             </div>
 

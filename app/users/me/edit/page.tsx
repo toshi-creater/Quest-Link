@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { ArrowLeft, FloppyDisk } from "@phosphor-icons/react";
+import { ArrowLeft, FloppyDisk, Camera } from "@phosphor-icons/react";
 import { type Game } from "@/lib/mock-data";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { MultiGamePicker } from "@/components/ui/GamePicker";
@@ -27,6 +27,7 @@ async function fetchMyProfile(): Promise<UserProfile> {
 export default function EditProfilePage() {
   const router = useRouter();
   const { data: session, update, status } = useSession();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: profile } = useQuery({
     queryKey: ["users", "me"],
@@ -35,7 +36,9 @@ export default function EditProfilePage() {
   });
 
   const [username, setUsername] = useState(session?.user?.username ?? "");
-  const [iconUrl, setIconUrl] = useState(session?.user?.iconUrl ?? "");
+  const [iconUrl, setIconUrl] = useState<string | null>(session?.user?.iconUrl ?? null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [selectedGames, setSelectedGames] = useState<Game[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -45,12 +48,25 @@ export default function EditProfilePage() {
   useEffect(() => {
     if (profile && !initialized) {
       setUsername(profile.username);
-      setIconUrl(profile.iconUrl ?? "");
+      setIconUrl(profile.iconUrl);
       setBio(profile.bio ?? "");
       setSelectedGames(profile.games);
       setInitialized(true);
     }
   }, [profile, initialized]);
+
+  useEffect(() => {
+    if (!avatarFile) return;
+    const url = URL.createObjectURL(avatarFile);
+    setAvatarPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [avatarFile]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -58,13 +74,43 @@ export default function EditProfilePage() {
     setSaving(true);
 
     try {
+      // アバター画像のアップロード
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append("file", avatarFile);
+
+        const uploadRes = await fetch("/api/v1/users/me/avatar", {
+          method: "POST",
+          body: formData,
+        });
+
+        const uploadJson = (await uploadRes.json()) as {
+          data?: { iconUrl: string };
+          error?: string;
+        };
+
+        if (!uploadRes.ok) {
+          const msgMap: Record<string, string> = {
+            FILE_TOO_LARGE: "画像サイズは5MB以内にしてください",
+            INVALID_FILE_TYPE: "JPEG / PNG / WebP / GIF のみアップロード可能です",
+            UPLOAD_FAILED: "画像のアップロードに失敗しました",
+          };
+          setError(msgMap[uploadJson.error ?? ""] ?? "画像のアップロードに失敗しました");
+          return;
+        }
+
+        if (uploadJson.data) {
+          setIconUrl(uploadJson.data.iconUrl);
+        }
+      }
+
+      // プロフィール更新
       const res = await fetch("/api/v1/users/me", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: username.trim(),
           bio: bio || null,
-          iconUrl: iconUrl || null,
           gameIds: selectedGames.map((g) => g.id),
         }),
       });
@@ -91,55 +137,45 @@ export default function EditProfilePage() {
     color: "var(--text-primary)",
   };
 
+  const displayIconUrl = avatarPreview ?? iconUrl;
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-4 sm:px-6 sm:py-8">
       <Link
         href="/users/me"
-        className="mb-3 flex items-center gap-2 text-sm transition-colors hover:text-white sm:mb-6"
-        style={{ color: "var(--text-secondary)" }}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        プロフィールに戻る
-      </Link>
-
-      <h1
-        className="mb-2 text-xl font-bold sm:text-2xl"
+        className="mb-6 flex items-center gap-2 text-xl font-bold transition-colors hover:opacity-80 sm:text-2xl"
         style={{ color: "var(--text-primary)" }}
       >
+        <ArrowLeft className="h-5 w-5" />
         プロフィール編集
-      </h1>
+      </Link>
 
       <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-6 sm:gap-8">
         {/* Avatar section */}
-        <div>
-          <p
-            className="mb-4 text-sm font-medium"
-            style={{ color: "var(--text-secondary)" }}
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="group relative flex-shrink-0"
+            aria-label="アイコン画像を変更"
           >
-            アイコン
-          </p>
-          <div className="flex items-center gap-4">
-            <UserAvatar username={username || "?"} iconUrl={iconUrl || null} size="xl" />
-            <div className="flex-1">
-              <label
-                className="mb-1.5 block text-sm font-medium"
-                style={{ color: "var(--text-primary)" }}
-              >
-                アイコン URL{" "}
-                <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
-                  （任意）
-                </span>
-              </label>
-              <input
-                type="url"
-                placeholder="https://example.com/icon.png"
-                value={iconUrl}
-                onChange={(e) => setIconUrl(e.target.value)}
-                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--accent)]"
-                style={inputStyle}
-              />
+            <UserAvatar
+              username={username || "?"}
+              iconUrl={displayIconUrl}
+              size="xl"
+            />
+            <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100" />
+            <div className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-black/80">
+              <Camera className="h-3.5 w-3.5 text-white" />
             </div>
-          </div>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleFileChange}
+            className="hidden"
+          />
         </div>
 
         {/* Username section */}
@@ -159,9 +195,6 @@ export default function EditProfilePage() {
             className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--accent)]"
             style={inputStyle}
           />
-          <p className="mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-            必須 · 50文字以内
-          </p>
         </div>
 
         {/* Bio section */}
@@ -170,10 +203,7 @@ export default function EditProfilePage() {
             className="mb-3 block text-sm font-medium"
             style={{ color: "var(--text-secondary)" }}
           >
-            自己紹介{" "}
-            <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
-              （任意）
-            </span>
+            自己紹介
           </label>
           <textarea
             rows={3}
@@ -184,9 +214,6 @@ export default function EditProfilePage() {
             className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--accent)]"
             style={inputStyle}
           />
-          <p className="mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-            500文字以内
-          </p>
         </div>
 
         {/* Games section */}
@@ -195,15 +222,9 @@ export default function EditProfilePage() {
             className="mb-3 block text-sm font-medium"
             style={{ color: "var(--text-secondary)" }}
           >
-            プレイしているゲーム{" "}
-            <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
-              （最大20件）
-            </span>
+            プレイしているゲーム
           </label>
           <MultiGamePicker value={selectedGames} onChange={setSelectedGames} max={20} />
-          <p className="mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-            ゲーム名を入力して検索し、プレイしているゲームを登録できます
-          </p>
         </div>
 
         {/* Error */}
