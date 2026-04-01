@@ -22,11 +22,13 @@ vi.mock("@/lib/prisma", () => ({
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { GET } from "./route";
+import { Prisma } from "@prisma/client";
+import { GET, PATCH } from "./route";
 
 const mockAuth = vi.mocked(auth);
 const mockFindUnique = vi.mocked(prisma.user.findUnique);
 const mockRatingFindMany = vi.mocked(prisma.rating.findMany);
+const mockTransaction = prisma.$transaction as ReturnType<typeof vi.fn>;
 
 const makeUser = () => ({
   id: "user-1",
@@ -141,5 +143,71 @@ describe("GET /api/v1/users/me", () => {
 
     expect(res.status).toBe(200);
     expect(body.data.receivedRatings).toEqual([]);
+  });
+});
+
+const makePatchRequest = (body: Record<string, unknown>) =>
+  new Request("http://localhost/api/v1/users/me", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+describe("PATCH /api/v1/users/me", () => {
+  it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
+    mockAuth.mockResolvedValue(null);
+
+    const res = await PATCH(makePatchRequest({ username: "newname" }));
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.error).toBe("UNAUTHORIZED");
+  });
+
+  it("username が空文字の場合 400 BAD_REQUEST を返す", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
+
+    const res = await PATCH(makePatchRequest({ username: "" }));
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBe("BAD_REQUEST");
+  });
+
+  it("正常更新の場合 200 とユーザーデータを返す", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
+    mockTransaction.mockImplementation(async (fn: (tx: typeof prisma) => Promise<unknown>) =>
+      fn({
+        ...prisma,
+        user: {
+          ...prisma.user,
+          update: vi.fn().mockResolvedValue({
+            ...makeUser(),
+            username: "updatedname",
+          }),
+        },
+      } as never)
+    );
+
+    const res = await PATCH(makePatchRequest({ username: "updatedname" }));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.username).toBe("updatedname");
+  });
+
+  it("ユーザー名重複の場合 409 USERNAME_TAKEN を返す", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
+    const prismaError = new Prisma.PrismaClientKnownRequestError("Unique constraint", {
+      code: "P2002",
+      clientVersion: "5.0.0",
+    });
+    mockTransaction.mockRejectedValue(prismaError);
+
+    const res = await PATCH(makePatchRequest({ username: "takenname" }));
+    const body = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(body.error).toBe("USERNAME_TAKEN");
   });
 });

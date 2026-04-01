@@ -13,6 +13,7 @@
 |---------|------|------|------|
 | GET | `/users/me` | 必要 | 自分のプロフィール取得 |
 | PATCH | `/users/me` | 必要 | 自分のプロフィール更新 |
+| POST | `/users/me/avatar` | 必要 | プロフィール画像アップロード |
 | DELETE | `/users/me` | 必要 | アカウント削除 |
 | GET | `/users/{userId}` | 不要 | ユーザープロフィール取得 |
 | GET | `/users/me/rooms` | 必要 | 自分の部屋参加履歴取得 |
@@ -93,7 +94,45 @@ PATCH /users/me
 
 ---
 
-## 4. アカウント削除
+## 4. プロフィール画像アップロード
+
+画像ファイルをアップロードし、Supabase Storage に保存した上で `iconUrl` を更新する。
+
+```
+POST /users/me/avatar
+```
+
+**認証**: 必要
+**Content-Type**: `multipart/form-data`
+
+### リクエストボディ
+
+| フィールド | 型 | 制約 | 説明 |
+|-----------|-----|------|------|
+| `file` | File | JPEG / PNG / WebP / GIF、5MB 以内 | アップロードする画像ファイル |
+
+### レスポンス `200 OK`
+
+```json
+{
+  "data": {
+    "iconUrl": "https://xxxx.supabase.co/storage/v1/object/public/avatar_images/user-id/avatar.png"
+  }
+}
+```
+
+### エラー
+
+| HTTP | エラーコード | 説明 |
+|------|------------|------|
+| 400 | `FILE_REQUIRED` | ファイルが含まれていない |
+| 400 | `INVALID_FILE_TYPE` | 許可されていない MIME タイプ |
+| 400 | `FILE_TOO_LARGE` | ファイルサイズが 5MB 超 |
+| 500 | `UPLOAD_FAILED` | Supabase Storage へのアップロード失敗 |
+
+---
+
+## 5. アカウント削除
 
 アカウントおよびすべての関連データを物理削除する。
 
@@ -107,7 +146,7 @@ DELETE /users/me
 
 ---
 
-## 5. ユーザープロフィール取得
+## 6. ユーザープロフィール取得
 
 ```
 GET /users/{userId}
@@ -144,7 +183,7 @@ GET /users/{userId}
 
 ---
 
-## 6. 自分の参加履歴取得
+## 7. 自分の参加履歴取得
 
 新しい順（`joined_at` 降順）で返却される。
 
