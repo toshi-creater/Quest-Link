@@ -166,3 +166,30 @@ export async function fetchCurrentRoom(): Promise<CurrentRoomResponse> {
   if (!res.ok) throw new Error("参加中の部屋の取得に失敗しました");
   return res.json() as Promise<CurrentRoomResponse>;
 }
+
+export type InviteTokenResponse = {
+  data: { inviteToken: string };
+};
+
+export async function generateInviteToken(roomId: string): Promise<InviteTokenResponse> {
+  const res = await fetch(`/api/v1/rooms/${roomId}/invite`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = (await res.json()) as { error?: { code: string; message: string } };
+    throw new Error(body.error?.message ?? "招待リンクの生成に失敗しました");
+  }
+  return res.json() as Promise<InviteTokenResponse>;
+}
+
+export async function invalidateInviteToken(roomId: string): Promise<void> {
+  const res = await fetch(`/api/v1/rooms/${roomId}/invite`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = (await res.json()) as { error?: { code: string; message: string } };
+    throw new Error(body.error?.message ?? "招待リンクの無効化に失敗しました");
+  }
+}

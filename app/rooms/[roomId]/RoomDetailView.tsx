@@ -12,6 +12,7 @@ import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
 import { GameCover } from "@/components/ui/GamePicker";
 import { RoomActions } from "./RoomActions";
+import { InvitePanel } from "./InvitePanel";
 
 type Props = { roomId: string };
 
@@ -97,7 +98,7 @@ export function RoomDetailView({ roomId }: Props) {
 
       <div className="grid gap-4 sm:gap-6 md:grid-cols-[1fr_260px] lg:grid-cols-3">
         {/* Main content */}
-        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+        <div className="lg:col-span-2 flex flex-col gap-4 sm:gap-6">
           {/* Room Info */}
           <div
             className="rounded-2xl border overflow-hidden animate-fade-in-up"
@@ -168,22 +169,12 @@ export function RoomDetailView({ roomId }: Props) {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="animate-fade-in-up" style={{ animationDelay: "80ms" }}>
-          <RoomActions
-            roomId={room.id}
-            isParticipant={isParticipant}
-            isHost={isHost}
-            status={room.status}
-          />
-          </div>
-
           {/* Chat shortcut */}
           {isParticipant && (
             <Link
               href={`/rooms/${room.id}/chat`}
-              className="flex items-center justify-between rounded-xl border px-5 py-4 transition-all hover:border-[var(--accent)]"
-              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+              className="flex items-center justify-between rounded-xl border px-5 py-4 transition-all hover:border-[var(--accent)] animate-fade-in-up"
+              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", animationDelay: "80ms" }}
             >
               <div className="flex items-center gap-3">
                 <div
@@ -201,6 +192,23 @@ export function RoomDetailView({ roomId }: Props) {
               <ArrowLeft className="h-4 w-4 rotate-180" style={{ color: "var(--text-muted)" }} />
             </Link>
           )}
+
+          {/* Invite link */}
+          {isHost && room.status !== "closed" && (
+            <div className="animate-fade-in-up" style={{ animationDelay: "80ms" }}>
+              <InvitePanel roomId={room.id} />
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="animate-fade-in-up" style={{ animationDelay: "80ms" }}>
+            <RoomActions
+              roomId={room.id}
+              isParticipant={isParticipant}
+              isHost={isHost}
+              status={room.status}
+            />
+          </div>
         </div>
 
         {/* Sidebar: Participants */}
