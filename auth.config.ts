@@ -34,7 +34,10 @@ export const authConfig = {
         return true;
       }
 
-      const isPublicPage = pathname === "/" || pathname === "/rooms";
+      const isPublicPage =
+        pathname === "/" ||
+        pathname === "/rooms" ||
+        pathname.startsWith("/rooms/");
       if (!isLoggedIn && isPublicPage) return true;
 
       if (!isLoggedIn) return false;

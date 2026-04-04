@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { ArrowLeft, Crown, Chat, Users } from "@phosphor-icons/react";
@@ -11,6 +12,7 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
 import { GameCover } from "@/components/ui/GamePicker";
+import { GuestJoinModal } from "@/components/rooms/GuestJoinModal";
 import { RoomActions } from "./RoomActions";
 import { InvitePanel } from "./InvitePanel";
 
@@ -18,12 +20,14 @@ type Props = { roomId: string };
 
 export function RoomDetailView({ roomId }: Props) {
   const { data: session } = useSession();
-  const currentUserId = session?.user?.id;
+  const currentUserId = session?.user?.id ?? null;
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get("inviteToken");
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["room", roomId],
     queryFn: () => fetchRoom(roomId),
-    enabled: !!currentUserId,
+    enabled: !!roomId,
   });
 
   if (isLoading) {
@@ -81,8 +85,10 @@ export function RoomDetailView({ roomId }: Props) {
 
   const room = data.data;
   const status = roomStatusConfig[room.status as keyof typeof roomStatusConfig] ?? fallbackStatusConfig;
-  const isParticipant = room.participants.some((p) => p.userId === currentUserId);
-  const isHost = room.host.id === currentUserId;
+  const isParticipant =
+    currentUserId != null &&
+    room.participants.some((p) => p.userId === currentUserId);
+  const isHost = currentUserId != null && room.host.id === currentUserId;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-4 sm:py-8 sm:px-6">
@@ -244,33 +250,51 @@ export function RoomDetailView({ roomId }: Props) {
             </div>
 
             <ul className="space-y-3">
-              {room.participants.map((p) => (
-                <li key={p.userId} className="flex items-center gap-3">
-                  <Link
-                    href={p.userId === currentUserId ? "/users/me" : `/users/${p.userId}`}
-                    className="shrink-0"
-                  >
-                    <UserAvatar username={p.username} iconUrl={p.iconUrl} size="md" />
-                  </Link>
+              {room.participants.map((p, idx) => (
+                <li key={p.userId ?? p.guestSessionId ?? `participant-${idx}`} className="flex items-center gap-3">
+                  {p.userId != null ? (
+                    <Link
+                      href={p.userId === currentUserId ? "/users/me" : `/users/${p.userId}`}
+                      className="shrink-0"
+                    >
+                      <UserAvatar username={p.username} iconUrl={p.iconUrl} size="md" />
+                    </Link>
+                  ) : (
+                    <span className="shrink-0">
+                      <UserAvatar username={p.username} iconUrl={p.iconUrl} size="md" />
+                    </span>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       {p.isHost && (
                         <Crown className="h-3.5 w-3.5 shrink-0" style={{ color: "#eab308" }} />
                       )}
-                      <Link
-                        href={p.userId === currentUserId ? "/users/me" : `/users/${p.userId}`}
-                        className="truncate text-sm font-medium hover:underline"
-                        style={{
-                          color: p.userId === currentUserId ? "var(--accent-light)" : "var(--text-primary)",
-                        }}
-                      >
-                        {p.username}
-                        {p.userId === currentUserId && (
+                      {p.userId != null ? (
+                        <Link
+                          href={p.userId === currentUserId ? "/users/me" : `/users/${p.userId}`}
+                          className="truncate text-sm font-medium hover:underline"
+                          style={{
+                            color: p.userId === currentUserId ? "var(--accent-light)" : "var(--text-primary)",
+                          }}
+                        >
+                          {p.username}
+                          {p.userId === currentUserId && (
+                            <span className="ml-1 text-xs" style={{ color: "var(--text-muted)" }}>
+                              (あなた)
+                            </span>
+                          )}
+                        </Link>
+                      ) : (
+                        <span
+                          className="truncate text-sm font-medium"
+                          style={{ color: "var(--text-primary)" }}
+                        >
+                          {p.username}
                           <span className="ml-1 text-xs" style={{ color: "var(--text-muted)" }}>
-                            (あなた)
+                            (ゲスト)
                           </span>
-                        )}
-                      </Link>
+                        </span>
+                      )}
                     </div>
                     <RatingDisplay
                       avgRating={p.avgRating}
@@ -299,6 +323,11 @@ export function RoomDetailView({ roomId }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Guest join modal — shown when accessing via invite URL without login */}
+      {!!inviteToken && currentUserId === null && !!data && (
+        <GuestJoinModal roomId={roomId} inviteToken={inviteToken} />
+      )}
     </div>
   );
 }

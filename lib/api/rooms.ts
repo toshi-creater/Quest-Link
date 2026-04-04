@@ -21,7 +21,8 @@ export type RoomTag = {
 };
 
 export type RoomParticipant = {
-  userId: string;
+  userId: string | null;
+  guestSessionId: string | null;
   username: string;
   iconUrl: string | null;
   avgRating: number | null;
