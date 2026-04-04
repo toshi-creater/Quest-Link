@@ -19,6 +19,8 @@
 | POST | `/rooms/{roomId}/join` | 必要 | 部屋に参加 |
 | POST | `/rooms/{roomId}/leave` | 必要 | 部屋を退室 |
 | POST | `/rooms/{roomId}/close` | 必要（ホストのみ） | 部屋を解散 |
+| POST | `/rooms/{roomId}/invite` | 必要（ホストのみ） | 招待トークンを発行（冪等） |
+| DELETE | `/rooms/{roomId}/invite` | 必要（ホストのみ） | 招待トークンを無効化 |
 | POST | `/rooms/{roomId}/share` | 必要 | SNS シェア投稿 |
 | GET | `/rooms/{roomId}/messages` | 必要 | チャット履歴取得 |
 | GET | `/rooms/{roomId}/pending-ratings` | 必要 | 未評価の相手一覧（`04_ratings-tags.md` 参照） |
@@ -309,7 +311,61 @@ POST /rooms/{roomId}/close
 
 ---
 
-## 10. SNS シェア投稿
+## 10. 招待トークン発行
+
+ホストが招待URLのトークンを生成する。既にトークンが存在する場合はそのまま返す（冪等）。`closed` な部屋には発行不可。
+
+```
+POST /rooms/{roomId}/invite
+```
+
+**認証**: 必要（ホストのみ）
+
+### レスポンス `200 OK`
+
+```json
+{
+  "data": {
+    "inviteToken": "a3f8c2e1d4b7..."
+  }
+}
+```
+
+招待URLはフロントエンドで `{origin}/rooms/{roomId}?invite={inviteToken}` として構築する。
+
+### エラー
+
+| HTTP | エラーコード | 説明 |
+|------|------------|------|
+| 400 | `ROOM_CLOSED` | 解散済みの部屋 |
+| 403 | `FORBIDDEN` | ホストではない |
+| 404 | `ROOM_NOT_FOUND` | 部屋が存在しない |
+
+---
+
+## 10-1. 招待トークン無効化
+
+発行済みの招待トークンを削除する。以降、そのトークンを含むURLでは参加不可になる。
+
+```
+DELETE /rooms/{roomId}/invite
+```
+
+**認証**: 必要（ホストのみ）
+
+### レスポンス `204 No Content`
+
+### エラー
+
+| HTTP | エラーコード | 説明 |
+|------|------------|------|
+| 400 | `ROOM_CLOSED` | 解散済みの部屋 |
+| 403 | `FORBIDDEN` | ホストではない |
+| 404 | `ROOM_NOT_FOUND` | 部屋が存在しない |
+
+---
+
+## 11. SNS シェア投稿
 
 部屋の参加リンクを X または Discord に投稿する。1部屋・1時間あたり3回まで。
 
@@ -350,7 +406,7 @@ Discord 投稿はプロフィールに登録済みの `discordWebhookUrl` を使
 
 ---
 
-## 11. チャット履歴取得
+## 12. チャット履歴取得
 
 リアルタイム送受信は WebSocket で行い、REST は履歴参照専用。カーソルページネーション方式（`before` パラメータ）を採用。
 
@@ -390,7 +446,7 @@ GET /rooms/{roomId}/messages
 
 ---
 
-## 12. WebSocket イベント
+## 13. WebSocket イベント
 
 Socket.IO を使用。ログイン済み参加者およびゲスト参加者が利用可。
 

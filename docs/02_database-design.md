@@ -81,6 +81,7 @@ Google / X / Discord の3プロバイダに対応するため、プロバイダ�
 | `max_players` | `SMALLINT` | NOT NULL | - | 最大参加人数（2〜16） |
 | `description` | `TEXT` | NULL | - | 補足説明 |
 | `status` | `room_status` | NOT NULL | `'waiting'` | 部屋ステータス（ENUM） |
+| `invite_token` | `VARCHAR(64)` | NULL | - | 招待URL用トークン（64文字hex）。NULL = 招待リンク未発行 |
 | `created_at` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | - |
 | `updated_at` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | - |
 | `closed_at` | `TIMESTAMPTZ` | NULL | - | 解散日時 |
@@ -97,6 +98,7 @@ Google / X / Discord の3プロバイダに対応するため、プロバイダ�
 - `FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE SET NULL`
 - `FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE RESTRICT`
 - `CHECK (max_players >= 2 AND max_players <= 16)`
+- `UNIQUE (invite_token)`
 
 ---
 
