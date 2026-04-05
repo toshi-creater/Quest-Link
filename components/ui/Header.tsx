@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { House, PlusCircle, Chat, User, Lightning, Users } from "@phosphor-icons/react";
+import { House, PlusCircle, Chat, User, Users } from "@phosphor-icons/react";
 import clsx from "clsx";
 import { SignOutButton } from "@/components/ui/SignOutButton";
+import { Logo } from "@/components/ui/Logo";
 
 export function Header() {
   const pathname = usePathname();
@@ -33,12 +34,8 @@ export function Header() {
     >
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <Lightning className="h-5 w-5" style={{ color: "var(--accent-light)" }} />
-          <span className="text-lg tracking-tight" style={{ color: "var(--text-primary)" }}>
-            <span className="font-medium">Quest</span>
-            <span className="font-bold">Link</span>
-          </span>
+        <Link href="/">
+          <Logo height={40} />
         </Link>
 
         {/* Desktop Nav */}

@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Lightning, Check, ArrowLeft, CaretRight, Camera } from "@phosphor-icons/react";
+import { Check, ArrowLeft, CaretRight, Camera } from "@phosphor-icons/react";
+import { Logo } from "@/components/ui/Logo";
 import { type Game } from "@/lib/mock-data";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { GridGamePicker } from "@/components/ui/GamePicker";
@@ -105,12 +106,8 @@ export default function OnboardingPage() {
       <div className="w-full max-w-md">
 
         {/* Logo — 常に表示 */}
-        <div className="mb-10 flex items-center gap-2 justify-center">
-          <Lightning className="h-6 w-6" style={{ color: "var(--accent-light)" }} />
-          <span className="text-2xl tracking-tight" style={{ color: "var(--text-primary)" }}>
-            <span className="font-medium">Quest</span>
-            <span className="font-bold">Link</span>
-          </span>
+        <div className="mb-10 flex justify-center">
+          <Logo height={64} />
         </div>
 
         {/* Progress dots — 常にレンダリング（step 1 は invisible で高さ確保） */}
