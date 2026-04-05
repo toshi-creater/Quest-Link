@@ -11,7 +11,7 @@ export type ChatMessage = {
 };
 
 export type Participant = {
-  userId: string;
+  userId: string | null;
   isHost: boolean;
   user: { username: string; iconUrl: string | null; avgRating: number | null } | null;
 };

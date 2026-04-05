@@ -82,7 +82,10 @@ export function ChatView({
 
     socket.on("room:host_changed", ({ newHostId }: { newHostId: string }) => {
       useChatStore.setState((state) => ({
-        participants: state.participants.map((p) => ({ ...p, isHost: p.userId === newHostId })),
+        participants: state.participants.map((p) => ({
+          ...p,
+          isHost: p.userId != null && p.userId === newHostId,
+        })),
       }));
     });
 
@@ -156,11 +159,11 @@ export function ChatView({
             参加者 {currentPlayers}/{roomInfo.maxPlayers}
           </p>
           <ul className="space-y-2.5">
-            {participants.map((p) => {
+            {participants.map((p, idx) => {
               if (!p.user) return null;
               const { username, iconUrl, avgRating } = p.user;
               return (
-                <li key={p.userId} className="flex items-center gap-2.5">
+                <li key={p.userId ?? `guest-${idx}`} className="flex items-center gap-2.5">
                   <div className="relative">
                     <UserAvatar username={username} iconUrl={iconUrl} size="sm" />
                     <span
@@ -175,7 +178,7 @@ export function ChatView({
                         className="truncate text-xs font-medium"
                         style={{
                           color:
-                            p.userId === currentUserId
+                            p.userId != null && p.userId === currentUserId
                               ? "var(--accent-light)"
                               : "var(--text-primary)",
                         }}

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
@@ -20,6 +19,8 @@ const roomSelect = {
     where: { leftAt: null },
     select: {
       userId: true,
+      guestSessionId: true,
+      displayName: true,
       isHost: true,
       joinedAt: true,
       user: { select: { username: true, iconUrl: true, avgRating: true } },
@@ -49,9 +50,13 @@ function formatRoom(room: RawRoom) {
     playStyleTags: room.playStyleTags.map((t) => t.tag),
     participants: room.participants.map((p) => ({
       userId: p.userId,
-      username: p.user?.username ?? "",
+      guestSessionId: p.guestSessionId,
+      username: p.user?.username ?? p.displayName ?? "ゲスト",
       iconUrl: p.user?.iconUrl ?? null,
-      avgRating: p.user?.avgRating !== null && p.user?.avgRating !== undefined ? Number(p.user.avgRating) : null,
+      avgRating:
+        p.user?.avgRating !== null && p.user?.avgRating !== undefined
+          ? Number(p.user.avgRating)
+          : null,
       isHost: p.isHost,
       joinedAt: p.joinedAt,
     })),
@@ -61,11 +66,6 @@ function formatRoom(room: RawRoom) {
 type RouteParams = { params: Promise<{ roomId: string }> };
 
 export async function GET(_request: Request, { params }: RouteParams) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "認証が必要です" } }, { status: 401 });
-  }
-
   const { roomId } = await params;
 
   const room = await prisma.room.findUnique({
@@ -74,7 +74,10 @@ export async function GET(_request: Request, { params }: RouteParams) {
   });
 
   if (!room) {
-    return NextResponse.json({ error: { code: "ROOM_NOT_FOUND", message: "部屋が存在しません" } }, { status: 404 });
+    return NextResponse.json(
+      { error: { code: "ROOM_NOT_FOUND", message: "部屋が存在しません" } },
+      { status: 404 }
+    );
   }
 
   return NextResponse.json({ data: formatRoom(room) });

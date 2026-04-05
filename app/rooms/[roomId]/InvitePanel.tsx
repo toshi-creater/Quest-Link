@@ -12,7 +12,7 @@ export function InvitePanel({ roomId }: Props) {
   const [copied, setCopied] = useState(false);
 
   const inviteUrl = inviteToken
-    ? `${window.location.origin}/rooms/${roomId}?invite=${inviteToken}`
+    ? `${window.location.origin}/rooms/${roomId}?inviteToken=${inviteToken}`
     : null;
 
   const generateMutation = useMutation({
