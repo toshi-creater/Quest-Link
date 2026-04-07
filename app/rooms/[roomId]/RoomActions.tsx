@@ -9,10 +9,11 @@ type Props = {
   roomId: string;
   isParticipant: boolean;
   isHost: boolean;
+  isGuest: boolean;
   status: "waiting" | "playing" | "closed";
 };
 
-export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
+export function RoomActions({ roomId, isParticipant, isHost, isGuest, status }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -27,7 +28,11 @@ export function RoomActions({ roomId, isParticipant, isHost, status }: Props) {
   const leaveMutation = useMutation({
     mutationFn: () => leaveRoom(roomId),
     onSuccess: () => {
-      router.push(`/rooms/${roomId}/ratings`);
+      if (isGuest) {
+        router.push(`/rooms/${roomId}/guest-leave`);
+      } else {
+        router.push(`/rooms/${roomId}/ratings`);
+      }
     },
   });
 

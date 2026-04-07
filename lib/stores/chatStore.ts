@@ -4,6 +4,8 @@ export type ChatMessage = {
   id: string;
   roomId: string;
   user: { id: string; username: string; iconUrl: string | null } | null;
+  displayName?: string;
+  guestSessionId?: string;
   content: string;
   isSystem: boolean;
   createdAt: Date;
@@ -13,6 +15,8 @@ export type ChatMessage = {
 export type Participant = {
   userId: string | null;
   isHost: boolean;
+  displayName?: string;
+  guestSessionId?: string;
   user: { username: string; iconUrl: string | null; avgRating: number | null } | null;
 };
 

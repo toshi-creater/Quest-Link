@@ -20,7 +20,6 @@ const roomSelect = {
     select: {
       userId: true,
       guestSessionId: true,
-      displayName: true,
       isHost: true,
       joinedAt: true,
       user: { select: { username: true, iconUrl: true, avgRating: true } },
@@ -30,7 +29,7 @@ const roomSelect = {
 
 type RawRoom = Prisma.RoomGetPayload<{ select: typeof roomSelect }>;
 
-function formatRoom(room: RawRoom) {
+function formatRoom(room: RawRoom, guestMap: Map<string, string>) {
   return {
     id: room.id,
     title: room.title,
@@ -51,7 +50,9 @@ function formatRoom(room: RawRoom) {
     participants: room.participants.map((p) => ({
       userId: p.userId,
       guestSessionId: p.guestSessionId,
-      username: p.user?.username ?? p.displayName ?? "ゲスト",
+      username:
+        p.user?.username ??
+        (p.guestSessionId ? (guestMap.get(p.guestSessionId) ?? "ゲスト") : "ゲスト"),
       iconUrl: p.user?.iconUrl ?? null,
       avgRating:
         p.user?.avgRating !== null && p.user?.avgRating !== undefined
@@ -65,7 +66,7 @@ function formatRoom(room: RawRoom) {
 
 type RouteParams = { params: Promise<{ roomId: string }> };
 
-export async function GET(_request: Request, { params }: RouteParams) {
+export async function GET(request: Request, { params }: RouteParams) {
   const { roomId } = await params;
 
   const room = await prisma.room.findUnique({
@@ -80,5 +81,32 @@ export async function GET(_request: Request, { params }: RouteParams) {
     );
   }
 
-  return NextResponse.json({ data: formatRoom(room) });
+  // ゲスト参加者の displayName を Guest テーブルから取得
+  const guestSessionIds = room.participants
+    .map((p) => p.guestSessionId)
+    .filter((id): id is string => id !== null);
+  const guestRecords =
+    guestSessionIds.length > 0
+      ? await prisma.guest.findMany({
+          where: { guestSessionId: { in: guestSessionIds } },
+          select: { guestSessionId: true, displayName: true },
+        })
+      : [];
+  const guestMap = new Map(guestRecords.map((g) => [g.guestSessionId, g.displayName]));
+
+  // リクエストの Cookie からゲストセッションを確認
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  const guestSessionCookieMatch = cookieHeader.match(/quest_link_guest_session=([^;]+)/);
+  const currentGuestSessionId = guestSessionCookieMatch?.[1] ?? null;
+  const isCurrentGuestParticipant =
+    currentGuestSessionId !== null &&
+    guestSessionIds.includes(currentGuestSessionId);
+
+  return NextResponse.json({
+    data: {
+      ...formatRoom(room, guestMap),
+      isCurrentGuestParticipant,
+      currentGuestSessionId: isCurrentGuestParticipant ? currentGuestSessionId : null,
+    },
+  });
 }

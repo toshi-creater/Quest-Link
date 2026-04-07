@@ -15,6 +15,7 @@ type Tag = { id: string; name: string; slug: string };
 type Props = {
   roomId: string;
   currentUserId: string | null;
+  currentGuestSessionId: string | null;
   initialMessages: ChatMessage[];
   initialParticipants: Participant[];
   roomInfo: {
@@ -28,6 +29,7 @@ type Props = {
 export function ChatView({
   roomId,
   currentUserId,
+  currentGuestSessionId,
   initialMessages,
   initialParticipants,
   roomInfo,
@@ -160,31 +162,45 @@ export function ChatView({
           </p>
           <ul className="space-y-2.5">
             {participants.map((p, idx) => {
-              if (!p.user) return null;
-              const { username, iconUrl, avgRating } = p.user;
+              const name = p.user?.username ?? p.displayName ?? "ゲスト";
+              const iconUrl = p.user?.iconUrl ?? null;
+              const avgRating = p.user?.avgRating ?? null;
+              const isMe =
+                (p.userId != null && p.userId === currentUserId) ||
+                (currentGuestSessionId !== null && p.guestSessionId === currentGuestSessionId);
+              const isGuest = p.user === null;
               return (
                 <li key={p.userId ?? `guest-${idx}`} className="flex items-center gap-2.5">
                   <div className="relative">
-                    <UserAvatar username={username} iconUrl={iconUrl} size="sm" />
-                    <span
-                      className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2"
-                      style={{ backgroundColor: "#22c55e", borderColor: "var(--bg-card)" }}
-                    />
+                    <UserAvatar username={name} iconUrl={iconUrl} size="sm" />
+                    {!isGuest && (
+                      <span
+                        className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2"
+                        style={{ backgroundColor: "#22c55e", borderColor: "var(--bg-card)" }}
+                      />
+                    )}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1">
                       {p.isHost && <Crown className="h-3 w-3" style={{ color: "#eab308" }} />}
                       <span
                         className="truncate text-xs font-medium"
-                        style={{
-                          color:
-                            p.userId != null && p.userId === currentUserId
-                              ? "var(--accent-light)"
-                              : "var(--text-primary)",
-                        }}
+                        style={{ color: isMe ? "var(--accent-light)" : "var(--text-primary)" }}
                       >
-                        {username}
+                        {name}
                       </span>
+                      {isGuest && (
+                        <span
+                          className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none"
+                          style={{
+                            backgroundColor: "rgba(34, 197, 94, 0.15)",
+                            color: "#4ade80",
+                            border: "1px solid rgba(34, 197, 94, 0.3)",
+                          }}
+                        >
+                          ゲスト
+                        </span>
+                      )}
                     </div>
                     <RatingDisplay
                       avgRating={avgRating !== null ? Number(avgRating) : null}
@@ -258,14 +274,18 @@ export function ChatView({
               );
             }
 
-            const isMe = msg.user?.id === currentUserId;
+            const isMe =
+              (currentUserId !== null && msg.user?.id === currentUserId) ||
+              (currentGuestSessionId !== null && msg.guestSessionId === currentGuestSessionId);
+            const isGuest = msg.user === null && !msg.isSystem;
+            const senderName = isGuest ? (msg.displayName ?? "ゲスト") : (msg.user?.username ?? "");
             return (
               <div
                 key={msg.id}
                 className={`flex flex-col gap-1 ${isMe ? "items-end" : "items-start"} ${msg.isNew ? "animate-slide-in-bottom" : ""}`}
               >
                 <div className={`flex items-end gap-2 max-w-[70%] ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-                  {!isMe && msg.user && (
+                  {!isMe && !isGuest && msg.user && (
                     <UserAvatar
                       username={msg.user.username}
                       iconUrl={msg.user.iconUrl}
@@ -275,9 +295,21 @@ export function ChatView({
                   <div
                     className={`min-w-0 ${isMe ? "items-end" : "items-start"} flex flex-col gap-1`}
                   >
-                    {!isMe && msg.user && (
-                      <span className="truncate text-xs" style={{ color: "var(--text-muted)" }}>
-                        {msg.user.username}
+                    {!isMe && (isGuest || msg.user) && (
+                      <span className="flex items-center gap-1 truncate text-xs" style={{ color: "var(--text-muted)" }}>
+                        {senderName}
+                        {isGuest && (
+                          <span
+                            className="inline-block rounded px-1 text-[10px] font-semibold leading-4"
+                            style={{
+                              backgroundColor: "rgba(139, 92, 246, 0.15)",
+                              color: "#a78bfa",
+                              border: "1px solid rgba(139, 92, 246, 0.3)",
+                            }}
+                          >
+                            ゲスト
+                          </span>
+                        )}
                       </span>
                     )}
                     <div
@@ -305,7 +337,7 @@ export function ChatView({
                   className="text-xs"
                   style={{
                     color: "var(--text-muted)",
-                    paddingLeft: isMe ? undefined : "40px",
+                    paddingLeft: isMe || isGuest ? undefined : "40px",
                   }}
                 >
                   {new Date(msg.createdAt).toLocaleTimeString("ja-JP", {

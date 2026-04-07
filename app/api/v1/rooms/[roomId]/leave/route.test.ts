@@ -7,8 +7,10 @@ vi.mock("@/auth", () => ({
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     room: { findUnique: vi.fn() },
-    roomParticipant: { findFirst: vi.fn() },
+    roomParticipant: { findFirst: vi.fn(), update: vi.fn() },
     user: { findUnique: vi.fn() },
+    guest: { findUnique: vi.fn() },
+    chatMessage: { create: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -23,7 +25,10 @@ import { POST } from "./route";
 const mockAuth = vi.mocked(auth);
 const mockFindUnique = vi.mocked(prisma.room.findUnique);
 const mockFindFirst = vi.mocked(prisma.roomParticipant.findFirst);
+const mockParticipantUpdate = vi.mocked(prisma.roomParticipant.update);
 const mockUserFindUnique = vi.mocked(prisma.user.findUnique);
+const mockGuestFindUnique = vi.mocked(prisma.guest.findUnique);
+const mockChatMessageCreate = vi.mocked(prisma.chatMessage.create);
 const mockTransaction = vi.mocked(prisma.$transaction);
 const mockEmitToRoom = vi.mocked(emitToRoom);
 
@@ -38,8 +43,11 @@ type MockTx = {
 
 let mockTx: MockTx;
 
-const makeRequest = () =>
-  new Request("http://localhost/api/v1/rooms/room-1/leave", { method: "POST" });
+const makeRequest = (cookie?: string) =>
+  new Request("http://localhost/api/v1/rooms/room-1/leave", {
+    method: "POST",
+    headers: cookie ? { cookie } : {},
+  });
 const makeParams = () => ({ params: Promise.resolve({ roomId: "room-1" }) });
 
 beforeEach(() => {
@@ -57,6 +65,8 @@ beforeEach(() => {
   mockTransaction.mockImplementation(async (fn) => fn(mockTx as never));
 
   mockUserFindUnique.mockResolvedValue({ username: "user-1-name" } as never);
+  mockParticipantUpdate.mockResolvedValue({} as never);
+  mockChatMessageCreate.mockResolvedValue({ id: "leave-msg-1", content: "ゲストさんが退室しました", createdAt: new Date() } as never);
 });
 
 describe("POST /api/v1/rooms/[roomId]/leave", () => {
@@ -174,6 +184,57 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
       "room-1",
       expect.objectContaining({ roomId: "room-1", closedAt: expect.any(Date) })
     );
+  });
+
+  describe("ゲスト退室", () => {
+    it("クッキーなしの場合 401 UNAUTHORIZED を返す", async () => {
+      mockAuth.mockResolvedValue(null);
+
+      const res = await POST(makeRequest(), makeParams());
+      const body = await res.json();
+
+      expect(res.status).toBe(401);
+      expect(body.error.code).toBe("UNAUTHORIZED");
+    });
+
+    it("ゲストが部屋に参加していない場合 400 NOT_IN_ROOM を返す", async () => {
+      mockAuth.mockResolvedValue(null);
+      mockFindFirst.mockResolvedValue(null);
+
+      const res = await POST(makeRequest("quest_link_guest_session=guest_abc"), makeParams());
+      const body = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(body.error.code).toBe("NOT_IN_ROOM");
+    });
+
+    it("ゲストが正常退室した場合 204 を返し leftAt が更新される", async () => {
+      mockAuth.mockResolvedValue(null);
+      mockFindFirst.mockResolvedValue({ id: "participant-g1" } as never);
+      mockGuestFindUnique.mockResolvedValue({ displayName: "ゲストA" } as never);
+
+      const res = await POST(makeRequest("quest_link_guest_session=guest_abc"), makeParams());
+
+      expect(res.status).toBe(204);
+      expect(mockParticipantUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "participant-g1" },
+          data: expect.objectContaining({ leftAt: expect.any(Date) }),
+        })
+      );
+    });
+
+    it("ゲスト退室時に chat:message と room:user_left が emit される", async () => {
+      mockAuth.mockResolvedValue(null);
+      mockFindFirst.mockResolvedValue({ id: "participant-g1" } as never);
+      mockGuestFindUnique.mockResolvedValue({ displayName: "ゲストA" } as never);
+
+      await POST(makeRequest("quest_link_guest_session=guest_abc"), makeParams());
+
+      expect(mockEmitToRoom).toHaveBeenCalledTimes(2);
+      expect(mockEmitToRoom).toHaveBeenCalledWith("chat:message", "room-1", expect.objectContaining({ isSystem: true }));
+      expect(mockEmitToRoom).toHaveBeenCalledWith("room:user_left", "room-1", expect.objectContaining({ userId: "guest_abc" }));
+    });
   });
 
   it("ホスト引き継ぎ時に emitToRoom の引数が正しい", async () => {
