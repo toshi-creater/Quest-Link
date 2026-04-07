@@ -80,8 +80,14 @@ export async function POST(request: Request, { params }: RouteParams) {
           throw new Error("ROOM_FULL");
         }
 
+        await tx.guest.upsert({
+          where: { guestSessionId },
+          create: { guestSessionId, displayName },
+          update: { displayName },
+        });
+
         const p = await tx.roomParticipant.create({
-          data: { roomId: room.id, guestSessionId, displayName, isHost: false },
+          data: { roomId: room.id, guestSessionId, isHost: false },
         });
 
         if (currentCount + 1 >= room.maxPlayers) {

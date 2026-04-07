@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
-const mockPush = vi.fn();
+const mockInvalidateQueries = vi.fn();
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
 }));
 
 import { GuestJoinModal } from "./GuestJoinModal";
@@ -14,6 +14,7 @@ const defaultProps = { roomId: "room-1", inviteToken: "valid-token" };
 beforeEach(() => {
   vi.clearAllMocks();
   vi.stubGlobal("fetch", vi.fn());
+  mockInvalidateQueries.mockResolvedValue(undefined);
 });
 
 describe("GuestJoinModal", () => {
@@ -37,7 +38,7 @@ describe("GuestJoinModal", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("成功時に router.push が /rooms/room-1/chat で呼ばれる", async () => {
+  it("成功時に invalidateQueries が room クエリで呼ばれる", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: async () => ({ data: { roomId: "room-1", guestSessionId: "guest_abc", isGuest: true } }),
@@ -51,7 +52,7 @@ describe("GuestJoinModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "参加する" }));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/rooms/room-1/chat");
+      expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ["room", "room-1"] });
     });
   });
 

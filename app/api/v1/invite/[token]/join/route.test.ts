@@ -40,6 +40,9 @@ type MockTx = {
     count: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
   };
+  guest: {
+    upsert: ReturnType<typeof vi.fn>;
+  };
   room: {
     update: ReturnType<typeof vi.fn>;
   };
@@ -71,10 +74,12 @@ beforeEach(() => {
       create: vi.fn().mockResolvedValue({
         roomId: "room-1",
         guestSessionId: "guest_abc",
-        displayName: "TestGuest",
         isHost: false,
         joinedAt: mockNow,
       }),
+    },
+    guest: {
+      upsert: vi.fn().mockResolvedValue({}),
     },
     room: {
       update: vi.fn().mockResolvedValue({}),
@@ -213,14 +218,14 @@ describe("POST /api/v1/invite/[token]/join", () => {
     );
   });
 
-  it("displayName が空の場合、自動生成名が使われる", async () => {
+  it("displayName が空の場合、自動生成名で guest.upsert が呼ばれる", async () => {
     mockRoomFindUnique.mockResolvedValue(mockRoom as never);
 
     await POST(makeRequest({ displayName: "" }), makeParams());
 
-    expect(mockTx.roomParticipant.create).toHaveBeenCalledWith(
+    expect(mockTx.guest.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
+        create: expect.objectContaining({
           displayName: expect.stringMatching(/^Guest\d+$/),
         }),
       })

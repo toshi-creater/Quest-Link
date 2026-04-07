@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ERROR_MESSAGES: Record<string, string> = {
   ROOM_CLOSED: "この部屋はすでに終了しています",
@@ -16,7 +16,7 @@ type Props = {
 };
 
 export function GuestJoinModal({ roomId, inviteToken }: Props) {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -41,7 +41,7 @@ export function GuestJoinModal({ roomId, inviteToken }: Props) {
         setError(ERROR_MESSAGES[body.error?.code ?? ""] ?? "参加に失敗しました");
         return;
       }
-      router.push(`/rooms/${roomId}/chat`);
+      await queryClient.invalidateQueries({ queryKey: ["room", roomId] });
     } catch {
       setError("ネットワークエラーが発生しました");
     } finally {

@@ -47,6 +47,8 @@ export type RoomDetail = RoomSummary & {
   description: string | null;
   participants: RoomParticipant[];
   closedAt: string | null;
+  isCurrentGuestParticipant: boolean;
+  currentGuestSessionId: string | null;
 };
 
 export type RoomsListResponse = {

@@ -85,10 +85,12 @@ export function RoomDetailView({ roomId }: Props) {
 
   const room = data.data;
   const status = roomStatusConfig[room.status as keyof typeof roomStatusConfig] ?? fallbackStatusConfig;
+  const currentGuestSessionId = room.currentGuestSessionId ?? null;
   const isParticipant =
-    currentUserId != null &&
-    room.participants.some((p) => p.userId === currentUserId);
+    (currentUserId != null && room.participants.some((p) => p.userId === currentUserId)) ||
+    room.isCurrentGuestParticipant;
   const isHost = currentUserId != null && room.host.id === currentUserId;
+  const isGuest = currentUserId === null && isParticipant;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-4 sm:py-8 sm:px-6">
@@ -212,6 +214,7 @@ export function RoomDetailView({ roomId }: Props) {
               roomId={room.id}
               isParticipant={isParticipant}
               isHost={isHost}
+              isGuest={isGuest}
               status={room.status}
             />
           </div>
@@ -287,12 +290,27 @@ export function RoomDetailView({ roomId }: Props) {
                       ) : (
                         <span
                           className="truncate text-sm font-medium"
-                          style={{ color: "var(--text-primary)" }}
+                          style={{
+                            color:
+                              currentGuestSessionId !== null &&
+                              p.guestSessionId === currentGuestSessionId
+                                ? "var(--accent-light)"
+                                : "var(--text-primary)",
+                          }}
                         >
                           {p.username}
-                          <span className="ml-1 text-xs" style={{ color: "var(--text-muted)" }}>
-                            (ゲスト)
-                          </span>
+                        </span>
+                      )}
+                      {p.userId == null && (
+                        <span
+                          className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none"
+                          style={{
+                            backgroundColor: "rgba(34, 197, 94, 0.15)",
+                            color: "#4ade80",
+                            border: "1px solid rgba(34, 197, 94, 0.3)",
+                          }}
+                        >
+                          ゲスト
                         </span>
                       )}
                     </div>
@@ -325,7 +343,7 @@ export function RoomDetailView({ roomId }: Props) {
       </div>
 
       {/* Guest join modal — shown when accessing via invite URL without login */}
-      {!!inviteToken && currentUserId === null && !!data && (
+      {!!inviteToken && currentUserId === null && !!data && !isParticipant && (
         <GuestJoinModal roomId={roomId} inviteToken={inviteToken} />
       )}
     </div>

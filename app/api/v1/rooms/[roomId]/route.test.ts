@@ -7,6 +7,7 @@ vi.mock("@/auth", () => ({
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     room: { findUnique: vi.fn() },
+    guest: { findMany: vi.fn() },
   },
 }));
 
@@ -58,19 +59,24 @@ const makeRoom = () => ({
   ],
 });
 
+const mockGuestFindMany = vi.mocked(prisma.guest.findMany);
+
 beforeEach(() => {
   vi.clearAllMocks();
+  mockGuestFindMany.mockResolvedValue([]);
 });
 
 describe("GET /api/v1/rooms/[roomId]", () => {
-  it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
+  it("未認証でも部屋情報を取得できる（isCurrentGuestParticipant: false）", async () => {
     mockAuth.mockResolvedValue(null);
+    mockFindUnique.mockResolvedValue(makeRoom() as never);
 
     const res = await GET(makeRequest(), makeParams());
     const body = await res.json();
 
-    expect(res.status).toBe(401);
-    expect(body.error.code).toBe("UNAUTHORIZED");
+    expect(res.status).toBe(200);
+    expect(body.data.isCurrentGuestParticipant).toBe(false);
+    expect(body.data.currentGuestSessionId).toBeNull();
   });
 
   it("room が存在しない場合 404 ROOM_NOT_FOUND を返す", async () => {
