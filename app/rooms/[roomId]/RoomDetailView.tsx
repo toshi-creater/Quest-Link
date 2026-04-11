@@ -2,20 +2,16 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, Crown, Chat, Users } from "@phosphor-icons/react";
+import { ArrowLeft, Chat } from "@phosphor-icons/react";
 import { fetchRoom, joinRoom } from "@/lib/api/rooms";
-import { roomStatusConfig, fallbackStatusConfig } from "@/lib/room-status";
-import { UserAvatar } from "@/components/ui/UserAvatar";
-import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
-import { RatingDisplay } from "@/components/ui/StarRating";
-import { GameCover } from "@/components/ui/GamePicker";
 import { GuestJoinModal } from "@/components/rooms/GuestJoinModal";
 import { RoomActions } from "./RoomActions";
 import { InvitePanel } from "./InvitePanel";
+import { RoomHeaderCard } from "./RoomHeaderCard";
+import { ParticipantSidebar } from "./ParticipantSidebar";
 
 type Props = { roomId: string };
 
@@ -112,7 +108,6 @@ export function RoomDetailView({ roomId }: Props) {
   }
 
   const room = data.data;
-  const status = roomStatusConfig[room.status as keyof typeof roomStatusConfig] ?? fallbackStatusConfig;
   const currentGuestSessionId = room.currentGuestSessionId ?? null;
   const isParticipant =
     (currentUserId != null && room.participants.some((p) => p.userId === currentUserId)) ||
@@ -142,74 +137,7 @@ export function RoomDetailView({ roomId }: Props) {
         {/* Main content */}
         <div className="lg:col-span-2 flex flex-col gap-4 sm:gap-6">
           {/* Room Info */}
-          <div
-            className="rounded-2xl border overflow-hidden animate-fade-in-up"
-            style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
-          >
-            {/* Game cover header */}
-            <div
-              className="relative h-32 flex items-end px-4 pb-3 sm:px-6 sm:pb-4 overflow-hidden"
-              style={{ backgroundColor: "rgba(124,58,237,0.08)" }}
-            >
-              {room.game.coverImageUrl && (
-                <Image
-                  src={room.game.coverImageUrl}
-                  alt=""
-                  aria-hidden
-                  fill
-                  className="pointer-events-none object-cover opacity-25 blur-sm scale-110"
-                  sizes="800px"
-                />
-              )}
-              <div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(to top, var(--bg-card) 20%, transparent 80%)" }}
-              />
-              <div className="relative z-10 flex items-center gap-4">
-                <GameCover game={room.game} size="lg" />
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: "var(--accent-light)" }}>
-                    {room.game.name}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <span
-                      className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
-                      style={{ backgroundColor: status.bg, color: status.color, border: `1px solid ${status.border}` }}
-                    >
-                      {status.label}
-                    </span>
-                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                      {new Date(room.createdAt).toLocaleString("ja-JP", {
-                        month: "numeric",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Room details */}
-            <div className="px-4 py-4 sm:px-6 sm:py-5">
-              <h1 className="text-lg sm:text-xl font-bold" style={{ color: "var(--text-primary)" }}>
-                {room.title}
-              </h1>
-              {room.description && (
-                <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                  {room.description}
-                </p>
-              )}
-              {room.playStyleTags.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {room.playStyleTags.map((tag) => (
-                    <PlayStyleTag key={tag.id} tag={tag} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <RoomHeaderCard room={room} />
 
           {/* Chat shortcut */}
           {isParticipant && (
@@ -256,125 +184,13 @@ export function RoomDetailView({ roomId }: Props) {
         </div>
 
         {/* Sidebar: Participants */}
-        <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: "160ms" }}>
-          <div
-            className="rounded-2xl border p-4 sm:p-5"
-            style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" style={{ color: "var(--text-muted)" }} />
-                <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                  参加者
-                </span>
-              </div>
-              <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                <span className="font-bold" style={{ color: "var(--text-primary)" }}>
-                  {room.currentPlayers}
-                </span>
-                /{room.maxPlayers}
-              </span>
-            </div>
-
-            {/* Progress bar */}
-            <div className="mb-4 h-2 w-full rounded-full overflow-hidden" style={{ backgroundColor: "var(--border)" }}>
-              <div
-                className="h-full rounded-full transition-all"
-                style={{
-                  width: `${(room.currentPlayers / room.maxPlayers) * 100}%`,
-                  background: "linear-gradient(90deg, var(--accent), var(--accent-light))",
-                }}
-              />
-            </div>
-
-            <ul className="space-y-3">
-              {room.participants.map((p, idx) => (
-                <li key={p.userId ?? p.guestSessionId ?? `participant-${idx}`} className="flex items-center gap-3">
-                  {p.userId != null ? (
-                    <Link
-                      href={p.userId === currentUserId ? "/users/me" : `/users/${p.userId}`}
-                      className="shrink-0"
-                    >
-                      <UserAvatar username={p.username} iconUrl={p.iconUrl} size="md" />
-                    </Link>
-                  ) : (
-                    <span className="shrink-0">
-                      <UserAvatar username={p.username} iconUrl={p.iconUrl} size="md" />
-                    </span>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      {p.isHost && (
-                        <Crown className="h-3.5 w-3.5 shrink-0" style={{ color: "#eab308" }} />
-                      )}
-                      {p.userId != null ? (
-                        <Link
-                          href={p.userId === currentUserId ? "/users/me" : `/users/${p.userId}`}
-                          className="truncate text-sm font-medium hover:underline"
-                          style={{
-                            color: p.userId === currentUserId ? "var(--accent-light)" : "var(--text-primary)",
-                          }}
-                        >
-                          {p.username}
-                          {p.userId === currentUserId && (
-                            <span className="ml-1 text-xs" style={{ color: "var(--text-muted)" }}>
-                              (あなた)
-                            </span>
-                          )}
-                        </Link>
-                      ) : (
-                        <span
-                          className="truncate text-sm font-medium"
-                          style={{
-                            color:
-                              currentGuestSessionId !== null &&
-                              p.guestSessionId === currentGuestSessionId
-                                ? "var(--accent-light)"
-                                : "var(--text-primary)",
-                          }}
-                        >
-                          {p.username}
-                        </span>
-                      )}
-                      {p.userId == null && (
-                        <span
-                          className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none"
-                          style={{
-                            backgroundColor: "rgba(34, 197, 94, 0.15)",
-                            color: "#4ade80",
-                            border: "1px solid rgba(34, 197, 94, 0.3)",
-                          }}
-                        >
-                          ゲスト
-                        </span>
-                      )}
-                    </div>
-                    <RatingDisplay
-                      avgRating={p.avgRating}
-                      ratingCount={p.avgRating != null ? 10 : 3}
-                      size="sm"
-                    />
-                  </div>
-                </li>
-              ))}
-              {Array.from({ length: room.maxPlayers - room.currentPlayers }).map((_, i) => (
-                <li
-                  key={`empty-${i}`}
-                  className="flex items-center gap-3 rounded-lg border border-dashed px-3 py-2"
-                  style={{ borderColor: "var(--border)" }}
-                >
-                  <div
-                    className="h-9 w-9 rounded-full border-2 border-dashed"
-                    style={{ borderColor: "var(--border)" }}
-                  />
-                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    募集中...
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <ParticipantSidebar
+          participants={room.participants}
+          maxPlayers={room.maxPlayers}
+          currentPlayers={room.currentPlayers}
+          currentUserId={currentUserId}
+          currentGuestSessionId={currentGuestSessionId}
+        />
       </div>
 
       {/* 統合ダイアログ: 参加ボタン押下時に表示 */}
