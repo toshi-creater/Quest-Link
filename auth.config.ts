@@ -44,7 +44,19 @@ export const authConfig = {
 
       // 初回ログイン未設定 → プロフィール設定画面へ強制
       const needsProfileSetup = auth?.user?.needsProfileSetup ?? false;
+      const hasInviteToken = nextUrl.searchParams.has("inviteToken");
+      const hasNewUserError = nextUrl.searchParams.get("error") === "new_user";
       if (needsProfileSetup && !isOnboardingPage) {
+        if (hasInviteToken) {
+          if (!hasNewUserError) {
+            // 招待URL経由の新規ユーザー（初回）→ エラーパラム付きで招待ページにリダイレクト
+            const redirectUrl = new URL(nextUrl);
+            redirectUrl.searchParams.set("error", "new_user");
+            return Response.redirect(redirectUrl);
+          }
+          // error=new_user 付きで戻ってきた → そのまま表示（無限ループ防止）
+          return true;
+        }
         return Response.redirect(new URL("/onboarding", nextUrl));
       }
 

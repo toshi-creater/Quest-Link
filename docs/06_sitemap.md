@@ -36,7 +36,7 @@
 
 | パス | 画面名 | 主な機能 | 使用 API |
 |------|--------|---------|---------|
-| `/login` | ログイン | Google ログインボタン表示 | - |
+| `/login` | ログイン | Google ログインボタン表示。`callbackUrl` に `inviteToken=` が含まれる場合は招待バナー（「この部屋に参加するにはログインが必要です」）と「ゲストで参加」リンクを追加表示 | - |
 | `/auth/callback` | OAuthコールバック | 認可コードを受け取り JWT を取得・保存。レスポンスの `isNewUser: true` の場合は `/onboarding` へ、既存ユーザーは OAuth `state` に保持した遷移元 URL へリダイレクト | `POST /auth/{provider}/callback`（Google / X / Discord） |
 | `/onboarding` | 初回プロフィール設定 | 5ステップウィザード形式（Step1: ウェルカム、Step2: ユーザー名（必須）、Step3: 自己紹介、Step4: プロフィール画像 URL、Step5: プレイゲーム選択）。ヘッダー・ボトムナビは非表示でロゴのみ表示。完了後は OAuth `state` に保持した遷移元 URL へリダイレクト。セッションの `needsProfileSetup` フラグが `false` の場合は `/users/me` へリダイレクト。ユーザー名未設定のまま離脱すると部屋機能利用不可（`username: null` の間は参加・作成・チャット不可） | `GET /games`（全件取得）、`PATCH /users/me` |
 
@@ -67,7 +67,8 @@
 | `/rooms/current/chat` | 参加中の部屋チャット | サーバーサイドで参加中の roomId を取得し `/rooms/{roomId}/chat` へリダイレクト。参加中の部屋がない場合は「参加中の部屋がありません」メッセージと「部屋を探す」リンクを表示 | Prisma 直接アクセス（リダイレクト後は `GET /rooms/{roomId}/messages`、WebSocket `chat:send` / `chat:message`） |
 | `/rooms/new` | 部屋作成 | タイトル・ゲーム（IGDB連携検索で選択）・最大人数・説明・タグを入力して部屋を作成 | `GET /play-style-tags`、`GET /games/search`、`POST /rooms` |
 | `/rooms/[roomId]` | 部屋詳細 | 部屋情報・参加者一覧表示（**認証不要で閲覧可**）、参加 / 退室 / 解散（認証必要）、ホストによる部屋情報編集、SNS シェア、リアルタイム参加者更新（WebSocket）。ログイン済みで自分が参加中の場合は `/rooms/current` へリダイレクト | `GET /rooms/{roomId}`（認証不要）、`POST /rooms/{roomId}/join`、`POST /rooms/{roomId}/leave`、`POST /rooms/{roomId}/close`、`PATCH /rooms/{roomId}`、`POST /rooms/{roomId}/share`、`GET /play-style-tags`（ホスト編集用）、`GET /rooms/current`（自分の参加中部屋かの判定用、ログイン時のみ） |
-| `/rooms/[roomId]/guest` | ゲスト参加フロー | 募集リンク経由でアクセスした未ログインユーザー向け。表示名（任意）を入力してゲストセッションを発行し、そのまま部屋に参加。ログインを促すボタンも併設 | `POST /auth/guest`、`POST /rooms/{roomId}/join` |
+| `/rooms/[roomId]?inviteToken=xxx` | 部屋詳細（招待URL経由） | 招待トークン付きURLで部屋詳細にアクセスした場合の追加モーダル表示。**Modal A（認証誘導）**：未ログイン＋guestFlowなし → 「ログインして参加」「ゲストで参加」ボタン。**Modal A（新規ユーザーエラー）**：OAuth後に新規ユーザーと判定 → 「招待リンクでの新規登録はできません」メッセージ＋「ゲストで参加」「プロフィール設定」ボタン。**Modal B（表示名入力）**：guestFlow=true＋未ログイン → 表示名入力でゲスト参加・チャットへ遷移 | `POST /invite/{inviteToken}/join` |
+| `/rooms/[roomId]/guest` | ゲスト参加フロー（旧） | 募集リンク経由でアクセスした未ログインユーザー向け。表示名（任意）を入力してゲストセッションを発行し、そのまま部屋に参加。ログインを促すボタンも併設 | `POST /auth/guest`、`POST /rooms/{roomId}/join` |
 | `/rooms/[roomId]/chat` | チャット | リアルタイムチャット送受信（WebSocket、ゲスト参加者も利用可）、過去ログのスクロール読み込み（カーソルページネーション） | `GET /rooms/{roomId}/messages`、WebSocket `chat:send` / `chat:message` |
 | `/rooms/[roomId]/ratings` | セッション評価 | 部屋クローズ後に同室メンバーを評価（スコア・コメント）、評価期限（24時間）表示 | `GET /rooms/{roomId}/pending-ratings`、`POST /ratings` |
 
@@ -114,7 +115,16 @@
     └─→ /rooms/[roomId]（部屋詳細）※認証不要で閲覧可
             ├─→ ログイン済みの場合: GET /rooms/current で自分の参加中 roomId を確認
             │       └─→ 一致する場合: そのまま部屋詳細を表示（リダイレクトなし）
-            ├─→ 未ログインで「参加する」クリック → /rooms/[roomId]/guest（ゲスト参加フロー）
+            ├─→ 招待URL（?inviteToken=xxx）経由でアクセス
+            │       ├─→ 未ログイン → Modal A（認証誘導）表示
+            │       │       ├─→ 「ログインして参加」→ /login?callbackUrl=招待URL
+            │       │       │       ├─→ 既存ユーザーOAuth → 招待URL（部屋詳細）に戻る → RoomActions
+            │       │       │       ├─→ 新規ユーザーOAuth → 招待URL + error=new_user に戻る
+            │       │       │       │       → Modal A（エラー）「ゲストで参加 or プロフィール設定」
+            │       │       │       └─→ ログインページの「ゲストで参加」→ 招待URL + guestFlow=true
+            │       │       └─→ 「ゲストで参加」→ 招待URL + &guestFlow=true
+            │       └─→ guestFlow=true → Modal B（表示名入力）→ ゲスト参加 → /rooms/[roomId]/chat
+            ├─→ 未ログインで「参加する」クリック（招待なし）→ /rooms/[roomId]/guest（ゲスト参加フロー）
             │       ├─→ ゲストセッション発行成功 → /rooms/[roomId]/chat（チャット）
             │       └─→ 「ログインして参加」クリック → /login → /rooms/[roomId]
             ├─→ /rooms/[roomId]/chat（チャット）
@@ -172,6 +182,7 @@
 | ver 6.0 | 2026年3月 | URL構造変更：トップ（`/`）をおすすめ＋部屋一覧の複合ページに刷新、ゲーム選択を `/games` に移動、部屋一覧を `/rooms` 廃止・`/games/[gameId]/rooms` に変更。ヘッダーナビゲーションを5項目（トップ・部屋を探す・部屋を作る・参加中の部屋・プロフィール）に更新 |
 | ver 6.1 | 2026年3月 | ユーザータグ廃止に伴い、オンボーディング・プロフィール・プロフィール編集・他ユーザープロフィール画面からプレイスタイルタグ関連記述を削除 |
 | ver 6.2 | 2026年3月 | オンボーディング画面を5ステップウィザード形式に刷新。ゲーム選択を `GET /games`（全件取得）に変更し `GridGamePicker` コンポーネントで全タイトルをグリッド表示。ヘッダー・ボトムナビを非表示化しロゴのみ表示。`needsProfileSetup` JWT フラグによるリダイレクト制御を追加 |
+| ver 6.3 | 2026年4月 | 招待URL経由の参加フロー刷新。Modal A（認証誘導）・Modal B（表示名入力）の2段階モーダルを実装。招待URL経由の新規OAuthユーザーを招待ページに戻し `error=new_user` でエラー表示。ログインページに招待バナーとゲスト参加リンクを追加 |
 
 ---
 

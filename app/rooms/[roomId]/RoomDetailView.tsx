@@ -1,12 +1,13 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { ArrowLeft, Crown, Chat, Users } from "@phosphor-icons/react";
-import { fetchRoom } from "@/lib/api/rooms";
+import { fetchRoom, joinRoom } from "@/lib/api/rooms";
 import { roomStatusConfig, fallbackStatusConfig } from "@/lib/room-status";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
@@ -23,12 +24,39 @@ export function RoomDetailView({ roomId }: Props) {
   const currentUserId = session?.user?.id ?? null;
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("inviteToken");
+  const errorParam = searchParams.get("error");
+  const needsProfileSetup = session?.user?.needsProfileSetup ?? false;
+  const isNewUserError = needsProfileSetup && errorParam === "new_user";
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const queryClient = useQueryClient();
+  const autoJoinAttempted = useRef(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["room", roomId],
     queryFn: () => fetchRoom(roomId),
     enabled: !!roomId,
   });
+
+  // 招待URL + ログイン済み + 未参加 → 自動参加
+  useEffect(() => {
+    if (autoJoinAttempted.current) return;
+    if (!inviteToken || currentUserId === null || !data) return;
+    if (data.data.status === "closed") return;
+
+    const isAlreadyParticipant =
+      (currentUserId != null && data.data.participants.some((p) => p.userId === currentUserId)) ||
+      data.data.isCurrentGuestParticipant;
+    if (isAlreadyParticipant) return;
+
+    autoJoinAttempted.current = true;
+    joinRoom(roomId)
+      .then(async () => {
+        await queryClient.invalidateQueries({ queryKey: ["room", roomId] });
+      })
+      .catch(() => {
+        autoJoinAttempted.current = false;
+      });
+  }, [inviteToken, currentUserId, data, roomId, queryClient]);
 
   if (isLoading) {
     return (
@@ -91,6 +119,12 @@ export function RoomDetailView({ roomId }: Props) {
     room.isCurrentGuestParticipant;
   const isHost = currentUserId != null && room.host.id === currentUserId;
   const isGuest = currentUserId === null && isParticipant;
+
+  // 招待URL + 未ログイン + 未参加 → 参加ボタン押下でダイアログを表示
+  const onInviteJoinClick =
+    !!inviteToken && currentUserId === null && !isParticipant
+      ? () => setShowInviteDialog(true)
+      : undefined;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-4 sm:py-8 sm:px-6">
@@ -216,6 +250,7 @@ export function RoomDetailView({ roomId }: Props) {
               isHost={isHost}
               isGuest={isGuest}
               status={room.status}
+              onInviteJoinClick={onInviteJoinClick}
             />
           </div>
         </div>
@@ -342,9 +377,18 @@ export function RoomDetailView({ roomId }: Props) {
         </div>
       </div>
 
-      {/* Guest join modal — shown when accessing via invite URL without login */}
-      {!!inviteToken && currentUserId === null && !!data && !isParticipant && (
-        <GuestJoinModal roomId={roomId} inviteToken={inviteToken} />
+      {/* 統合ダイアログ: 参加ボタン押下時に表示 */}
+      {showInviteDialog && !!inviteToken && (
+        <GuestJoinModal
+          mode="invite"
+          roomId={roomId}
+          inviteToken={inviteToken}
+          onClose={() => setShowInviteDialog(false)}
+        />
+      )}
+      {/* 新規ユーザーエラー: 招待URL経由でOAuth新規登録した場合（自動表示） */}
+      {!!inviteToken && isNewUserError && !isParticipant && !!data && (
+        <GuestJoinModal mode="newUserError" roomId={roomId} inviteToken={inviteToken} />
       )}
     </div>
   );

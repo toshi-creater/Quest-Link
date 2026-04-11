@@ -11,9 +11,10 @@ type Props = {
   isHost: boolean;
   isGuest: boolean;
   status: "waiting" | "playing" | "closed";
+  onInviteJoinClick?: () => void;
 };
 
-export function RoomActions({ roomId, isParticipant, isHost, isGuest, status }: Props) {
+export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, onInviteJoinClick }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -60,7 +61,7 @@ export function RoomActions({ roomId, isParticipant, isHost, isGuest, status }: 
     return (
       <div className="flex flex-col gap-2">
         <button
-          onClick={() => joinMutation.mutate()}
+          onClick={onInviteJoinClick ?? (() => joinMutation.mutate())}
           disabled={joinMutation.isPending || status === "playing"}
           className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
           style={{

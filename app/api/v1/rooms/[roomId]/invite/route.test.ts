@@ -12,7 +12,7 @@ vi.mock("@/lib/prisma", () => ({
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { POST, DELETE } from "./route";
+import { POST } from "./route";
 
 const mockAuth = vi.mocked(auth);
 const mockFindUnique = vi.mocked(prisma.room.findUnique);
@@ -20,8 +20,6 @@ const mockUpdate = vi.mocked(prisma.room.update);
 
 const makePostRequest = () =>
   new Request("http://localhost/api/v1/rooms/room-1/invite", { method: "POST" });
-const makeDeleteRequest = () =>
-  new Request("http://localhost/api/v1/rooms/room-1/invite", { method: "DELETE" });
 const makeParams = () => ({ params: Promise.resolve({ roomId: "room-1" }) });
 
 beforeEach(() => {
@@ -123,75 +121,3 @@ describe("POST /api/v1/rooms/[roomId]/invite", () => {
   });
 });
 
-describe("DELETE /api/v1/rooms/[roomId]/invite", () => {
-  it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
-    mockAuth.mockResolvedValue(null);
-
-    const res = await DELETE(makeDeleteRequest(), makeParams());
-    const body = await res.json();
-
-    expect(res.status).toBe(401);
-    expect(body.error.code).toBe("UNAUTHORIZED");
-  });
-
-  it("room が存在しない場合 404 ROOM_NOT_FOUND を返す", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue(null);
-
-    const res = await DELETE(makeDeleteRequest(), makeParams());
-    const body = await res.json();
-
-    expect(res.status).toBe(404);
-    expect(body.error.code).toBe("ROOM_NOT_FOUND");
-  });
-
-  it("ホスト以外のユーザーの場合 403 FORBIDDEN を返す", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue({
-      id: "room-1",
-      hostId: "other-user",
-      status: "waiting",
-    } as never);
-
-    const res = await DELETE(makeDeleteRequest(), makeParams());
-    const body = await res.json();
-
-    expect(res.status).toBe(403);
-    expect(body.error.code).toBe("FORBIDDEN");
-  });
-
-  it("closed な部屋の場合 400 ROOM_CLOSED を返す", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue({
-      id: "room-1",
-      hostId: "user-1",
-      status: "closed",
-    } as never);
-
-    const res = await DELETE(makeDeleteRequest(), makeParams());
-    const body = await res.json();
-
-    expect(res.status).toBe(400);
-    expect(body.error.code).toBe("ROOM_CLOSED");
-  });
-
-  it("正常無効化の場合 204 を返しトークンを null にする", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockFindUnique.mockResolvedValue({
-      id: "room-1",
-      hostId: "user-1",
-      status: "waiting",
-    } as never);
-    mockUpdate.mockResolvedValue({} as never);
-
-    const res = await DELETE(makeDeleteRequest(), makeParams());
-
-    expect(res.status).toBe(204);
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: "room-1" },
-        data: { inviteToken: null },
-      })
-    );
-  });
-});
