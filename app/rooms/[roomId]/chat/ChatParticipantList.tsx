@@ -1,0 +1,127 @@
+"use client";
+
+import Link from "next/link";
+import { ArrowLeft, Crown } from "@phosphor-icons/react";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
+import { RatingDisplay } from "@/components/ui/StarRating";
+import { useChatStore } from "@/lib/stores/chatStore";
+
+type Tag = { id: string; name: string; slug: string };
+
+type Props = {
+  roomId: string;
+  currentUserId: string | null;
+  currentGuestSessionId: string | null;
+  maxPlayers: number;
+  roomTitle: string;
+  gameName: string;
+  tags: Tag[];
+};
+
+export function ChatParticipantList({
+  roomId,
+  currentUserId,
+  currentGuestSessionId,
+  maxPlayers,
+  roomTitle,
+  gameName,
+  tags,
+}: Props) {
+  const participants = useChatStore((s) => s.participants);
+  const currentPlayers = participants.length;
+
+  return (
+    <aside
+      className="hidden w-64 shrink-0 flex-col border-r md:flex"
+      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+    >
+      {/* Room info */}
+      <div className="border-b p-4" style={{ borderColor: "var(--border)" }}>
+        <Link
+          href={`/rooms/${roomId}`}
+          className="mb-3 flex items-center gap-2 text-xs transition-colors hover:text-white"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          部屋の詳細へ
+        </Link>
+        <h2 className="text-sm font-bold leading-snug" style={{ color: "var(--text-primary)" }}>
+          {roomTitle}
+        </h2>
+        <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
+          {gameName}
+        </p>
+        {tags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {tags.map((tag) => (
+              <PlayStyleTag key={tag.id} tag={tag} size="sm" />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Participants */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <p
+          className="mb-3 text-xs font-semibold uppercase tracking-wider"
+          style={{ color: "var(--text-muted)" }}
+        >
+          参加者 {currentPlayers}/{maxPlayers}
+        </p>
+        <ul className="space-y-2.5">
+          {participants.map((p, idx) => {
+            const name = p.user?.username ?? p.displayName ?? "ゲスト";
+            const iconUrl = p.user?.iconUrl ?? null;
+            const avgRating = p.user?.avgRating ?? null;
+            const isMe =
+              (p.userId != null && p.userId === currentUserId) ||
+              (currentGuestSessionId !== null && p.guestSessionId === currentGuestSessionId);
+            const isGuest = p.user === null;
+            return (
+              <li key={p.userId ?? `guest-${idx}`} className="flex items-center gap-2.5">
+                <div className="relative">
+                  <UserAvatar username={name} iconUrl={iconUrl} size="sm" />
+                  {!isGuest && (
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2"
+                      style={{ backgroundColor: "#22c55e", borderColor: "var(--bg-card)" }}
+                    />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1">
+                    {p.isHost && <Crown className="h-3 w-3" style={{ color: "#eab308" }} />}
+                    <span
+                      className="truncate text-xs font-medium"
+                      style={{ color: isMe ? "var(--accent-light)" : "var(--text-primary)" }}
+                    >
+                      {name}
+                    </span>
+                    {isGuest && (
+                      <span
+                        className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none"
+                        style={{
+                          backgroundColor: "rgba(34, 197, 94, 0.15)",
+                          color: "#4ade80",
+                          border: "1px solid rgba(34, 197, 94, 0.3)",
+                        }}
+                      >
+                        ゲスト
+                      </span>
+                    )}
+                  </div>
+                  <RatingDisplay
+                    avgRating={avgRating !== null ? Number(avgRating) : null}
+                    ratingCount={avgRating != null ? 10 : 3}
+                    size="sm"
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </aside>
+  );
+}
