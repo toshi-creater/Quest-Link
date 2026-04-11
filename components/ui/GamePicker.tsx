@@ -5,6 +5,7 @@ import Image from "next/image";
 import { MagnifyingGlass, X, GameController, Check, CaretDown } from "@phosphor-icons/react";
 import { type Game } from "@/lib/mock-data";
 import clsx from "clsx";
+import { GameCoverImage } from "@/components/ui/GameCoverImage";
 
 // ─── ゲームカバー画像 ─────────────────────────────────────────────────────────
 
@@ -14,43 +15,14 @@ type GameCoverProps = {
   className?: string;
 };
 
-const coverSizes = {
-  sm: "h-10 w-8",
-  md: "h-14 w-11",
-  lg: "h-24 w-18",
-};
-
 export const GameCover = memo(function GameCover({ game, size = "md", className }: GameCoverProps) {
-  const [error, setError] = useState(false);
-  const sizeClass = coverSizes[size];
-
-  if (!game.coverImageUrl || error) {
-    return (
-      <div
-        className={clsx(
-          "flex shrink-0 items-center justify-center rounded-md",
-          sizeClass,
-          className
-        )}
-        style={{ backgroundColor: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.2)" }}
-        title={game.name}
-      >
-        <GameController className="h-4 w-4" style={{ color: "var(--accent-light)" }} />
-      </div>
-    );
-  }
-
   return (
-    <div className={clsx("relative shrink-0 overflow-hidden rounded-md", sizeClass, className)}>
-      <Image
-        src={game.coverImageUrl}
-        alt={game.name}
-        fill
-        className="object-cover"
-        sizes="64px"
-        onError={() => setError(true)}
-      />
-    </div>
+    <GameCoverImage
+      coverImageUrl={game.coverImageUrl}
+      name={game.name}
+      size={size}
+      className={className}
+    />
   );
 });
 

@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { MagnifyingGlass, GameController } from "@phosphor-icons/react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import type { GameResult } from "@/lib/games";
+import { GameCoverImage } from "@/components/ui/GameCoverImage";
 
 type Props = {
   games: GameResult[];
@@ -14,17 +14,12 @@ type Props = {
 export function GamesGrid({ games, roomCounts }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
 
   const filteredGames = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return games;
     return games.filter((g) => g.name.toLowerCase().includes(q));
   }, [query, games]);
-
-  const handleImgError = (gameId: string) => {
-    setImgErrors((prev) => new Set(prev).add(gameId));
-  };
 
   return (
     <>
@@ -58,7 +53,6 @@ export function GamesGrid({ games, roomCounts }: Props) {
         <div className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {filteredGames.map((game, index) => {
             const roomCount = roomCounts[game.id] ?? 0;
-            const hasError = imgErrors.has(game.id);
 
             return (
               <button
@@ -69,23 +63,11 @@ export function GamesGrid({ games, roomCounts }: Props) {
               >
                 {/* Cover image */}
                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl">
-                  {!hasError && game.coverImageUrl ? (
-                    <Image
-                      src={game.coverImageUrl}
-                      alt={game.name}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
-                      onError={() => handleImgError(game.id)}
-                    />
-                  ) : (
-                    <div
-                      className="flex h-full w-full items-center justify-center"
-                      style={{ background: "var(--bg-card-hover)" }}
-                    >
-                      <GameController className="h-10 w-10 opacity-40" style={{ color: "var(--accent)" }} />
-                    </div>
-                  )}
+                  <GameCoverImage
+                    coverImageUrl={game.coverImageUrl}
+                    name={game.name}
+                    className="transition-transform duration-300 group-hover:scale-105"
+                  />
 
                   {/* Hover overlay */}
                   <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
