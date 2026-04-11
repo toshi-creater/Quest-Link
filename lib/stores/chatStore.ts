@@ -20,7 +20,7 @@ export type Participant = {
   user: { username: string; iconUrl: string | null; avgRating: number | null } | null;
 };
 
-type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error" | "failed";
+export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error" | "failed";
 
 type ChatStore = {
   messages: ChatMessage[];
