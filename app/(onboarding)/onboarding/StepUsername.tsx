@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CaretRight } from "@phosphor-icons/react";
+import { OnboardingNavButtons } from "./OnboardingNavButtons";
 
 interface StepUsernameProps {
   username: string;
@@ -56,29 +56,12 @@ export function StepUsername({ username, onUsernameChange, onNext, onBack }: Ste
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex flex-1 items-center justify-center gap-1 rounded-xl border px-4 py-3 text-sm font-medium transition-all hover:opacity-80"
-          style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          戻る
-        </button>
-        <button
-          type="submit"
-          disabled={username.trim() === ""}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
-          style={{
-            background: "linear-gradient(135deg, var(--accent), #6d28d9)",
-            boxShadow: "0 4px 14px rgba(124,58,237,0.4)",
-          }}
-        >
-          次へ
-          <CaretRight className="h-4 w-4" />
-        </button>
-      </div>
+      <OnboardingNavButtons
+        primaryLabel="次へ"
+        primaryType="submit"
+        primaryDisabled={username.trim() === ""}
+        onBack={onBack}
+      />
     </form>
   );
 }

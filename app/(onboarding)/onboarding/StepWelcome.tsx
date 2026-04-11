@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, CaretRight } from "@phosphor-icons/react";
+import { Check } from "@phosphor-icons/react";
+import { OnboardingNavButtons } from "./OnboardingNavButtons";
 
 interface StepWelcomeProps {
   onNext: () => void;
@@ -45,18 +46,11 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
         </ul>
       </div>
 
-      <button
-        type="button"
-        onClick={onNext}
-        className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-white transition-all hover:opacity-90"
-        style={{
-          background: "linear-gradient(135deg, var(--accent), #6d28d9)",
-          boxShadow: "0 4px 14px rgba(124,58,237,0.4)",
-        }}
-      >
-        次へ
-        <CaretRight className="h-4 w-4" />
-      </button>
+      <OnboardingNavButtons
+        primaryLabel="次へ"
+        onPrimary={onNext}
+        primaryWidth="full"
+      />
     </div>
   );
 }
