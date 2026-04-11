@@ -175,4 +175,32 @@ describe("POST /api/v1/rooms", () => {
     expect(res.status).toBe(201);
     expect(json.data.id).toBe("room-1");
   });
+
+  it("正常系: 部屋作成時に inviteToken が自動生成される", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockGameFindUnique.mockResolvedValueOnce({ id: VALID_GAME_ID } as never);
+
+    const mockCreate = vi.fn().mockResolvedValue({ id: "room-1" });
+    const mockTx = {
+      room: {
+        create: mockCreate,
+        findUniqueOrThrow: vi.fn().mockResolvedValue(SAMPLE_RAW_ROOM),
+      },
+      roomParticipant: { create: vi.fn().mockResolvedValue({}) },
+    };
+
+    mockTransaction.mockImplementationOnce(
+      (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)
+    );
+
+    await POST(makePostRequest({ title: "テストルーム", gameId: VALID_GAME_ID, maxPlayers: 4 }));
+
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          inviteToken: expect.stringMatching(/^[0-9a-f]{64}$/),
+        }),
+      })
+    );
+  });
 });

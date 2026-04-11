@@ -1,121 +1,84 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
-vi.mock("@tanstack/react-query", () => ({
-  useMutation: vi.fn(),
-}));
-
 vi.mock("@phosphor-icons/react", () => ({
   LinkSimple: () => <span data-testid="icon-link" />,
   Copy: () => <span data-testid="icon-copy" />,
-  Prohibit: () => <span data-testid="icon-prohibit" />,
   CircleNotch: () => <span data-testid="icon-spinner" />,
   Check: () => <span data-testid="icon-check" />,
 }));
 
 vi.mock("@/lib/api/rooms", () => ({
   generateInviteToken: vi.fn(),
-  invalidateInviteToken: vi.fn(),
 }));
 
-import { useMutation } from "@tanstack/react-query";
+// window.location.origin の設定
+Object.defineProperty(window, "location", {
+  value: { origin: "http://localhost:3000" },
+  writable: true,
+});
+
+import { generateInviteToken } from "@/lib/api/rooms";
 import { InvitePanel } from "./InvitePanel";
 
-const mockUseMutation = vi.mocked(useMutation);
-
-type MutationConfig = {
-  mutationFn?: () => Promise<unknown>;
-  onSuccess?: (data: unknown) => void;
-};
-
-function makeMutation(overrides: Partial<ReturnType<typeof useMutation>> = {}) {
-  return {
-    mutate: vi.fn(),
-    isPending: false,
-    isError: false,
-    error: null,
-    ...overrides,
-  } as unknown as ReturnType<typeof useMutation>;
-}
+const mockGenerateInviteToken = vi.mocked(generateInviteToken);
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockUseMutation.mockReturnValue(makeMutation());
+  Object.assign(navigator, {
+    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+  });
 });
 
 describe("InvitePanel", () => {
-  it("初期状態では「招待リンクを生成」ボタンが表示される", () => {
+  it("マウント時にスピナーが表示される", () => {
+    mockGenerateInviteToken.mockReturnValue(new Promise(() => {})); // pending
     render(<InvitePanel roomId="room-1" />);
-    expect(screen.getByText("招待リンクを生成")).toBeInTheDocument();
+    expect(screen.getByTestId("icon-spinner")).toBeInTheDocument();
   });
 
-  it("「招待リンクを生成」ボタンをクリックすると generateMutation.mutate が呼ばれる", () => {
-    const generateMutate = vi.fn();
-    mockUseMutation
-      .mockReturnValueOnce(makeMutation({ mutate: generateMutate }))
-      .mockReturnValueOnce(makeMutation());
-
+  it("マウント時に generateInviteToken が呼ばれる", async () => {
+    mockGenerateInviteToken.mockResolvedValue({ data: { inviteToken: "abc123" } });
     render(<InvitePanel roomId="room-1" />);
-    fireEvent.click(screen.getByText("招待リンクを生成"));
-    expect(generateMutate).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(mockGenerateInviteToken).toHaveBeenCalledWith("room-1"));
   });
 
-  it("生成中は「招待リンクを生成」ボタンが無効化される", () => {
-    mockUseMutation
-      .mockReturnValueOnce(makeMutation({ isPending: true }))
-      .mockReturnValueOnce(makeMutation());
-
+  it("トークン取得後に「リンクをコピー」ボタンが表示される", async () => {
+    mockGenerateInviteToken.mockResolvedValue({ data: { inviteToken: "abc123" } });
     render(<InvitePanel roomId="room-1" />);
-    expect(screen.getByText("招待リンクを生成").closest("button")).toBeDisabled();
-  });
-
-  it("生成エラー時にエラーメッセージが表示される", () => {
-    mockUseMutation
-      .mockReturnValueOnce(makeMutation({ isError: true, error: new Error("生成に失敗しました") }))
-      .mockReturnValueOnce(makeMutation());
-
-    render(<InvitePanel roomId="room-1" />);
-    expect(screen.getByText("生成に失敗しました")).toBeInTheDocument();
-  });
-
-  it("onSuccess でトークンがセットされると招待URLが表示される", async () => {
-    let capturedOnSuccess: ((data: unknown) => void) | undefined;
-    mockUseMutation.mockImplementation((config: MutationConfig) => {
-      if (!capturedOnSuccess && config.onSuccess) {
-        capturedOnSuccess = config.onSuccess;
-      }
-      return makeMutation();
+    await waitFor(() => {
+      expect(screen.getByText("リンクをコピー")).toBeInTheDocument();
     });
+  });
 
+  it("取得失敗時はコンポーネントが何も表示しない", async () => {
+    mockGenerateInviteToken.mockRejectedValue(new Error("失敗"));
+    const { container } = render(<InvitePanel roomId="room-1" />);
+    await waitFor(() => expect(screen.queryByTestId("icon-spinner")).not.toBeInTheDocument());
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("「リンクをコピー」クリックで clipboard.writeText が正しいURLで呼ばれる", async () => {
+    mockGenerateInviteToken.mockResolvedValue({ data: { inviteToken: "token-xyz" } });
     render(<InvitePanel roomId="room-1" />);
 
-    capturedOnSuccess?.({ data: { inviteToken: "abc123" } });
+    await waitFor(() => screen.getByText("リンクをコピー"));
+    fireEvent.click(screen.getByText("リンクをコピー"));
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      "http://localhost:3000/rooms/room-1?inviteToken=token-xyz"
+    );
+  });
+
+  it("コピー後に「コピーしました」に変わる", async () => {
+    mockGenerateInviteToken.mockResolvedValue({ data: { inviteToken: "token-xyz" } });
+    render(<InvitePanel roomId="room-1" />);
+
+    await waitFor(() => screen.getByText("リンクをコピー"));
+    fireEvent.click(screen.getByText("リンクをコピー"));
 
     await waitFor(() => {
-      expect(screen.getByText(/abc123/)).toBeInTheDocument();
+      expect(screen.getByText("コピーしました")).toBeInTheDocument();
     });
-  });
-
-  it("「リンクを無効化」ボタンをクリックすると invalidateMutation.mutate が呼ばれる", async () => {
-    const invalidateMutate = vi.fn();
-    let capturedOnSuccess: ((data: unknown) => void) | undefined;
-
-    mockUseMutation.mockImplementation((config: MutationConfig) => {
-      if (!capturedOnSuccess && config.onSuccess) {
-        capturedOnSuccess = config.onSuccess;
-        return makeMutation();
-      }
-      return makeMutation({ mutate: invalidateMutate });
-    });
-
-    render(<InvitePanel roomId="room-1" />);
-    capturedOnSuccess?.({ data: { inviteToken: "abc123" } });
-
-    await waitFor(() => {
-      expect(screen.getByText("リンクを無効化")).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByText("リンクを無効化"));
-    expect(invalidateMutate).toHaveBeenCalledTimes(1);
   });
 });

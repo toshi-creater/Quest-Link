@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -173,6 +174,7 @@ export async function POST(request: Request) {
         maxPlayers,
         description,
         hostId: userId,
+        inviteToken: randomBytes(32).toString("hex"),
         ...(playStyleTagIds && playStyleTagIds.length > 0 && {
           playStyleTags: {
             createMany: { data: playStyleTagIds.map((tagId) => ({ tagId })) },

@@ -19,8 +19,7 @@
 | POST | `/rooms/{roomId}/join` | 必要 | 部屋に参加 |
 | POST | `/rooms/{roomId}/leave` | 必要 | 部屋を退室 |
 | POST | `/rooms/{roomId}/close` | 必要（ホストのみ） | 部屋を解散 |
-| POST | `/rooms/{roomId}/invite` | 必要（ホストのみ） | 招待トークンを発行（冪等） |
-| DELETE | `/rooms/{roomId}/invite` | 必要（ホストのみ） | 招待トークンを無効化 |
+| POST | `/rooms/{roomId}/invite` | 必要（ホストのみ） | 招待トークンを取得（冪等。部屋作成時に自動生成済み） |
 | POST | `/rooms/{roomId}/share` | 必要 | SNS シェア投稿 |
 | GET | `/rooms/{roomId}/messages` | 必要 | チャット履歴取得 |
 | GET | `/rooms/{roomId}/pending-ratings` | 必要 | 未評価の相手一覧（`04_ratings-tags.md` 参照） |
@@ -311,9 +310,9 @@ POST /rooms/{roomId}/close
 
 ---
 
-## 10. 招待トークン発行
+## 10. 招待トークン取得
 
-ホストが招待URLのトークンを生成する。既にトークンが存在する場合はそのまま返す（冪等）。`closed` な部屋には発行不可。
+部屋作成時に自動生成済みのトークンを返す。トークンが存在しない場合（旧データ等）は新規生成する（冪等）。`closed` な部屋には発行不可。
 
 ```
 POST /rooms/{roomId}/invite
@@ -331,29 +330,7 @@ POST /rooms/{roomId}/invite
 }
 ```
 
-招待URLはフロントエンドで `{origin}/rooms/{roomId}?invite={inviteToken}` として構築する。
-
-### エラー
-
-| HTTP | エラーコード | 説明 |
-|------|------------|------|
-| 400 | `ROOM_CLOSED` | 解散済みの部屋 |
-| 403 | `FORBIDDEN` | ホストではない |
-| 404 | `ROOM_NOT_FOUND` | 部屋が存在しない |
-
----
-
-## 10-1. 招待トークン無効化
-
-発行済みの招待トークンを削除する。以降、そのトークンを含むURLでは参加不可になる。
-
-```
-DELETE /rooms/{roomId}/invite
-```
-
-**認証**: 必要（ホストのみ）
-
-### レスポンス `204 No Content`
+招待URLはフロントエンドで `{origin}/rooms/{roomId}?inviteToken={inviteToken}` として構築する。
 
 ### エラー
 

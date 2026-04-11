@@ -8,6 +8,7 @@ type Props = {
 export default async function LoginPage({ searchParams }: Props) {
   const { callbackUrl } = await searchParams;
   const redirectTo = callbackUrl?.startsWith("/") ? callbackUrl : "/rooms";
+  const hasInviteToken = callbackUrl?.includes("inviteToken=") ?? false;
 
   return (
     <div
@@ -32,6 +33,18 @@ export default async function LoginPage({ searchParams }: Props) {
             animationDelay: "120ms",
           }}
         >
+          {hasInviteToken && (
+            <div
+              className="mb-4 rounded-lg border px-4 py-3 text-sm text-center"
+              style={{
+                borderColor: "var(--accent)",
+                color: "var(--text-secondary)",
+                backgroundColor: "rgba(124,58,237,0.08)",
+              }}
+            >
+              この部屋に参加するにはログインが必要です
+            </div>
+          )}
           <h2
             className="mb-2 text-center text-xl font-semibold"
             style={{ color: "var(--text-primary)" }}

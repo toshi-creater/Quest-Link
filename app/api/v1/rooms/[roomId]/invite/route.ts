@@ -42,36 +42,3 @@ export async function POST(_request: Request, { params }: RouteParams) {
 
   return NextResponse.json({ data: { inviteToken } });
 }
-
-export async function DELETE(_request: Request, { params }: RouteParams) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "認証が必要です" } }, { status: 401 });
-  }
-
-  const { roomId } = await params;
-
-  const room = await prisma.room.findUnique({
-    where: { id: roomId },
-    select: { id: true, hostId: true, status: true },
-  });
-
-  if (!room) {
-    return NextResponse.json({ error: { code: "ROOM_NOT_FOUND", message: "部屋が存在しません" } }, { status: 404 });
-  }
-
-  if (room.hostId !== session.user.id) {
-    return NextResponse.json({ error: { code: "FORBIDDEN", message: "ホストのみ招待リンクを無効化できます" } }, { status: 403 });
-  }
-
-  if (room.status === "closed") {
-    return NextResponse.json({ error: { code: "ROOM_CLOSED", message: "解散済みの部屋です" } }, { status: 400 });
-  }
-
-  await prisma.room.update({
-    where: { id: roomId },
-    data: { inviteToken: null },
-  });
-
-  return new NextResponse(null, { status: 204 });
-}
