@@ -34,12 +34,6 @@ export const authConfig = {
         return true;
       }
 
-      const isPublicPage =
-        pathname === "/" ||
-        pathname === "/rooms" ||
-        pathname.startsWith("/rooms/");
-      if (!isLoggedIn && isPublicPage) return true;
-
       if (!isLoggedIn) return false;
 
       // 初回ログイン未設定 → プロフィール設定画面へ強制
