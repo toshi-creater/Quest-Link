@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { ArrowLeft, FloppyDisk, Camera } from "@phosphor-icons/react";
 import { type Game } from "@/lib/mock-data";
@@ -27,6 +27,7 @@ async function fetchMyProfile(): Promise<UserProfile> {
 export default function EditProfilePage() {
   const router = useRouter();
   const { data: session, update, status } = useSession();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: profile } = useQuery({
@@ -123,6 +124,7 @@ export default function EditProfilePage() {
       }
 
       await update({ username: username.trim() });
+      await queryClient.invalidateQueries({ queryKey: ["users", "me"] });
       router.push("/users/me");
     } catch {
       setError("通信エラーが発生しました。再度お試しください");
