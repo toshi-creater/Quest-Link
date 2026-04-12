@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
-const mockInvalidateQueries = vi.fn();
+const mockRefetchQueries = vi.fn();
 const mockPush = vi.fn();
 const mockUpdate = vi.fn();
 
 vi.mock("@tanstack/react-query", () => ({
-  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
+  useQueryClient: () => ({ refetchQueries: mockRefetchQueries }),
   useQuery: () => ({
     data: {
       username: "テストユーザー",
@@ -59,7 +59,7 @@ import EditProfilePage from "./page";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockInvalidateQueries.mockResolvedValue(undefined);
+  mockRefetchQueries.mockResolvedValue(undefined);
   mockUpdate.mockResolvedValue(undefined);
   vi.stubGlobal("fetch", vi.fn());
 });
@@ -71,7 +71,7 @@ describe("EditProfilePage", () => {
     expect(screen.getByRole("button", { name: "保存する" })).toBeInTheDocument();
   });
 
-  it("保存成功後に ['users', 'me'] クエリのキャッシュが invalidate される", async () => {
+  it("保存成功後に ['users', 'me'] クエリが refetch される", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: async () => ({}),
@@ -81,15 +81,15 @@ describe("EditProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "保存する" }));
 
     await waitFor(() => {
-      expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ["users", "me"] });
+      expect(mockRefetchQueries).toHaveBeenCalledWith({ queryKey: ["users", "me"] });
     });
   });
 
-  it("invalidateQueries が完了してから /users/me に遷移する", async () => {
-    let resolveInvalidate!: () => void;
-    mockInvalidateQueries.mockReturnValue(
+  it("refetchQueries が完了してから /users/me に遷移する", async () => {
+    let resolveRefetch!: () => void;
+    mockRefetchQueries.mockReturnValue(
       new Promise<void>((resolve) => {
-        resolveInvalidate = resolve;
+        resolveRefetch = resolve;
       })
     );
 
@@ -101,20 +101,20 @@ describe("EditProfilePage", () => {
     render(<EditProfilePage />);
     fireEvent.click(screen.getByRole("button", { name: "保存する" }));
 
-    // invalidateQueries 完了前は router.push が呼ばれない
+    // refetchQueries 完了前は router.push が呼ばれない
     await waitFor(() => {
-      expect(mockInvalidateQueries).toHaveBeenCalled();
+      expect(mockRefetchQueries).toHaveBeenCalled();
     });
     expect(mockPush).not.toHaveBeenCalled();
 
-    resolveInvalidate();
+    resolveRefetch();
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/users/me");
     });
   });
 
-  it("PATCH API 失敗時は invalidateQueries と router.push が呼ばれない", async () => {
+  it("PATCH API 失敗時は refetchQueries と router.push が呼ばれない", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: false,
       json: async () => ({ error: "ユーザー名が重複しています" }),
@@ -127,7 +127,7 @@ describe("EditProfilePage", () => {
       expect(screen.getByText("ユーザー名が重複しています")).toBeInTheDocument();
     });
 
-    expect(mockInvalidateQueries).not.toHaveBeenCalled();
+    expect(mockRefetchQueries).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
   });
 
