@@ -124,7 +124,7 @@ export default function EditProfilePage() {
       }
 
       await update({ username: username.trim() });
-      await queryClient.refetchQueries({ queryKey: ["users", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["users", "me"] });
       router.push("/users/me");
     } catch {
       setError("通信エラーが発生しました。再度お試しください");
