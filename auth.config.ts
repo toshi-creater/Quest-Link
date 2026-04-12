@@ -34,6 +34,13 @@ export const authConfig = {
         return true;
       }
 
+      // 招待リンク経由の部屋詳細（/rooms/[roomId]?inviteToken=...）は未ログインでもアクセス可
+      const isRoomDetailWithInvite =
+        pathname.startsWith("/rooms/") &&
+        !pathname.slice("/rooms/".length).includes("/") &&
+        nextUrl.searchParams.has("inviteToken");
+      if (!isLoggedIn && isRoomDetailWithInvite) return true;
+
       if (!isLoggedIn) return false;
 
       // 初回ログイン未設定 → プロフィール設定画面へ強制

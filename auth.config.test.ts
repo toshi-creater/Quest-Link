@@ -51,13 +51,39 @@ describe("authorized コールバック", () => {
       expect(result).toBe(false);
     });
 
-    it("/rooms/abc-123 に未ログインでアクセスすると false を返す", async () => {
+    it("/rooms/abc-123（inviteToken なし）に未ログインでアクセスすると false を返す", async () => {
       const result = await authorized({ auth: null, request: makeRequest("/rooms/abc-123") });
       expect(result).toBe(false);
     });
 
     it("/users/me に未ログインでアクセスすると false を返す", async () => {
       const result = await authorized({ auth: null, request: makeRequest("/users/me") });
+      expect(result).toBe(false);
+    });
+  });
+
+  describe("招待リンク経由の部屋詳細（未ログインアクセス許可）", () => {
+    it("inviteToken あり → 未ログインでも true を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/abc-123", { inviteToken: "tok" }),
+      });
+      expect(result).toBe(true);
+    });
+
+    it("inviteToken + guestFlow=true → 未ログインでも true を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/abc-123", { inviteToken: "tok", guestFlow: "true" }),
+      });
+      expect(result).toBe(true);
+    });
+
+    it("サブパス /rooms/abc-123/chat は inviteToken があっても未ログインは false を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/abc-123/chat", { inviteToken: "tok" }),
+      });
       expect(result).toBe(false);
     });
   });
