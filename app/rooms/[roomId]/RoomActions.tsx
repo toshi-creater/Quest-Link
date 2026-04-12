@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DoorOpen, SignOut, CircleNotch, Trash } from "@phosphor-icons/react";
 import { joinRoom, leaveRoom, closeRoom } from "@/lib/api/rooms";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 type Props = {
   roomId: string;
@@ -17,6 +19,7 @@ type Props = {
 export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, onInviteJoinClick }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const joinMutation = useMutation({
     mutationFn: () => joinRoom(roomId),
@@ -107,10 +110,7 @@ export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, on
         </button>
         {isHost && (
           <button
-            onClick={() => {
-              if (!window.confirm("本当に部屋を解散しますか？この操作は取り消せません。")) return;
-              closeMutation.mutate();
-            }}
+            onClick={() => setIsConfirmOpen(true)}
             disabled={closeMutation.isPending}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: "rgba(239,68,68,0.05)" }}
@@ -133,6 +133,19 @@ export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, on
         <p className="text-center text-xs animate-slide-in-bottom" style={{ color: "#f87171" }}>
           {closeMutation.error.message}
         </p>
+      )}
+      {isConfirmOpen && (
+        <ConfirmModal
+          title="部屋を解散しますか？"
+          description="この操作は取り消せません。"
+          confirmLabel="解散する"
+          isPending={closeMutation.isPending}
+          onConfirm={() => {
+            closeMutation.mutate();
+            setIsConfirmOpen(false);
+          }}
+          onCancel={() => setIsConfirmOpen(false)}
+        />
       )}
     </div>
   );
