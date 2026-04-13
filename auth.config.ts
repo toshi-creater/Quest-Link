@@ -39,7 +39,13 @@ export const authConfig = {
         pathname.startsWith("/rooms/") &&
         !pathname.slice("/rooms/".length).includes("/") &&
         nextUrl.searchParams.has("inviteToken");
-      if (!isLoggedIn && isRoomDetailWithInvite) return true;
+
+      // /rooms/[roomId]/ 配下（/chat, /guest 等）は未ログインでもアクセス可（ゲスト参加フローのため）
+      const isRoomSubPath =
+        pathname.startsWith("/rooms/") &&
+        pathname.slice("/rooms/".length).includes("/");
+
+      if (!isLoggedIn && (isRoomDetailWithInvite || isRoomSubPath)) return true;
 
       if (!isLoggedIn) return false;
 

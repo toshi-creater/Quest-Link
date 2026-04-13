@@ -79,12 +79,28 @@ describe("authorized コールバック", () => {
       expect(result).toBe(true);
     });
 
-    it("サブパス /rooms/abc-123/chat は inviteToken があっても未ログインは false を返す", async () => {
+    it("サブパス /rooms/abc-123/chat は inviteToken があれば未ログインでも true を返す", async () => {
       const result = await authorized({
         auth: null,
         request: makeRequest("/rooms/abc-123/chat", { inviteToken: "tok" }),
       });
-      expect(result).toBe(false);
+      expect(result).toBe(true);
+    });
+
+    it("サブパス /rooms/abc-123/chat は inviteToken なしでも未ログインで true を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/abc-123/chat"),
+      });
+      expect(result).toBe(true);
+    });
+
+    it("サブパス /rooms/abc-123/ratings は未ログインでも true を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/abc-123/ratings"),
+      });
+      expect(result).toBe(true);
     });
   });
 
