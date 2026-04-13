@@ -139,6 +139,14 @@ describe("authorized コールバック", () => {
       });
       expect(result).toBe(false);
     });
+
+    it("/rooms/new はゲストセッションがあっても false を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/new", {}, guestCookie),
+      });
+      expect(result).toBe(false);
+    });
   });
 
   describe("ログイン済み・通常アクセス", () => {

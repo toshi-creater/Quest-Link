@@ -36,11 +36,13 @@ export const authConfig = {
 
       const hasGuestSession = !!cookies.get("quest_link_guest_session");
       const isRoomPath = pathname.startsWith("/rooms/");
-      const isRoomDetail = isRoomPath && !pathname.slice("/rooms/".length).includes("/");
+      // /rooms/new は部屋作成ページのためゲストセッション・招待リンクの対象外
+      const isRoomNew = pathname === "/rooms/new";
+      const isRoomDetail = isRoomPath && !isRoomNew && !pathname.slice("/rooms/".length).includes("/");
 
       if (!isLoggedIn) {
-        // ゲストセッションがあれば /rooms/[roomId] 配下すべてアクセス可
-        if (isRoomPath && hasGuestSession) return true;
+        // ゲストセッションがあれば /rooms/new 以外の /rooms/* すべてアクセス可
+        if (isRoomPath && !isRoomNew && hasGuestSession) return true;
         // 招待リンク経由の部屋詳細（サブパスなし）もアクセス可
         if (isRoomDetail && nextUrl.searchParams.has("inviteToken")) return true;
         return false;
