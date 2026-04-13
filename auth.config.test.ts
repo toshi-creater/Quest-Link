@@ -147,6 +147,30 @@ describe("authorized コールバック", () => {
       });
       expect(result).toBe(false);
     });
+
+    it("/rooms/new は inviteToken があっても false を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/new", { inviteToken: "tok" }),
+      });
+      expect(result).toBe(false);
+    });
+
+    it("/rooms/current にゲストセッションがあれば未ログインでも true を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/current", {}, guestCookie),
+      });
+      expect(result).toBe(true);
+    });
+
+    it("/rooms/current/chat にゲストセッションがあれば未ログインでも true を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/current/chat", {}, guestCookie),
+      });
+      expect(result).toBe(true);
+    });
   });
 
   describe("ログイン済み・通常アクセス", () => {
