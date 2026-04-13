@@ -66,10 +66,10 @@
 | `/rooms/current` | 参加中の部屋リダイレクト | サーバーサイドで参加中の roomId を取得し `/rooms/{roomId}` へリダイレクト。参加中の部屋がない場合は「参加中の部屋がありません」メッセージと「部屋を探す」リンクを表示 | Prisma 直接アクセス |
 | `/rooms/current/chat` | 参加中の部屋チャット | サーバーサイドで参加中の roomId を取得し `/rooms/{roomId}/chat` へリダイレクト。参加中の部屋がない場合は「参加中の部屋がありません」メッセージと「部屋を探す」リンクを表示 | Prisma 直接アクセス（リダイレクト後は `GET /rooms/{roomId}/messages`、WebSocket `chat:send` / `chat:message`） |
 | `/rooms/new` | 部屋作成 | タイトル・ゲーム（IGDB連携検索で選択）・最大人数・説明・タグを入力して部屋を作成 | `GET /play-style-tags`、`GET /games/search`、`POST /rooms` |
-| `/rooms/[roomId]` | 部屋詳細 | 部屋情報・参加者一覧表示、参加 / 退室 / 解散、ホストによる部屋情報編集、SNS シェア、リアルタイム参加者更新（WebSocket）。ログイン済みで自分が参加中の場合は `/rooms/current` へリダイレクト。**`inviteToken` パラメータ付きの招待リンク経由でのアクセスは未ログインでも可**（Modal A 表示） | `GET /rooms/{roomId}`、`POST /rooms/{roomId}/join`、`POST /rooms/{roomId}/leave`、`POST /rooms/{roomId}/close`、`PATCH /rooms/{roomId}`、`POST /rooms/{roomId}/share`、`GET /play-style-tags`（ホスト編集用）、`GET /rooms/current`（自分の参加中部屋かの判定用） |
+| `/rooms/[roomId]` | 部屋詳細 | 部屋情報・参加者一覧表示、参加 / 退室 / 解散、ホストによる部屋情報編集、SNS シェア、リアルタイム参加者更新（WebSocket）。ログイン済みで自分が参加中の場合は `/rooms/current` へリダイレクト。**未ログインでも `inviteToken` パラメータ付き招待リンク経由またはゲストセッション保持時はアクセス可**（Modal A 表示） | `GET /rooms/{roomId}`、`POST /rooms/{roomId}/join`、`POST /rooms/{roomId}/leave`、`POST /rooms/{roomId}/close`、`PATCH /rooms/{roomId}`、`POST /rooms/{roomId}/share`、`GET /play-style-tags`（ホスト編集用）、`GET /rooms/current`（自分の参加中部屋かの判定用） |
 | `/rooms/[roomId]?inviteToken=xxx` | 部屋詳細（招待URL経由） | 招待トークン付きURLで部屋詳細にアクセスした場合の追加モーダル表示。**Modal A（認証誘導）**：未ログイン＋guestFlowなし → 「ログインして参加」「ゲストで参加」ボタン。**Modal A（新規ユーザーエラー）**：OAuth後に新規ユーザーと判定 → 「招待リンクでの新規登録はできません」メッセージ＋「ゲストで参加」「プロフィール設定」ボタン。**Modal B（表示名入力）**：guestFlow=true＋未ログイン → 表示名入力でゲスト参加・チャットへ遷移 | `POST /invite/{inviteToken}/join` |
 | `/rooms/[roomId]/guest` | ゲスト参加フロー（旧） | 募集リンク経由でアクセスした未ログインユーザー向け。表示名（任意）を入力してゲストセッションを発行し、そのまま部屋に参加。ログインを促すボタンも併設 | `POST /auth/guest`、`POST /rooms/{roomId}/join` |
-| `/rooms/[roomId]/chat` | チャット | リアルタイムチャット送受信（WebSocket、ゲスト参加者も利用可）、過去ログのスクロール読み込み（カーソルページネーション） | `GET /rooms/{roomId}/messages`、WebSocket `chat:send` / `chat:message` |
+| `/rooms/[roomId]/chat` | チャット | リアルタイムチャット送受信（WebSocket、ゲスト参加者も利用可）、過去ログのスクロール読み込み（カーソルページネーション）。**ゲストセッション保持時は未ログインでもアクセス可** | `GET /rooms/{roomId}/messages`、WebSocket `chat:send` / `chat:message` |
 | `/rooms/[roomId]/ratings` | セッション評価 | 部屋クローズ後に同室メンバーを評価（スコア・コメント）、評価期限（24時間）表示 | `GET /rooms/{roomId}/pending-ratings`、`POST /ratings` |
 
 ---
@@ -90,7 +90,9 @@
 
 ```
 未ログインでいずれかのページにアクセス
-    └─→ /login へリダイレクト（例外: 招待リンク /rooms/[roomId]?inviteToken=... は通過）
+    └─→ /login へリダイレクト
+        例外1: /rooms/[roomId]?inviteToken=... （招待リンク）は通過
+        例外2: ゲストセッション Cookie 保持時は /rooms/[roomId] 配下すべて通過
 
 ログイン済みユーザー
     └─→ /（トップ）※おすすめゲームカテゴリ上段 + 部屋一覧下段
@@ -186,7 +188,7 @@
 | ver 6.1 | 2026年3月 | ユーザータグ廃止に伴い、オンボーディング・プロフィール・プロフィール編集・他ユーザープロフィール画面からプレイスタイルタグ関連記述を削除 |
 | ver 6.2 | 2026年3月 | オンボーディング画面を5ステップウィザード形式に刷新。ゲーム選択を `GET /games`（全件取得）に変更し `GridGamePicker` コンポーネントで全タイトルをグリッド表示。ヘッダー・ボトムナビを非表示化しロゴのみ表示。`needsProfileSetup` JWT フラグによるリダイレクト制御を追加 |
 | ver 6.3 | 2026年4月 | 招待URL経由の参加フロー刷新。Modal A（認証誘導）・Modal B（表示名入力）の2段階モーダルを実装。招待URL経由の新規OAuthユーザーを招待ページに戻し `error=new_user` でエラー表示。ログインページに招待バナーとゲスト参加リンクを追加 |
-| ver 6.4 | 2026年4月 | 全画面ログイン必須化。`/login` 以外のすべての画面でログインを必須とし、未ログイン時は `/login` へリダイレクト。例外として `inviteToken` パラメータ付きの `/rooms/[roomId]` は未ログインでもアクセス可（招待リンク経由での Modal A 表示のため） |
+| ver 6.4 | 2026年4月 | 全画面ログイン必須化。`/login` 以外のすべての画面でログインを必須とし、未ログイン時は `/login` へリダイレクト。例外: ①`inviteToken` 付き `/rooms/[roomId]` は未ログインでもアクセス可（招待リンク Modal A 表示）、②ゲストセッション Cookie 保持時は `/rooms/[roomId]` 配下すべてアクセス可 |
 
 ---
 

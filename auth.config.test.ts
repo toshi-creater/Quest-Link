@@ -5,10 +5,19 @@ import { authConfig } from "./auth.config";
 
 const authorized = authConfig.callbacks!.authorized!;
 
-function makeRequest(pathname: string, params: Record<string, string> = {}) {
+function makeRequest(
+  pathname: string,
+  params: Record<string, string> = {},
+  cookieMap: Record<string, string> = {}
+) {
   const url = new URL(`http://localhost${pathname}`);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  return { nextUrl: url } as unknown as NextRequest;
+  return {
+    nextUrl: url,
+    cookies: {
+      get: (name: string) => (cookieMap[name] ? { value: cookieMap[name] } : undefined),
+    },
+  } as unknown as NextRequest;
 }
 
 function makeAuth(needsProfileSetup = false): Session {
@@ -79,28 +88,56 @@ describe("authorized コールバック", () => {
       expect(result).toBe(true);
     });
 
-    it("サブパス /rooms/abc-123/chat は inviteToken があれば未ログインでも true を返す", async () => {
+    it("サブパス /rooms/abc-123/chat は inviteToken があっても未ログインは false を返す", async () => {
       const result = await authorized({
         auth: null,
         request: makeRequest("/rooms/abc-123/chat", { inviteToken: "tok" }),
       });
+      expect(result).toBe(false);
+    });
+  });
+
+  describe("ゲストセッション経由のアクセス許可", () => {
+    const guestCookie = { quest_link_guest_session: "guest_abc123" };
+
+    it("/rooms/abc-123 にゲストセッションがあれば未ログインでも true を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/abc-123", {}, guestCookie),
+      });
       expect(result).toBe(true);
     });
 
-    it("サブパス /rooms/abc-123/chat は inviteToken なしでも未ログインで true を返す", async () => {
+    it("/rooms/abc-123/chat にゲストセッションがあれば未ログインでも true を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/abc-123/chat", {}, guestCookie),
+      });
+      expect(result).toBe(true);
+    });
+
+    it("/rooms/abc-123/ratings にゲストセッションがあれば未ログインでも true を返す", async () => {
+      const result = await authorized({
+        auth: null,
+        request: makeRequest("/rooms/abc-123/ratings", {}, guestCookie),
+      });
+      expect(result).toBe(true);
+    });
+
+    it("/rooms/abc-123/chat にゲストセッションなし・inviteToken なしは false を返す", async () => {
       const result = await authorized({
         auth: null,
         request: makeRequest("/rooms/abc-123/chat"),
       });
-      expect(result).toBe(true);
+      expect(result).toBe(false);
     });
 
-    it("サブパス /rooms/abc-123/ratings は未ログインでも true を返す", async () => {
+    it("/rooms/abc-123/chat は inviteToken のみでは false を返す（サブパスは inviteToken 不可）", async () => {
       const result = await authorized({
         auth: null,
-        request: makeRequest("/rooms/abc-123/ratings"),
+        request: makeRequest("/rooms/abc-123/chat", { inviteToken: "tok" }),
       });
-      expect(result).toBe(true);
+      expect(result).toBe(false);
     });
   });
 

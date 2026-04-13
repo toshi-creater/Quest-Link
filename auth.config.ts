@@ -23,7 +23,7 @@ export const authConfig = {
       session.user.needsProfileSetup = (token["needsProfileSetup"] as boolean | undefined) ?? false;
       return session;
     },
-    authorized({ auth, request: { nextUrl } }) {
+    authorized({ auth, request: { nextUrl, cookies } }) {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
       const isLoginPage = pathname === "/login";
@@ -34,20 +34,17 @@ export const authConfig = {
         return true;
       }
 
-      // 招待リンク経由の部屋詳細（/rooms/[roomId]?inviteToken=...）は未ログインでもアクセス可
-      const isRoomDetailWithInvite =
-        pathname.startsWith("/rooms/") &&
-        !pathname.slice("/rooms/".length).includes("/") &&
-        nextUrl.searchParams.has("inviteToken");
+      const hasGuestSession = !!cookies.get("quest_link_guest_session");
+      const isRoomPath = pathname.startsWith("/rooms/");
+      const isRoomDetail = isRoomPath && !pathname.slice("/rooms/".length).includes("/");
 
-      // /rooms/[roomId]/ 配下（/chat, /guest 等）は未ログインでもアクセス可（ゲスト参加フローのため）
-      const isRoomSubPath =
-        pathname.startsWith("/rooms/") &&
-        pathname.slice("/rooms/".length).includes("/");
-
-      if (!isLoggedIn && (isRoomDetailWithInvite || isRoomSubPath)) return true;
-
-      if (!isLoggedIn) return false;
+      if (!isLoggedIn) {
+        // ゲストセッションがあれば /rooms/[roomId] 配下すべてアクセス可
+        if (isRoomPath && hasGuestSession) return true;
+        // 招待リンク経由の部屋詳細（サブパスなし）もアクセス可
+        if (isRoomDetail && nextUrl.searchParams.has("inviteToken")) return true;
+        return false;
+      }
 
       // 初回ログイン未設定 → プロフィール設定画面へ強制
       const needsProfileSetup = auth?.user?.needsProfileSetup ?? false;
