@@ -46,7 +46,7 @@ export function BackButton() {
 
       {/* デスクトップ: main内の右上にabsolute配置（max-w-7xlコンテナ基準） */}
       <div className="hidden md:block absolute top-4 inset-x-0 z-40 pointer-events-none">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-end pointer-events-auto">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-start pointer-events-auto">
           <Link
             href={href}
             className="flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:text-white"
