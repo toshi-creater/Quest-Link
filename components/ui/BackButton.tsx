@@ -25,18 +25,34 @@ export function BackButton() {
   const pathname = usePathname();
   if (!shouldShowBackButton(pathname)) return null;
 
+  const href = getParentPath(pathname);
+  const buttonStyle = {
+    color: "var(--text-secondary)",
+    backgroundColor: "var(--bg-card)",
+    borderColor: "var(--border)",
+  };
+
   return (
-    <Link
-      href={getParentPath(pathname)}
-      className="fixed top-3 left-4 z-50 md:hidden flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:text-white"
-      style={{
-        color: "var(--text-secondary)",
-        backgroundColor: "var(--bg-card)",
-        borderColor: "var(--border)",
-      }}
-      aria-label="前のページに戻る"
-    >
-      <ArrowLeft className="h-5 w-5" />
-    </Link>
+    <>
+      {/* モバイル: 左上固定 */}
+      <Link
+        href={href}
+        className="fixed top-3 left-4 z-50 md:hidden flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:text-white"
+        style={buttonStyle}
+        aria-label="前のページに戻る"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </Link>
+
+      {/* デスクトップ: ボディ右上固定（ヘッダー直下） */}
+      <Link
+        href={href}
+        className="fixed top-20 right-4 z-40 hidden md:flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:text-white"
+        style={buttonStyle}
+        aria-label="前のページに戻る"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </Link>
+    </>
   );
 }
