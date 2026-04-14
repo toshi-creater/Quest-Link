@@ -66,4 +66,14 @@ describe("TagFilterPanel", () => {
     fireEvent.click(screen.getByText("絞り込む"));
     expect(onApply).toHaveBeenCalledOnce();
   });
+
+  it("全ボタンが type='button' を持つ（フォーム内でのsubmit防止）", () => {
+    render(
+      <TagFilterPanel tags={tags} selectedTags={[]} onToggle={vi.fn()} open={true} onApply={vi.fn()} />
+    );
+    const buttons = screen.getAllByRole("button");
+    buttons.forEach((btn) => {
+      expect(btn).toHaveAttribute("type", "button");
+    });
+  });
 });
