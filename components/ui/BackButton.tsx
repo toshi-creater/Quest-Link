@@ -44,15 +44,19 @@ export function BackButton() {
         <ArrowLeft className="h-5 w-5" />
       </Link>
 
-      {/* デスクトップ: ボディ左上固定（ヘッダー直下） */}
-      <Link
-        href={href}
-        className="fixed top-20 left-4 z-40 hidden md:flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:text-white"
-        style={buttonStyle}
-        aria-label="前のページに戻る"
-      >
-        <ArrowLeft className="h-5 w-5" />
-      </Link>
+      {/* デスクトップ: main内の右上にabsolute配置（max-w-7xlコンテナ基準） */}
+      <div className="hidden md:block absolute top-4 inset-x-0 z-40 pointer-events-none">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-end pointer-events-auto">
+          <Link
+            href={href}
+            className="flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:text-white"
+            style={buttonStyle}
+            aria-label="前のページに戻る"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+        </div>
+      </div>
     </>
   );
 }

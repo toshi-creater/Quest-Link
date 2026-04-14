@@ -29,8 +29,10 @@ export default function RootLayout({
       <body className="antialiased min-h-screen" style={{ backgroundColor: "var(--bg-base)", color: "var(--text-primary)" }}>
         <Providers>
           <Header />
-          <BackButton />
-          <main className="min-h-screen md:min-h-[calc(100vh_-_64px)] pb-[calc(60px_+_env(safe-area-inset-bottom))] md:pb-0">{children}</main>
+          <main className="relative min-h-screen md:min-h-[calc(100vh_-_64px)] pb-[calc(60px_+_env(safe-area-inset-bottom))] md:pb-0">
+            <BackButton />
+            {children}
+          </main>
           <BottomNav />
         </Providers>
       </body>
