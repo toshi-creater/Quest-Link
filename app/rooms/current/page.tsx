@@ -1,15 +1,22 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 export default async function CurrentRoomPage() {
   const session = await auth();
   const userId = session?.user?.id;
-  if (!userId) redirect("/login");
+
+  const cookieStore = await cookies();
+  const guestSessionId = cookieStore.get("quest_link_guest_session")?.value ?? null;
+
+  if (!userId && !guestSessionId) redirect("/login");
 
   const participant = await prisma.roomParticipant.findFirst({
-    where: { userId, leftAt: null, room: { status: { not: "closed" } } },
+    where: userId
+      ? { userId, leftAt: null, room: { status: { not: "closed" } } }
+      : { guestSessionId, leftAt: null, room: { status: { not: "closed" } } },
     select: { roomId: true },
   });
 

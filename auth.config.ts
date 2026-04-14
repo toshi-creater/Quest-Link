@@ -23,7 +23,7 @@ export const authConfig = {
       session.user.needsProfileSetup = (token["needsProfileSetup"] as boolean | undefined) ?? false;
       return session;
     },
-    authorized({ auth, request: { nextUrl } }) {
+    authorized({ auth, request: { nextUrl, cookies } }) {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
       const isLoginPage = pathname === "/login";
@@ -34,13 +34,19 @@ export const authConfig = {
         return true;
       }
 
-      const isPublicPage =
-        pathname === "/" ||
-        pathname === "/rooms" ||
-        pathname.startsWith("/rooms/");
-      if (!isLoggedIn && isPublicPage) return true;
+      const hasGuestSession = !!cookies.get("quest_link_guest_session");
+      const isRoomPath = pathname.startsWith("/rooms/");
+      // /rooms/new は部屋作成ページのためゲストセッション・招待リンクの対象外
+      const isRoomNew = pathname === "/rooms/new";
+      const isRoomDetail = isRoomPath && !isRoomNew && !pathname.slice("/rooms/".length).includes("/");
 
-      if (!isLoggedIn) return false;
+      if (!isLoggedIn) {
+        // ゲストセッションがあれば /rooms/new 以外の /rooms/* すべてアクセス可
+        if (isRoomPath && !isRoomNew && hasGuestSession) return true;
+        // 招待リンク経由の部屋詳細（サブパスなし）もアクセス可
+        if (isRoomDetail && nextUrl.searchParams.has("inviteToken")) return true;
+        return false;
+      }
 
       // 初回ログイン未設定 → プロフィール設定画面へ強制
       const needsProfileSetup = auth?.user?.needsProfileSetup ?? false;
