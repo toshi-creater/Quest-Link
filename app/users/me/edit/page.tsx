@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { ArrowLeft, FloppyDisk, Camera } from "@phosphor-icons/react";
+import { FloppyDisk, Camera } from "@phosphor-icons/react";
 import { type Game } from "@/lib/mock-data";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { MultiGamePicker } from "@/components/ui/GamePicker";
@@ -143,15 +143,6 @@ export default function EditProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-4 sm:px-6 sm:py-8">
-      <Link
-        href="/users/me"
-        className="mb-6 flex items-center gap-2 text-xl font-bold transition-colors hover:opacity-80 sm:text-2xl"
-        style={{ color: "var(--text-primary)" }}
-      >
-        <ArrowLeft className="h-5 w-5" />
-        プロフィール編集
-      </Link>
-
       <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-6 sm:gap-8">
         {/* Avatar section */}
         <div className="flex justify-center">

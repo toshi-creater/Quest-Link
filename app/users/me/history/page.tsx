@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { ArrowLeft, Calendar } from "@phosphor-icons/react/dist/ssr";
+import { Calendar } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -31,15 +30,6 @@ export default async function HistoryPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-4 sm:py-8 sm:px-6">
-      <Link
-        href="/users/me"
-        className="mb-3 sm:mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
-        style={{ color: "var(--text-secondary)" }}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        プロフィールに戻る
-      </Link>
-
       <div className="mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
           参加履歴

@@ -11,6 +11,8 @@ function shouldShowBackButton(pathname: string): boolean {
   if (EXCLUDED_PATHS.includes(pathname)) return false;
   // /rooms/[roomId]/chat は ChatView 内に既存の戻るボタンがあるため除外
   if (/^\/rooms\/[^/]+\/chat$/.test(pathname)) return false;
+  // /users/[userId] は自前の戻るボタンがあり、/users ページが存在しないため除外
+  if (/^\/users\/[^/]+$/.test(pathname)) return false;
   return !TOP_LEVEL_HREFS.includes(pathname);
 }
 
