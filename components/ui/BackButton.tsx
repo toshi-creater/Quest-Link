@@ -34,7 +34,7 @@ export function BackButton() {
 
   return (
     <>
-      {/* モバイル: 左上固定 */}
+      {/* モバイル: 左上固定フローティング */}
       <Link
         href={href}
         className="fixed top-3 left-4 z-50 md:hidden flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:text-white"
@@ -44,7 +44,7 @@ export function BackButton() {
         <ArrowLeft className="h-5 w-5" />
       </Link>
 
-      {/* デスクトップ: main内の右上にabsolute配置（max-w-7xlコンテナ基準） */}
+      {/* デスクトップ: main内左上にabsolute配置（max-w-7xlコンテナ基準） */}
       <div className="hidden md:block absolute top-4 inset-x-0 z-40 pointer-events-none">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex justify-start pointer-events-auto">
           <Link
