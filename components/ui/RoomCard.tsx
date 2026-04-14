@@ -92,20 +92,21 @@ export const RoomCard = memo(function RoomCard({ room }: Props) {
         >
           {room.title}
         </h3>
-        {room.description && (
-          <p className="mt-1 text-sm line-clamp-1 leading-snug" style={{ color: "var(--text-secondary)" }}>
-            {room.description}
-          </p>
-        )}
-
-        {/* Tags */}
-        {room.playStyleTags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {room.playStyleTags.map((tag) => (
-              <PlayStyleTag key={tag.id} tag={tag} size="sm" />
-            ))}
-          </div>
-        )}
+        {/* Description + Tags: min-h でタグ・説明なしでもカード高さを統一 */}
+        <div className="min-h-[52px]" data-testid="card-body">
+          {room.description && (
+            <p className="mt-1 text-sm line-clamp-1 leading-snug" style={{ color: "var(--text-secondary)" }}>
+              {room.description}
+            </p>
+          )}
+          {room.playStyleTags.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {room.playStyleTags.map((tag) => (
+                <PlayStyleTag key={tag.id} tag={tag} size="sm" />
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Host */}
         <div className="mt-3 flex items-center gap-2 border-t pt-3" style={{ borderColor: "var(--border)" }}>

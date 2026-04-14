@@ -83,4 +83,15 @@ describe("RoomCard", () => {
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", "/rooms/room-1");
   });
+
+  it("説明・タグなしでも card-body コンテナが DOM に存在する", () => {
+    render(<RoomCard room={{ ...mockRoom, description: null, playStyleTags: [] }} />);
+    expect(screen.getByTestId("card-body")).toBeInTheDocument();
+  });
+
+  it("説明・タグなしのとき説明文とタグが表示されない", () => {
+    render(<RoomCard room={{ ...mockRoom, description: null, playStyleTags: [] }} />);
+    expect(screen.queryByText("説明文")).not.toBeInTheDocument();
+    expect(screen.queryByText("ガチ")).not.toBeInTheDocument();
+  });
 });
