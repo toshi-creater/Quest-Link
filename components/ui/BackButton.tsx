@@ -44,10 +44,10 @@ export function BackButton() {
         <ArrowLeft className="h-5 w-5" />
       </Link>
 
-      {/* デスクトップ: ボディ右上固定（ヘッダー直下） */}
+      {/* デスクトップ: ボディ左上固定（ヘッダー直下） */}
       <Link
         href={href}
-        className="fixed top-20 right-4 z-40 hidden md:flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:text-white"
+        className="fixed top-20 left-4 z-40 hidden md:flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:text-white"
         style={buttonStyle}
         aria-label="前のページに戻る"
       >
