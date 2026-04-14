@@ -38,12 +38,12 @@ async function fetchMyProfile(): Promise<UserProfile> {
 }
 
 export default function MyProfilePage() {
-  const { data: user, isLoading, isError } = useQuery({
+  const { data: user, isLoading, isFetching, isError } = useQuery({
     queryKey: ["users", "me"],
     queryFn: fetchMyProfile,
   });
 
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <div className="mx-auto max-w-3xl pb-8 sm:mt-6 sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
         <div className="relative h-[200px] rounded-b-3xl sm:rounded-none sm:border-b sm:border-[var(--border)]" style={{ backgroundColor: "var(--bg-card)" }}>

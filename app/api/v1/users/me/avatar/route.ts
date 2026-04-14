@@ -52,10 +52,12 @@ export async function POST(request: Request) {
     data: { publicUrl },
   } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path);
 
+  const iconUrl = `${publicUrl}?v=${Date.now()}`;
+
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { iconUrl: publicUrl },
+    data: { iconUrl },
   });
 
-  return NextResponse.json({ data: { iconUrl: publicUrl } });
+  return NextResponse.json({ data: { iconUrl } });
 }
