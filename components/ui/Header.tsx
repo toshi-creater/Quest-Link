@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { House, PlusCircle, Chat, User, Users } from "@phosphor-icons/react";
+import { House, PlusCircle, Chat, User, Users, ArrowLeft } from "@phosphor-icons/react";
 import clsx from "clsx";
 import { SignOutButton } from "@/components/ui/SignOutButton";
 import { Logo } from "@/components/ui/Logo";
@@ -15,6 +15,18 @@ export function Header() {
   if (pathname === "/login" || pathname === "/onboarding") return null;
 
   const isAuthenticated = status === "authenticated";
+
+  const topLevelHrefs = ["/", "/games", "/rooms/new", "/rooms/current/chat", "/users/me"];
+  const isNestedPage =
+    pathname !== "/login" &&
+    pathname !== "/onboarding" &&
+    !/^\/rooms\/[^/]+\/chat$/.test(pathname) &&
+    !topLevelHrefs.includes(pathname);
+  const parentPath = (() => {
+    if (/^\/games\/[^/]+\/rooms$/.test(pathname)) return "/games";
+    const idx = pathname.lastIndexOf("/");
+    return idx > 0 ? pathname.slice(0, idx) : "/";
+  })();
 
   const staticNavItems = [
     { href: "/", label: "トップ", icon: House, requiresAuth: false },
@@ -33,10 +45,22 @@ export function Header() {
       }}
     >
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6">
-        {/* Logo */}
-        <Link href="/">
-          <Logo height={40} />
-        </Link>
+        {/* Left: back button (nested pages) + logo */}
+        <div className="flex items-center gap-2">
+          {isNestedPage && (
+            <Link
+              href={parentPath}
+              className="hidden md:flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:text-white"
+              style={{ color: "var(--text-secondary)" }}
+              aria-label="前のページに戻る"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          )}
+          <Link href="/">
+            <Logo height={40} />
+          </Link>
+        </div>
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">
