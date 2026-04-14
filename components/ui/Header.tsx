@@ -17,11 +17,42 @@ export function Header() {
   const isAuthenticated = status === "authenticated";
 
   const staticNavItems = [
-    { href: "/", label: "トップ", icon: House, requiresAuth: false },
-    { href: "/games", label: "部屋を探す", icon: Users, requiresAuth: false },
-    { href: "/rooms/new", label: "部屋作成", icon: PlusCircle, requiresAuth: true },
-    { href: "/rooms/current/chat", label: "参加中の部屋", icon: Chat, requiresAuth: true },
-    { href: "/users/me", label: "プロフィール", icon: User, requiresAuth: true },
+    {
+      href: "/",
+      label: "トップ",
+      icon: House,
+      requiresAuth: false,
+      isActive: (p: string) => p === "/",
+    },
+    {
+      href: "/games",
+      label: "部屋を探す",
+      icon: Users,
+      requiresAuth: false,
+      isActive: (p: string) => p === "/games" || p.startsWith("/games/"),
+    },
+    {
+      href: "/rooms/new",
+      label: "部屋作成",
+      icon: PlusCircle,
+      requiresAuth: true,
+      isActive: (p: string) => p === "/rooms/new",
+    },
+    {
+      href: "/rooms/current/chat",
+      label: "参加中の部屋",
+      icon: Chat,
+      requiresAuth: true,
+      isActive: (p: string) =>
+        p.startsWith("/rooms/") && !p.startsWith("/rooms/new"),
+    },
+    {
+      href: "/users/me",
+      label: "プロフィール",
+      icon: User,
+      requiresAuth: true,
+      isActive: (p: string) => p.startsWith("/users/me"),
+    },
   ];
 
   return (
@@ -40,8 +71,8 @@ export function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">
-          {staticNavItems.map(({ href, label, icon: Icon, requiresAuth }) => {
-            const isActive = href === "/" || href === "/games" ? pathname === href : pathname.startsWith(href);
+          {staticNavItems.map(({ href, label, icon: Icon, requiresAuth, isActive: checkActive }) => {
+            const isActive = checkActive(pathname);
             if (requiresAuth && !isAuthenticated) {
               return (
                 <Link
