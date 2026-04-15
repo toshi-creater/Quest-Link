@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import clsx from "clsx";
-import { SignOutButton } from "@/components/ui/SignOutButton";
 import { Logo } from "@/components/ui/Logo";
 import { NAV_ITEMS } from "@/components/ui/nav-items";
 
@@ -67,12 +66,6 @@ export function Header() {
             );
           })}
 
-          {isAuthenticated && (
-            <>
-              <div className="mx-2 h-6 w-px" style={{ backgroundColor: "var(--border)" }} />
-              <SignOutButton />
-            </>
-          )}
         </nav>
       </div>
     </header>

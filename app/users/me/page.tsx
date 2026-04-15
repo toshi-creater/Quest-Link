@@ -9,6 +9,7 @@ import { ProfileStats } from "@/components/users/ProfileStats";
 import { GameScrollList } from "@/components/users/GameScrollList";
 import { ReceivedRatingsList } from "@/components/users/ReceivedRatingsList";
 import { DeleteAccountButton } from "./DeleteAccountButton";
+import { SignOutButton } from "@/components/ui/SignOutButton";
 
 type ReceivedRating = {
   id: string;
@@ -115,8 +116,13 @@ export default function MyProfilePage() {
       <ProfileStats avgRating={user.avgRating} ratingCount={user.ratingCount} />
       <GameScrollList games={user.games} />
       <ReceivedRatingsList ratings={user.receivedRatings} />
-      <div className="mx-4 sm:mx-6 mt-8">
-        <DeleteAccountButton />
+      <div className="mx-4 sm:mx-6 mt-8 space-y-4">
+        <div>
+          <SignOutButton />
+        </div>
+        <div className="border-t pt-4" style={{ borderColor: "var(--border)" }}>
+          <DeleteAccountButton />
+        </div>
       </div>
     </div>
   );
