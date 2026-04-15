@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { House, PlusCircle, Chat, User, Users } from "@phosphor-icons/react";
 import clsx from "clsx";
 import { SignOutButton } from "@/components/ui/SignOutButton";
 import { Logo } from "@/components/ui/Logo";
+import { NAV_ITEMS } from "@/components/ui/nav-items";
 
 export function Header() {
   const pathname = usePathname();
@@ -15,45 +15,6 @@ export function Header() {
   if (pathname === "/login" || pathname === "/onboarding") return null;
 
   const isAuthenticated = status === "authenticated";
-
-  const staticNavItems = [
-    {
-      href: "/",
-      label: "トップ",
-      icon: House,
-      requiresAuth: false,
-      isActive: (p: string) => p === "/",
-    },
-    {
-      href: "/games",
-      label: "部屋を探す",
-      icon: Users,
-      requiresAuth: false,
-      isActive: (p: string) => p === "/games" || p.startsWith("/games/"),
-    },
-    {
-      href: "/rooms/new",
-      label: "部屋作成",
-      icon: PlusCircle,
-      requiresAuth: true,
-      isActive: (p: string) => p === "/rooms/new",
-    },
-    {
-      href: "/rooms/current/chat",
-      label: "参加中の部屋",
-      icon: Chat,
-      requiresAuth: true,
-      isActive: (p: string) =>
-        p.startsWith("/rooms/") && !p.startsWith("/rooms/new"),
-    },
-    {
-      href: "/users/me",
-      label: "プロフィール",
-      icon: User,
-      requiresAuth: true,
-      isActive: (p: string) => p.startsWith("/users/me"),
-    },
-  ];
 
   return (
     <header
@@ -71,7 +32,7 @@ export function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">
-          {staticNavItems.map(({ href, label, icon: Icon, requiresAuth, isActive: checkActive }) => {
+          {NAV_ITEMS.map(({ href, label, icon: Icon, requiresAuth, isActive: checkActive }) => {
             const isActive = checkActive(pathname);
             if (requiresAuth && !isAuthenticated) {
               return (

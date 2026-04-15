@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { House, PlusCircle, Chat, User, Users } from "@phosphor-icons/react";
+import { NAV_ITEMS } from "@/components/ui/nav-items";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -12,44 +12,6 @@ export function BottomNav() {
   if (pathname === "/login" || pathname === "/onboarding") return null;
 
   const isAuthenticated = status === "authenticated";
-
-  const staticItems = [
-    {
-      href: "/",
-      label: "トップ",
-      icon: House,
-      isActive: (p: string) => p === "/",
-    },
-    {
-      href: "/games",
-      label: "探す",
-      icon: Users,
-      requiresAuth: false,
-      isActive: (p: string) => p === "/games" || p.startsWith("/games/"),
-    },
-    {
-      href: "/rooms/new",
-      label: "部屋作成",
-      icon: PlusCircle,
-      requiresAuth: true,
-      isActive: (p: string) => p === "/rooms/new",
-    },
-    {
-      href: "/rooms/current/chat",
-      label: "参加中",
-      icon: Chat,
-      requiresAuth: true,
-      isActive: (p: string) =>
-        p.startsWith("/rooms/") && !p.startsWith("/rooms/new"),
-    },
-    {
-      href: "/users/me",
-      label: "プロフィール",
-      icon: User,
-      requiresAuth: true,
-      isActive: (p: string) => p.startsWith("/users/me"),
-    },
-  ];
 
   return (
     <nav
@@ -61,7 +23,7 @@ export function BottomNav() {
         borderTop: "1px solid var(--border)",
       }}
     >
-      {staticItems.map(({ href, label, icon: Icon, requiresAuth, isActive: checkActive }) => {
+      {NAV_ITEMS.map(({ href, shortLabel, icon: Icon, requiresAuth, isActive: checkActive }) => {
         const isActive = checkActive(pathname);
         const linkStyle = {
           color: isActive ? "var(--accent-light)" : "var(--text-secondary)",
@@ -76,7 +38,7 @@ export function BottomNav() {
               style={{ color: "var(--text-secondary)" }}
             >
               <Icon className="h-6 w-6" />
-              {label}
+              {shortLabel}
             </Link>
           );
         }
@@ -88,7 +50,7 @@ export function BottomNav() {
             style={linkStyle}
           >
             <Icon className="h-6 w-6" />
-            {label}
+            {shortLabel}
           </Link>
         );
       })}
