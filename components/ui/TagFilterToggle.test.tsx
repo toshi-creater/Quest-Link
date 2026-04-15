@@ -37,4 +37,9 @@ describe("TagFilterToggle", () => {
     const chevron = container.querySelector("svg:last-child");
     expect(chevron).toHaveStyle({ transform: "rotate(180deg)" });
   });
+
+  it("ボタンが type='button' を持つ（フォーム内でのsubmit防止）", () => {
+    render(<TagFilterToggle selectedCount={0} panelOpen={false} onPanelToggle={() => {}} />);
+    expect(screen.getByRole("button")).toHaveAttribute("type", "button");
+  });
 });

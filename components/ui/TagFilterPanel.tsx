@@ -58,6 +58,7 @@ export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, ap
                 return (
                   <button
                     key={tag.id}
+                    type="button"
                     onClick={() => onToggle(tag.slug)}
                     className={clsx(
                       "rounded-full px-3 py-1.5 text-xs font-medium transition-all min-h-[2rem]"
@@ -88,6 +89,7 @@ export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, ap
       {onApply && (
         <div className="mt-6 flex justify-start">
           <button
+            type="button"
             onClick={onApply}
             className="rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97]"
             style={{ background: "linear-gradient(135deg, var(--accent), #6d28d9)" }}
