@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Crown } from "@phosphor-icons/react";
+import { Crown } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
 import { useChatStore } from "@/lib/stores/chatStore";
+import { BackButton } from "@/components/ui/BackButton";
 
 type Tag = { id: string; name: string; slug: string };
 
@@ -38,14 +39,7 @@ export function ChatParticipantList({
     >
       {/* Room info */}
       <div className="border-b p-4" style={{ borderColor: "var(--border)" }}>
-        <Link
-          href={`/rooms/${roomId}`}
-          className="mb-3 flex items-center gap-2 text-xs transition-colors hover:text-white"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          部屋の詳細へ
-        </Link>
+        <BackButton href={`/rooms/${roomId}`} />
         <h2 className="text-sm font-bold leading-snug" style={{ color: "var(--text-primary)" }}>
           {roomTitle}
         </h2>

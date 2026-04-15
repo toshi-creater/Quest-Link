@@ -12,6 +12,7 @@ import { RoomActions } from "./RoomActions";
 import { InvitePanel } from "./InvitePanel";
 import { RoomHeaderCard } from "./RoomHeaderCard";
 import { ParticipantSidebar } from "./ParticipantSidebar";
+import { BackButton } from "@/components/ui/BackButton";
 
 type Props = { roomId: string };
 
@@ -123,15 +124,8 @@ export function RoomDetailView({ roomId }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-4 sm:py-8 sm:px-6">
-      {/* Back
-      <Link
-        href="/rooms"
-        className="mb-6 flex items-center gap-2 text-sm transition-colors hover:text-white"
-        style={{ color: "var(--text-secondary)" }}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        部屋一覧
-      </Link> */}
+      {/* Back */}
+      <BackButton href={`/games/${room.game.id}/rooms`} className={"mb-6"} />
 
       <div className="grid gap-4 sm:gap-6 md:grid-cols-[1fr_260px] lg:grid-cols-3">
         {/* Main content */}
