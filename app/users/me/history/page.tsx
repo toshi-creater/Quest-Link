@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { GameCover } from "@/components/ui/GamePicker";
+import { BackButton } from "@/components/ui/BackButton";
 
 export default async function HistoryPage() {
   const session = await auth();
@@ -30,6 +31,8 @@ export default async function HistoryPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-4 sm:py-8 sm:px-6">
+      <BackButton href={"/users/me"} />
+
       <div className="mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
           参加履歴

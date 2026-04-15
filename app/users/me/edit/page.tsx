@@ -9,6 +9,7 @@ import { FloppyDisk, Camera } from "@phosphor-icons/react";
 import { type Game } from "@/lib/mock-data";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { MultiGamePicker } from "@/components/ui/GamePicker";
+import { BackButton } from "@/components/ui/BackButton";
 
 type UserProfile = {
   username: string;
@@ -143,6 +144,7 @@ export default function EditProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-4 sm:px-6 sm:py-8">
+      <BackButton href={"/users/me"} />
       <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-6 sm:gap-8">
         {/* Avatar section */}
         <div className="flex justify-center">

@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft } from "@phosphor-icons/react";
 import { useChatStore, type ChatMessage, type Participant } from "@/lib/stores/chatStore";
 import { useSocketRoom } from "./useSocketRoom";
 import { ChatParticipantList } from "./ChatParticipantList";
 import { ChatMessageList } from "./ChatMessageList";
 import { ChatInput } from "./ChatInput";
+import { BackButton } from "@/components/ui/BackButton";
 
 type Tag = { id: string; name: string; slug: string };
 
@@ -59,9 +59,7 @@ export function ChatView({
           className="flex items-center gap-3 border-b px-4 py-3 md:hidden"
           style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
         >
-          <Link href={`/rooms/${roomId}`} style={{ color: "var(--text-secondary)" }}>
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
+          <BackButton href={`/rooms/${roomId}`} />
           <div>
             <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
               {roomInfo.title}
