@@ -34,6 +34,7 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
+              prefetch={true}
               className="relative flex flex-1 flex-col items-center gap-1 px-2 py-2 text-[11px] whitespace-nowrap transition-colors"
               style={{ color: "var(--text-secondary)" }}
             >
@@ -46,6 +47,7 @@ export function BottomNav() {
           <Link
             key={href}
             href={href}
+            prefetch={true}
             className="flex flex-1 flex-col items-center gap-1 px-2 py-2 text-[11px] whitespace-nowrap transition-colors"
             style={linkStyle}
           >
