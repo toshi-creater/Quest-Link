@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, CircleNotch } from "@phosphor-icons/react";
+import { Plus, Minus, CircleNotch } from "@phosphor-icons/react";
 import type { Game } from "@/lib/mock-data";
 import { SingleGamePicker } from "@/components/ui/GamePicker";
 import { TagFilterToggle } from "@/components/ui/TagFilterToggle";
@@ -147,30 +147,33 @@ export default function NewRoomPage() {
           <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
             最大人数 <span className="text-red-400">*</span>
           </label>
-          <div className="flex flex-wrap items-center gap-2">
-            {[2, 3, 4, 5, 6, 8, 10, 16].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setMaxPlayers(n)}
-                className="h-10 w-10 rounded-xl text-sm font-semibold border transition-all"
-                style={
-                  maxPlayers === n
-                    ? {
-                        backgroundColor: "rgba(124,58,237,0.3)",
-                        color: "var(--accent-light)",
-                        borderColor: "rgba(124,58,237,0.6)",
-                      }
-                    : {
-                        backgroundColor: "var(--bg-input)",
-                        color: "var(--text-secondary)",
-                        borderColor: "var(--border)",
-                      }
-                }
-              >
-                {n}
-              </button>
-            ))}
+          <div className="inline-flex items-center rounded-xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+            <button
+              type="button"
+              onClick={() => setMaxPlayers((v) => Math.max(2, v - 1))}
+              disabled={maxPlayers <= 2}
+              className="h-10 w-10 flex items-center justify-center transition-colors hover:opacity-80 disabled:opacity-30"
+              style={{ backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }}
+              aria-label="人数を減らす"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <div
+              className="h-10 w-14 flex items-center justify-center text-sm font-semibold border-x"
+              style={{ backgroundColor: "var(--bg-input)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+            >
+              {maxPlayers}人
+            </div>
+            <button
+              type="button"
+              onClick={() => setMaxPlayers((v) => Math.min(16, v + 1))}
+              disabled={maxPlayers >= 16}
+              className="h-10 w-10 flex items-center justify-center transition-colors hover:opacity-80 disabled:opacity-30"
+              style={{ backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }}
+              aria-label="人数を増やす"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
