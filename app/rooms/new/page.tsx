@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Minus, CircleNotch, ArrowLeft } from "@phosphor-icons/react";
+import Image from "next/image";
+import { Plus, Minus, CircleNotch, ArrowLeft, GameController } from "@phosphor-icons/react";
 import type { GameResult } from "@/lib/games";
 import { GamesGrid } from "@/app/games/GamesGrid";
-import { GameCoverImage } from "@/components/ui/GameCoverImage";
 import { TagFilterToggle } from "@/components/ui/TagFilterToggle";
 import { TagFilterPanel } from "@/components/ui/TagFilterPanel";
 import { ActiveFilterBar } from "@/components/ui/ActiveFilterBar";
@@ -182,28 +182,39 @@ export default function NewRoomPage() {
       {step === 2 && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 sm:gap-6">
           {/* 選択済みゲーム（読み取り専用） */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-              ゲーム
-            </label>
-            <div
-              className="flex items-center gap-3 rounded-xl border px-3 py-2"
-              style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-input)" }}
-            >
-              {selectedGame && (
-                <>
-                  <GameCoverImage
-                    coverImageUrl={selectedGame.coverImageUrl}
-                    name={selectedGame.name}
-                    size="sm"
+          {selectedGame && (
+            <div className="flex items-center gap-5">
+              <div className="h-24 w-16 shrink-0 overflow-hidden rounded-xl">
+                {selectedGame.coverImageUrl ? (
+                  <Image
+                    src={selectedGame.coverImageUrl}
+                    alt={selectedGame.name}
+                    width={64}
+                    height={96}
+                    className="h-full w-full object-cover"
                   />
-                  <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                    {selectedGame.name}
-                  </span>
-                </>
-              )}
+                ) : (
+                  <div
+                    className="flex h-full items-center justify-center rounded-xl"
+                    style={{ backgroundColor: "var(--bg-card)" }}
+                  >
+                    <GameController className="h-8 w-8 opacity-40" style={{ color: "var(--accent)" }} />
+                  </div>
+                )}
+              </div>
+              <div>
+                <p
+                  className="mb-1 text-xs font-medium uppercase tracking-wider"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  選択中のゲーム
+                </p>
+                <p className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
+                  {selectedGame.name}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Title */}
           <div>
