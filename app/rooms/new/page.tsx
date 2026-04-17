@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Minus, CircleNotch, ArrowLeft } from "@phosphor-icons/react";
+import { Plus, Minus, CircleNotch, ArrowLeft, MagnifyingGlass } from "@phosphor-icons/react";
 import type { Game } from "@/lib/mock-data";
-import { GridGamePicker } from "@/components/ui/GamePicker";
 import { GameCoverImage } from "@/components/ui/GameCoverImage";
 import { TagFilterToggle } from "@/components/ui/TagFilterToggle";
 import { TagFilterPanel } from "@/components/ui/TagFilterPanel";
@@ -29,6 +27,13 @@ async function fetchTags(): Promise<Tag[]> {
   return json.data;
 }
 
+async function fetchGames(): Promise<Game[]> {
+  const res = await fetch("/api/v1/games");
+  if (!res.ok) return [];
+  const json = (await res.json()) as { data: Game[] };
+  return json.data;
+}
+
 const STEPS = ["ゲーム選択", "部屋詳細"] as const;
 
 export default function NewRoomPage() {
@@ -42,11 +47,23 @@ export default function NewRoomPage() {
   const [pendingSlugs, setPendingSlugs] = useState<string[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [gameQuery, setGameQuery] = useState("");
 
   const { data: tags = [] } = useQuery({
     queryKey: ["play-style-tags"],
     queryFn: fetchTags,
   });
+
+  const { data: allGames = [], isLoading: gamesLoading } = useQuery({
+    queryKey: ["games"],
+    queryFn: fetchGames,
+  });
+
+  const filteredGames = useMemo(() => {
+    const q = gameQuery.trim().toLowerCase();
+    if (!q) return allGames;
+    return allGames.filter((g) => g.name.toLowerCase().includes(q));
+  }, [allGames, gameQuery]);
 
   const mutation = useMutation({
     mutationFn: createRoom,
@@ -108,54 +125,56 @@ export default function NewRoomPage() {
       </div>
 
       {/* ステップインジケーター */}
-      <div className="flex items-center mb-6">
-        {STEPS.map((label, index) => {
-          const stepNum = (index + 1) as 1 | 2;
-          const isCompleted = stepNum < step;
-          const isCurrent = stepNum === step;
-          return (
-            <div key={stepNum} className="flex items-center flex-1">
-              <div className="flex items-center gap-2 shrink-0">
-                <div
-                  className="h-6 w-6 flex items-center justify-center rounded-full text-xs font-semibold transition-all duration-200 shrink-0"
-                  style={
-                    isCurrent
-                      ? {
-                          backgroundColor: "rgba(124,58,237,0.2)",
-                          color: "var(--accent-light)",
-                          border: "2px solid var(--accent)",
-                        }
-                      : isCompleted
+      <div className="flex items-center justify-center mb-6">
+        <div className="flex items-center">
+          {STEPS.map((label, index) => {
+            const stepNum = (index + 1) as 1 | 2;
+            const isCompleted = stepNum < step;
+            const isCurrent = stepNum === step;
+            return (
+              <div key={stepNum} className="flex items-center">
+                <div className="flex items-center gap-2 shrink-0">
+                  <div
+                    className="h-6 w-6 flex items-center justify-center rounded-full text-xs font-semibold transition-all duration-200 shrink-0"
+                    style={
+                      isCurrent
                         ? {
-                            backgroundColor: "var(--accent)",
-                            color: "#fff",
+                            backgroundColor: "rgba(124,58,237,0.2)",
+                            color: "var(--accent-light)",
                             border: "2px solid var(--accent)",
                           }
-                        : {
-                            backgroundColor: "var(--bg-card)",
-                            color: "var(--text-muted)",
-                            border: "2px solid var(--border)",
-                          }
-                  }
-                >
-                  {isCompleted ? "✓" : stepNum}
+                        : isCompleted
+                          ? {
+                              backgroundColor: "var(--accent)",
+                              color: "#fff",
+                              border: "2px solid var(--accent)",
+                            }
+                          : {
+                              backgroundColor: "var(--bg-card)",
+                              color: "var(--text-muted)",
+                              border: "2px solid var(--border)",
+                            }
+                    }
+                  >
+                    {isCompleted ? "✓" : stepNum}
+                  </div>
+                  <span
+                    className="text-xs sm:text-sm font-medium transition-colors duration-200"
+                    style={{ color: isCurrent ? "var(--accent-light)" : "var(--text-muted)" }}
+                  >
+                    {label}
+                  </span>
                 </div>
-                <span
-                  className="text-xs sm:text-sm font-medium transition-colors duration-200"
-                  style={{ color: isCurrent ? "var(--accent-light)" : "var(--text-muted)" }}
-                >
-                  {label}
-                </span>
+                {index < STEPS.length - 1 && (
+                  <div
+                    className="h-px w-12 mx-3 transition-colors duration-300"
+                    style={{ backgroundColor: step > stepNum ? "var(--accent)" : "var(--border)" }}
+                  />
+                )}
               </div>
-              {index < STEPS.length - 1 && (
-                <div
-                  className="h-px flex-1 mx-3 transition-colors duration-300"
-                  style={{ backgroundColor: step > stepNum ? "var(--accent)" : "var(--border)" }}
-                />
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {errorMessage && (
@@ -169,25 +188,73 @@ export default function NewRoomPage() {
 
       {/* ステップ1: ゲーム選択 */}
       {step === 1 && (
-        <div className="flex flex-col gap-5">
-          <GridGamePicker
-            value={selectedGame ? [selectedGame] : []}
-            onChange={(games) => {
-              const game = games[0] ?? null;
-              setSelectedGame(game);
-              if (game) setStep(2);
-            }}
-            max={1}
-          />
-          <div className="flex gap-3">
-            <Link
-              href="/rooms"
-              className="flex-1 rounded-xl border px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"
-              style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
-            >
-              キャンセル
-            </Link>
+        <div className="flex flex-col gap-4">
+          {/* 検索バー */}
+          <div className="relative">
+            <MagnifyingGlass
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+              style={{ color: "var(--text-secondary)" }}
+            />
+            <input
+              type="text"
+              value={gameQuery}
+              onChange={(e) => setGameQuery(e.target.value)}
+              placeholder="ゲームを検索..."
+              className="w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-[var(--accent)]"
+              style={{
+                backgroundColor: "var(--bg-card)",
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+              }}
+            />
           </div>
+
+          {/* ゲームグリッド */}
+          {gamesLoading ? (
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
+                  <div className="aspect-[3/4] w-full rounded-xl animate-shimmer" />
+                  <div className="mt-2 h-3 w-3/4 rounded-md animate-shimmer" />
+                </div>
+              ))}
+            </div>
+          ) : filteredGames.length === 0 ? (
+            <div className="py-16 text-center">
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                &ldquo;{gameQuery}&rdquo; に一致するゲームが見つかりません
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+              {filteredGames.map((game, index) => (
+                <button
+                  key={game.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedGame(game);
+                    setStep(2);
+                  }}
+                  className="group text-left animate-fade-in-up"
+                  style={{ animationDelay: `${Math.min(index, 11) * 40}ms` }}
+                >
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl">
+                    <GameCoverImage
+                      coverImageUrl={game.coverImageUrl}
+                      name={game.name}
+                      className="transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-transparent p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                      <span className="text-xs font-semibold text-white">選択する →</span>
+                    </div>
+                  </div>
+                  <p className="mt-1.5 truncate text-xs font-medium" style={{ color: "var(--text-primary)" }}>
+                    {game.name}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
