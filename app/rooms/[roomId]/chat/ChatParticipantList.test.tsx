@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 vi.mock("@phosphor-icons/react", () => ({
   ArrowLeft: () => <span data-testid="icon-arrow-left" />,
+  CaretLeft: () => <span data-testid="icon-caret-left" />,
   Crown: () => <span data-testid="icon-crown" />,
 }));
 
@@ -57,9 +58,9 @@ describe("ChatParticipantList", () => {
       expect(screen.getByText("Valorant")).toBeInTheDocument();
     });
 
-    it("「部屋の詳細へ」リンクが正しい href を持つ", () => {
+    it("戻るリンクが正しい href を持つ", () => {
       render(<ChatParticipantList {...defaultProps} />);
-      expect(screen.getByRole("link", { name: /部屋の詳細へ/ })).toHaveAttribute(
+      expect(screen.getByRole("link", { name: /戻る/ })).toHaveAttribute(
         "href",
         "/rooms/room-1"
       );
