@@ -42,6 +42,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# pnpm
+.pnpm-store/
+
 # claude code
 .claude/
 .worktrees/
