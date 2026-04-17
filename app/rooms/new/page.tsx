@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Minus, CircleNotch, ArrowLeft, MagnifyingGlass } from "@phosphor-icons/react";
-import type { Game } from "@/lib/mock-data";
+import { Plus, Minus, CircleNotch, ArrowLeft } from "@phosphor-icons/react";
+import type { GameResult } from "@/lib/games";
+import { GamesGrid } from "@/app/games/GamesGrid";
 import { GameCoverImage } from "@/components/ui/GameCoverImage";
 import { TagFilterToggle } from "@/components/ui/TagFilterToggle";
 import { TagFilterPanel } from "@/components/ui/TagFilterPanel";
@@ -27,43 +28,24 @@ async function fetchTags(): Promise<Tag[]> {
   return json.data;
 }
 
-async function fetchGames(): Promise<Game[]> {
-  const res = await fetch("/api/v1/games");
-  if (!res.ok) return [];
-  const json = (await res.json()) as { data: Game[] };
-  return json.data;
-}
-
 const STEPS = ["ゲーム選択", "部屋詳細"] as const;
 
 export default function NewRoomPage() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
   const [title, setTitle] = useState("");
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [selectedGame, setSelectedGame] = useState<GameResult | null>(null);
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [description, setDescription] = useState("");
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [pendingSlugs, setPendingSlugs] = useState<string[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [gameQuery, setGameQuery] = useState("");
 
   const { data: tags = [] } = useQuery({
     queryKey: ["play-style-tags"],
     queryFn: fetchTags,
   });
-
-  const { data: allGames = [], isLoading: gamesLoading } = useQuery({
-    queryKey: ["games"],
-    queryFn: fetchGames,
-  });
-
-  const filteredGames = useMemo(() => {
-    const q = gameQuery.trim().toLowerCase();
-    if (!q) return allGames;
-    return allGames.filter((g) => g.name.toLowerCase().includes(q));
-  }, [allGames, gameQuery]);
 
   const mutation = useMutation({
     mutationFn: createRoom,
@@ -116,7 +98,7 @@ export default function NewRoomPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-4 sm:py-8 sm:px-6">
+    <div className={step === 1 ? "mx-auto max-w-screen-xl px-4 py-4 sm:py-8 sm:px-6" : "mx-auto max-w-2xl px-4 py-4 sm:py-8 sm:px-6"}>
 
       <div className="mb-4 sm:mb-6 md:text-left text-center">
         <h1 className="text-lg sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
@@ -188,74 +170,12 @@ export default function NewRoomPage() {
 
       {/* ステップ1: ゲーム選択 */}
       {step === 1 && (
-        <div className="flex flex-col gap-4">
-          {/* 検索バー */}
-          <div className="relative">
-            <MagnifyingGlass
-              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
-              style={{ color: "var(--text-secondary)" }}
-            />
-            <input
-              type="text"
-              value={gameQuery}
-              onChange={(e) => setGameQuery(e.target.value)}
-              placeholder="ゲームを検索..."
-              className="w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-[var(--accent)]"
-              style={{
-                backgroundColor: "var(--bg-card)",
-                borderColor: "var(--border)",
-                color: "var(--text-primary)",
-              }}
-            />
-          </div>
-
-          {/* ゲームグリッド */}
-          {gamesLoading ? (
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
-                  <div className="aspect-[3/4] w-full rounded-xl animate-shimmer" />
-                  <div className="mt-2 h-3 w-3/4 rounded-md animate-shimmer" />
-                </div>
-              ))}
-            </div>
-          ) : filteredGames.length === 0 ? (
-            <div className="py-16 text-center">
-              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                &ldquo;{gameQuery}&rdquo; に一致するゲームが見つかりません
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-              {filteredGames.map((game, index) => (
-                <button
-                  key={game.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedGame(game);
-                    setStep(2);
-                  }}
-                  className="group text-left animate-fade-in-up"
-                  style={{ animationDelay: `${Math.min(index, 11) * 40}ms` }}
-                >
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl">
-                    <GameCoverImage
-                      coverImageUrl={game.coverImageUrl}
-                      name={game.name}
-                      className="transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-transparent p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                      <span className="text-xs font-semibold text-white">選択する →</span>
-                    </div>
-                  </div>
-                  <p className="mt-1.5 truncate text-xs font-medium" style={{ color: "var(--text-primary)" }}>
-                    {game.name}
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <GamesGrid
+          onSelect={(game) => {
+            setSelectedGame(game);
+            setStep(2);
+          }}
+        />
       )}
 
       {/* ステップ2: 部屋詳細入力 */}
