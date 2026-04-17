@@ -1,25 +1,47 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import type { GameResult } from "@/lib/games";
 import { GameCoverImage } from "@/components/ui/GameCoverImage";
 
 type Props = {
-  games: GameResult[];
-  roomCounts: Record<string, number>;
+  games?: GameResult[];
+  roomCounts?: Record<string, number>;
+  onSelect?: (game: GameResult) => void;
 };
 
-export function GamesGrid({ games, roomCounts }: Props) {
+export function GamesGrid({ games: gamesProp, roomCounts = {}, onSelect }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [fetchedGames, setFetchedGames] = useState<GameResult[]>([]);
+  const [loading, setLoading] = useState(!gamesProp);
+
+  useEffect(() => {
+    if (gamesProp) return;
+    fetch("/api/v1/games")
+      .then((r) => r.json())
+      .then((json: { data: GameResult[] }) => setFetchedGames(json.data))
+      .catch(() => setFetchedGames([]))
+      .finally(() => setLoading(false));
+  }, [gamesProp]);
+
+  const games = gamesProp ?? fetchedGames;
 
   const filteredGames = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return games;
     return games.filter((g) => g.name.toLowerCase().includes(q));
   }, [query, games]);
+
+  const handleClick = (game: GameResult) => {
+    if (onSelect) {
+      onSelect(game);
+    } else {
+      router.push(`/games/${game.id}/rooms`);
+    }
+  };
 
   return (
     <>
@@ -43,13 +65,24 @@ export function GamesGrid({ games, roomCounts }: Props) {
             }}
           />
         </div>
-        <span className="shrink-0 text-sm" style={{ color: "var(--text-secondary)" }}>
-          全{games.length}件
-        </span>
+        {!loading && (
+          <span className="shrink-0 text-sm" style={{ color: "var(--text-secondary)" }}>
+            全{games.length}件
+          </span>
+        )}
       </div>
 
       {/* Game grid */}
-      {filteredGames.length > 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
+              <div className="aspect-[3/4] w-full rounded-xl animate-shimmer" />
+              <div className="mt-2 h-3 w-3/4 rounded-md animate-shimmer" />
+            </div>
+          ))}
+        </div>
+      ) : filteredGames.length > 0 ? (
         <div className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {filteredGames.map((game, index) => {
             const roomCount = roomCounts[game.id] ?? 0;
@@ -57,7 +90,7 @@ export function GamesGrid({ games, roomCounts }: Props) {
             return (
               <button
                 key={game.id}
-                onClick={() => router.push(`/games/${game.id}/rooms`)}
+                onClick={() => handleClick(game)}
                 className="group text-left animate-fade-in-up"
                 style={{ animationDelay: `${Math.min(index, 11) * 50}ms` }}
               >
@@ -71,7 +104,9 @@ export function GamesGrid({ games, roomCounts }: Props) {
 
                   {/* Hover overlay */}
                   <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                    <span className="text-xs font-semibold text-white">部屋を探す →</span>
+                    <span className="text-xs font-semibold text-white">
+                      {onSelect ? "選択する →" : "部屋を探す →"}
+                    </span>
                   </div>
                 </div>
 
@@ -80,9 +115,11 @@ export function GamesGrid({ games, roomCounts }: Props) {
                   <p className="truncate text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                     {game.name}
                   </p>
-                  <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-                    {roomCount > 0 ? `${roomCount} 部屋募集中` : "募集なし"}
-                  </p>
+                  {!onSelect && (
+                    <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                      {roomCount > 0 ? `${roomCount} 部屋募集中` : "募集なし"}
+                    </p>
+                  )}
                 </div>
               </button>
             );
