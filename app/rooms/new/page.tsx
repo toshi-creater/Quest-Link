@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Minus, CircleNotch } from "@phosphor-icons/react";
+import { Plus, Minus, CircleNotch, ArrowLeft } from "@phosphor-icons/react";
 import type { Game } from "@/lib/mock-data";
-import { SingleGamePicker } from "@/components/ui/GamePicker";
+import { GridGamePicker } from "@/components/ui/GamePicker";
+import { GameCoverImage } from "@/components/ui/GameCoverImage";
 import { TagFilterToggle } from "@/components/ui/TagFilterToggle";
 import { TagFilterPanel } from "@/components/ui/TagFilterPanel";
 import { ActiveFilterBar } from "@/components/ui/ActiveFilterBar";
@@ -28,8 +29,11 @@ async function fetchTags(): Promise<Tag[]> {
   return json.data;
 }
 
+const STEPS = ["ゲーム選択", "部屋詳細"] as const;
+
 export default function NewRoomPage() {
   const router = useRouter();
+  const [step, setStep] = useState<1 | 2>(1);
   const [title, setTitle] = useState("");
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [maxPlayers, setMaxPlayers] = useState(4);
@@ -103,6 +107,57 @@ export default function NewRoomPage() {
         </h1>
       </div>
 
+      {/* ステップインジケーター */}
+      <div className="flex items-center mb-6">
+        {STEPS.map((label, index) => {
+          const stepNum = (index + 1) as 1 | 2;
+          const isCompleted = stepNum < step;
+          const isCurrent = stepNum === step;
+          return (
+            <div key={stepNum} className="flex items-center flex-1">
+              <div className="flex items-center gap-2 shrink-0">
+                <div
+                  className="h-6 w-6 flex items-center justify-center rounded-full text-xs font-semibold transition-all duration-200 shrink-0"
+                  style={
+                    isCurrent
+                      ? {
+                          backgroundColor: "rgba(124,58,237,0.2)",
+                          color: "var(--accent-light)",
+                          border: "2px solid var(--accent)",
+                        }
+                      : isCompleted
+                        ? {
+                            backgroundColor: "var(--accent)",
+                            color: "#fff",
+                            border: "2px solid var(--accent)",
+                          }
+                        : {
+                            backgroundColor: "var(--bg-card)",
+                            color: "var(--text-muted)",
+                            border: "2px solid var(--border)",
+                          }
+                  }
+                >
+                  {isCompleted ? "✓" : stepNum}
+                </div>
+                <span
+                  className="text-xs sm:text-sm font-medium transition-colors duration-200"
+                  style={{ color: isCurrent ? "var(--accent-light)" : "var(--text-muted)" }}
+                >
+                  {label}
+                </span>
+              </div>
+              {index < STEPS.length - 1 && (
+                <div
+                  className="h-px flex-1 mx-3 transition-colors duration-300"
+                  style={{ backgroundColor: step > stepNum ? "var(--accent)" : "var(--border)" }}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       {errorMessage && (
         <div
           className="mb-4 rounded-xl border px-4 py-3 text-sm"
@@ -112,160 +167,201 @@ export default function NewRoomPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5 sm:gap-6">
-        {/* Game Picker */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-            ゲーム <span className="text-red-400">*</span>
-          </label>
-          <SingleGamePicker
-            value={selectedGame}
-            onChange={setSelectedGame}
-            placeholder="ゲームを選択"
+      {/* ステップ1: ゲーム選択 */}
+      {step === 1 && (
+        <div className="flex flex-col gap-5">
+          <GridGamePicker
+            value={selectedGame ? [selectedGame] : []}
+            onChange={(games) => {
+              const game = games[0] ?? null;
+              setSelectedGame(game);
+              if (game) setStep(2);
+            }}
+            max={1}
           />
-        </div>
-
-        {/* Title */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-            部屋タイトル <span className="text-red-400">*</span>
-          </label>
-          <input
-            type="text"
-            required
-            maxLength={100}
-            placeholder=""
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
-            style={inputStyle}
-          />
-        </div>
-
-        {/* Max Players */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-            最大人数 <span className="text-red-400">*</span>
-          </label>
-          <div className="inline-flex items-center rounded-xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-            <button
-              type="button"
-              onClick={() => setMaxPlayers((v) => Math.max(2, v - 1))}
-              disabled={maxPlayers <= 2}
-              className="h-10 w-10 flex items-center justify-center transition-colors hover:opacity-80 disabled:opacity-30"
-              style={{ backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }}
-              aria-label="人数を減らす"
+          <div className="flex gap-3">
+            <Link
+              href="/rooms"
+              className="flex-1 rounded-xl border px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"
+              style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
             >
-              <Minus className="h-4 w-4" />
-            </button>
-            <div
-              className="h-10 w-14 flex items-center justify-center text-sm font-semibold border-x"
-              style={{ backgroundColor: "var(--bg-input)", borderColor: "var(--border)", color: "var(--text-primary)" }}
-            >
-              {maxPlayers}人
-            </div>
-            <button
-              type="button"
-              onClick={() => setMaxPlayers((v) => Math.min(16, v + 1))}
-              disabled={maxPlayers >= 16}
-              className="h-10 w-10 flex items-center justify-center transition-colors hover:opacity-80 disabled:opacity-30"
-              style={{ backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }}
-              aria-label="人数を増やす"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
+              キャンセル
+            </Link>
           </div>
         </div>
+      )}
 
-        {/* Play Style Tags */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-            プレイスタイル{" "}
-            <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
-              （複数選択可）
-            </span>
-          </label>
-          <div className="flex items-center gap-2">
-            <TagFilterToggle
-              selectedCount={selectedSlugs.length}
-              panelOpen={panelOpen}
-              onPanelToggle={handlePanelToggle}
-              label="タグを選択"
+      {/* ステップ2: 部屋詳細入力 */}
+      {step === 2 && (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 sm:gap-6">
+          {/* 選択済みゲーム（読み取り専用） */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              ゲーム
+            </label>
+            <div
+              className="flex items-center gap-3 rounded-xl border px-3 py-2"
+              style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-input)" }}
+            >
+              {selectedGame && (
+                <>
+                  <GameCoverImage
+                    coverImageUrl={selectedGame.coverImageUrl}
+                    name={selectedGame.name}
+                    size="sm"
+                  />
+                  <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                    {selectedGame.name}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Title */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              部屋タイトル <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              maxLength={100}
+              placeholder=""
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
+              style={inputStyle}
             />
-            {selectedSlugs.length > 0 && (
+          </div>
+
+          {/* Max Players */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              最大人数 <span className="text-red-400">*</span>
+            </label>
+            <div className="inline-flex items-center rounded-xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
               <button
                 type="button"
-                onClick={() => setSelectedSlugs([])}
-                className="shrink-0 text-xs transition-opacity hover:opacity-70"
-                style={{ color: "var(--text-muted)" }}
+                onClick={() => setMaxPlayers((v) => Math.max(2, v - 1))}
+                disabled={maxPlayers <= 2}
+                className="h-10 w-10 flex items-center justify-center transition-colors hover:opacity-80 disabled:opacity-30"
+                style={{ backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }}
+                aria-label="人数を減らす"
               >
-                すべてクリア
+                <Minus className="h-4 w-4" />
               </button>
-            )}
+              <div
+                className="h-10 w-14 flex items-center justify-center text-sm font-semibold border-x"
+                style={{ backgroundColor: "var(--bg-input)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+              >
+                {maxPlayers}人
+              </div>
+              <button
+                type="button"
+                onClick={() => setMaxPlayers((v) => Math.min(16, v + 1))}
+                disabled={maxPlayers >= 16}
+                className="h-10 w-10 flex items-center justify-center transition-colors hover:opacity-80 disabled:opacity-30"
+                style={{ backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }}
+                aria-label="人数を増やす"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-          <TagFilterPanel
-            tags={tags}
-            selectedTags={pendingSlugs}
-            onToggle={togglePendingSlug}
-            open={panelOpen}
-            onApply={handleApply}
-            applyLabel="決定"
-          />
-          <div className="mt-2 min-w-0">
-            <ActiveFilterBar
-              selectedTags={selectedSlugs}
-              allTags={tags}
-              onRemove={(slug) => setSelectedSlugs((prev) => prev.filter((s) => s !== slug))}
+
+          {/* Play Style Tags */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              プレイスタイル{" "}
+              <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
+                （複数選択可）
+              </span>
+            </label>
+            <div className="flex items-center gap-2">
+              <TagFilterToggle
+                selectedCount={selectedSlugs.length}
+                panelOpen={panelOpen}
+                onPanelToggle={handlePanelToggle}
+                label="タグを選択"
+              />
+              {selectedSlugs.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedSlugs([])}
+                  className="shrink-0 text-xs transition-opacity hover:opacity-70"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  すべてクリア
+                </button>
+              )}
+            </div>
+            <TagFilterPanel
+              tags={tags}
+              selectedTags={pendingSlugs}
+              onToggle={togglePendingSlug}
+              open={panelOpen}
+              onApply={handleApply}
+              applyLabel="決定"
+            />
+            <div className="mt-2 min-w-0">
+              <ActiveFilterBar
+                selectedTags={selectedSlugs}
+                allTags={tags}
+                onRemove={(slug) => setSelectedSlugs((prev) => prev.filter((s) => s !== slug))}
+              />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              部屋の説明{" "}
+              <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
+                （任意）
+              </span>
+            </label>
+            <textarea
+              rows={2}
+              placeholder=""
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={500}
+              className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
+              style={inputStyle}
             />
           </div>
-        </div>
 
-        {/* Description */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-            部屋の説明{" "}
-            <span className="text-xs font-normal" style={{ color: "var(--text-muted)" }}>
-              （任意）
-            </span>
-          </label>
-          <textarea
-            rows={2}
-            placeholder=""
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            maxLength={500}
-            className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
-            style={inputStyle}
-          />
-        </div>
-
-        {/* Submit */}
-        <div className="flex gap-3">
-          <Link
-            href="/rooms"
-            className="flex-1 rounded-xl border px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"
-            style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
-          >
-            キャンセル
-          </Link>
-          <button
-            type="submit"
-            disabled={!selectedGame || !title || mutation.isPending}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{
-              background: "linear-gradient(135deg, var(--accent), #6d28d9)",
-              boxShadow: selectedGame && title ? "0 4px 14px rgba(124,58,237,0.4)" : "none",
-            }}
-          >
-            {mutation.isPending ? (
-              <CircleNotch className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            作成する
-          </button>
-        </div>
-      </form>
+          {/* Buttons */}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="flex items-center justify-center gap-2 rounded-xl border px-6 py-3 text-sm font-medium transition-all hover:opacity-80"
+              style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              戻る
+            </button>
+            <button
+              type="submit"
+              disabled={!title || mutation.isPending}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-lg active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                background: "linear-gradient(135deg, var(--accent), #6d28d9)",
+                boxShadow: title ? "0 4px 14px rgba(124,58,237,0.4)" : "none",
+              }}
+            >
+              {mutation.isPending ? (
+                <CircleNotch className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              作成する
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
