@@ -47,9 +47,22 @@ export default function NewRoomPage() {
     queryFn: fetchTags,
   });
 
+  const resetForm = () => {
+    setStep(1);
+    setTitle("");
+    setSelectedGame(null);
+    setMaxPlayers(4);
+    setDescription("");
+    setSelectedSlugs([]);
+    setPendingSlugs([]);
+    setPanelOpen(false);
+    setErrorMessage(null);
+  };
+
   const mutation = useMutation({
     mutationFn: createRoom,
     onSuccess: (res) => {
+      resetForm();
       router.push(`/rooms/${res.data.id}`);
     },
     onError: (err: Error) => {
