@@ -314,6 +314,7 @@ export default function NewRoomPage() {
               open={panelOpen}
               onApply={handleApply}
               applyLabel="決定"
+              onClickOutside={handleApply}
             />
             <div className="mt-2 min-w-0">
               <ActiveFilterBar

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import clsx from "clsx";
 
 type Tag = {
@@ -17,9 +18,23 @@ type TagFilterPanelProps = {
   open: boolean;
   onApply?: () => void;
   applyLabel?: string;
+  onClickOutside?: () => void;
 };
 
-export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, applyLabel }: TagFilterPanelProps) {
+export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, applyLabel, onClickOutside }: TagFilterPanelProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleMouseDown = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        onClickOutside?.();
+      }
+    };
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [open, onClickOutside]);
+
   if (!open) return null;
 
   const categoryMap = new Map<string, { name: string; tags: Tag[] }>();
@@ -43,6 +58,7 @@ export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, ap
 
   return (
     <div
+      ref={panelRef}
       className="animate-slide-down mt-2 rounded-xl border p-4"
       style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
     >

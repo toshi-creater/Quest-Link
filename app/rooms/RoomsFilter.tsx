@@ -117,6 +117,7 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
           onToggle={togglePendingTag}
           open={panelOpen}
           onApply={handleApply}
+          onClickOutside={handleApply}
         />
         <div className="mt-2 min-w-0">
           <ActiveFilterBar
