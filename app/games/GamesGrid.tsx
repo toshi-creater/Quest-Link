@@ -75,8 +75,8 @@ export function GamesGrid({ games: gamesProp, roomCounts = {}, onSelect }: Props
       {/* Game grid */}
       {loading ? (
         <div className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
+          {Array.from({ length: 24 }).map((_, i) => (
+            <div key={i}>
               <div className="aspect-[3/4] w-full rounded-xl animate-shimmer" />
               <div className="mt-2 h-3 w-3/4 rounded-md animate-shimmer" />
             </div>
@@ -84,15 +84,14 @@ export function GamesGrid({ games: gamesProp, roomCounts = {}, onSelect }: Props
         </div>
       ) : filteredGames.length > 0 ? (
         <div className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {filteredGames.map((game, index) => {
+          {filteredGames.map((game) => {
             const roomCount = roomCounts[game.id] ?? 0;
 
             return (
               <button
                 key={game.id}
                 onClick={() => handleClick(game)}
-                className="group text-left animate-fade-in-up"
-                style={{ animationDelay: `${Math.min(index, 11) * 50}ms` }}
+                className="group text-left"
               >
                 {/* Cover image */}
                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl">

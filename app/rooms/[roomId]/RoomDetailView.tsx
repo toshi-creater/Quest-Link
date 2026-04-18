@@ -137,8 +137,8 @@ export function RoomDetailView({ roomId }: Props) {
           {isParticipant && (
             <Link
               href={`/rooms/${room.id}/chat`}
-              className="flex items-center justify-between rounded-xl border px-5 py-4 transition-all hover:border-[var(--accent)] animate-fade-in-up"
-              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", animationDelay: "80ms" }}
+              className="flex items-center justify-between rounded-xl border px-5 py-4 transition-all hover:border-[var(--accent)]"
+              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
             >
               <div className="flex items-center gap-3">
                 <div
@@ -158,23 +158,17 @@ export function RoomDetailView({ roomId }: Props) {
           )}
 
           {/* Invite link */}
-          {isHost && room.status !== "closed" && (
-            <div className="animate-fade-in-up" style={{ animationDelay: "80ms" }}>
-              <InvitePanel roomId={room.id} />
-            </div>
-          )}
+          {isHost && room.status !== "closed" && <InvitePanel roomId={room.id} />}
 
           {/* Actions */}
-          <div className="animate-fade-in-up" style={{ animationDelay: "80ms" }}>
-            <RoomActions
-              roomId={room.id}
-              isParticipant={isParticipant}
-              isHost={isHost}
-              isGuest={isGuest}
-              status={room.status}
-              onInviteJoinClick={onInviteJoinClick}
-            />
-          </div>
+          <RoomActions
+            roomId={room.id}
+            isParticipant={isParticipant}
+            isHost={isHost}
+            isGuest={isGuest}
+            status={room.status}
+            onInviteJoinClick={onInviteJoinClick}
+          />
         </div>
 
         {/* Sidebar: Participants */}

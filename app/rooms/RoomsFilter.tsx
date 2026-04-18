@@ -134,8 +134,8 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-2xl border overflow-hidden animate-fade-in"
-              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", animationDelay: `${i * 60}ms` }}
+              className="rounded-2xl border overflow-hidden"
+              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
             >
               <div className="h-32 animate-shimmer" />
               <div className="p-4 space-y-3">
@@ -169,10 +169,8 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {filtered.map((room, index) => (
-            <div key={room.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 60}ms` }}>
-              <RoomCard room={room} />
-            </div>
+          {filtered.map((room) => (
+            <RoomCard key={room.id} room={room} />
           ))}
         </div>
       )}

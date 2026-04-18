@@ -18,7 +18,7 @@ export function RoomHeaderCard({ room }: RoomHeaderCardProps) {
 
   return (
     <div
-      className="rounded-2xl border overflow-hidden animate-fade-in-up"
+      className="rounded-2xl border overflow-hidden"
       style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
     >
       {/* Game cover header */}
