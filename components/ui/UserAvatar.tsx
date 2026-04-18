@@ -34,6 +34,13 @@ function getGradient(username: string): string {
 
 export const UserAvatar = memo(function UserAvatar({ username, iconUrl, size = "md", className }: Props) {
   const [imgError, setImgError] = useState(false);
+  const [prevIconUrl, setPrevIconUrl] = useState(iconUrl);
+
+  if (prevIconUrl !== iconUrl) {
+    setPrevIconUrl(iconUrl);
+    setImgError(false);
+  }
+
   const sizeClass = sizeClasses[size];
   const gradient = getGradient(username);
   const initial = username.charAt(0).toUpperCase();
