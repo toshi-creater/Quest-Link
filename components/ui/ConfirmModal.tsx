@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { CircleNotch } from "@phosphor-icons/react";
 
 type Props = {
@@ -12,7 +13,7 @@ type Props = {
 };
 
 export function ConfirmModal({ title, description, confirmLabel, onConfirm, onCancel, isPending }: Props) {
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
       onClick={onCancel}
@@ -50,6 +51,7 @@ export function ConfirmModal({ title, description, confirmLabel, onConfirm, onCa
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
