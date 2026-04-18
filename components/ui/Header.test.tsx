@@ -8,10 +8,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next-auth/react", () => ({
-  useSession: () => ({
-    status: "authenticated",
-    data: { user: { username: "testuser", iconUrl: "https://example.com/avatar.jpg" } },
-  }),
+  useSession: () => ({ status: "authenticated" }),
 }));
 
 vi.mock("next/link", () => ({
@@ -46,12 +43,6 @@ vi.mock("@/components/ui/SignOutButton", () => ({
 
 vi.mock("@/components/ui/Logo", () => ({
   Logo: () => <div data-testid="logo" />,
-}));
-
-vi.mock("@/components/ui/UserAvatar", () => ({
-  UserAvatar: ({ username }: { username: string }) => (
-    <div data-testid="user-avatar">{username}</div>
-  ),
 }));
 
 import { Header } from "./Header";
@@ -139,11 +130,5 @@ describe("Header - ナビアクティブ状態", () => {
     mockUsePathname.mockReturnValue("/login");
     const { container } = render(<Header />);
     expect(container.firstChild).toBeNull();
-  });
-
-  it("認証済みの場合、デスクトップヘッダーにアバターが表示される", () => {
-    mockUsePathname.mockReturnValue("/");
-    render(<Header />);
-    expect(screen.getByTestId("user-avatar")).toBeInTheDocument();
   });
 });

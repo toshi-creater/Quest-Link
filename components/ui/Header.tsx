@@ -6,11 +6,10 @@ import { useSession } from "next-auth/react";
 import clsx from "clsx";
 import { Logo } from "@/components/ui/Logo";
 import { NAV_ITEMS } from "@/components/ui/nav-items";
-import { UserAvatar } from "@/components/ui/UserAvatar";
 
 export function Header() {
   const pathname = usePathname();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   if (pathname === "/login" || pathname === "/onboarding") return null;
 
@@ -70,17 +69,6 @@ export function Header() {
           })}
 
         </nav>
-
-        {/* User avatar - desktop only */}
-        {isAuthenticated && session?.user && (
-          <Link href="/users/me" className="hidden md:flex shrink-0">
-            <UserAvatar
-              username={session.user.username}
-              iconUrl={session.user.iconUrl}
-              size="sm"
-            />
-          </Link>
-        )}
       </div>
     </header>
   );
