@@ -149,6 +149,19 @@ describe("NewRoomPage", () => {
     });
   });
 
+  it("createRoom 成功後にフォームがリセットされステップ1に戻る", async () => {
+    render(<NewRoomPage />);
+    selectGame();
+    fireEvent.change(screen.getAllByRole("textbox")[0], { target: { value: "テスト部屋" } });
+    act(() => {
+      mutationCallbacks.onSuccess?.({ data: { id: "room-123" } });
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("game-picker")).toBeInTheDocument();
+    });
+    expect(mockPush).toHaveBeenCalledWith("/rooms/room-123");
+  });
+
   it("createRoom 失敗時にエラーメッセージが表示される", async () => {
     render(<NewRoomPage />);
     selectGame();
