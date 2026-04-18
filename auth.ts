@@ -59,11 +59,6 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
             providerUserId,
           },
         });
-      } else {
-        await prisma.user.update({
-          where: { id: existing.userId },
-          data: { iconUrl: avatarUrl },
-        });
       }
 
       return true;
