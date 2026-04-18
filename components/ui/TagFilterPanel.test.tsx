@@ -76,4 +76,31 @@ describe("TagFilterPanel", () => {
       expect(btn).toHaveAttribute("type", "button");
     });
   });
+
+  it("パネル外をクリックすると onClickOutside が呼ばれる", () => {
+    const onClickOutside = vi.fn();
+    render(
+      <TagFilterPanel tags={tags} selectedTags={[]} onToggle={vi.fn()} open={true} onClickOutside={onClickOutside} />
+    );
+    fireEvent.mouseDown(document.body);
+    expect(onClickOutside).toHaveBeenCalledOnce();
+  });
+
+  it("パネル内をクリックしても onClickOutside は呼ばれない", () => {
+    const onClickOutside = vi.fn();
+    render(
+      <TagFilterPanel tags={tags} selectedTags={[]} onToggle={vi.fn()} open={true} onClickOutside={onClickOutside} />
+    );
+    fireEvent.mouseDown(screen.getByText("ガチ勢"));
+    expect(onClickOutside).not.toHaveBeenCalled();
+  });
+
+  it("パネルが閉じているときは onClickOutside が登録されない", () => {
+    const onClickOutside = vi.fn();
+    render(
+      <TagFilterPanel tags={tags} selectedTags={[]} onToggle={vi.fn()} open={false} onClickOutside={onClickOutside} />
+    );
+    fireEvent.mouseDown(document.body);
+    expect(onClickOutside).not.toHaveBeenCalled();
+  });
 });
