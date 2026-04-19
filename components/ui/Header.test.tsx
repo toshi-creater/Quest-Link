@@ -7,8 +7,10 @@ vi.mock("next/navigation", () => ({
   usePathname: () => mockUsePathname(),
 }));
 
+const mockUseSession = vi.fn();
+
 vi.mock("next-auth/react", () => ({
-  useSession: () => ({ status: "authenticated" }),
+  useSession: () => mockUseSession(),
 }));
 
 vi.mock("next/link", () => ({
@@ -17,32 +19,36 @@ vi.mock("next/link", () => ({
     children,
     className,
     style,
+    "aria-label": ariaLabel,
   }: {
     href: string;
     children: React.ReactNode;
     className?: string;
     style?: React.CSSProperties;
+    "aria-label"?: string;
   }) => (
-    <a href={href} className={className} style={style}>
+    <a href={href} className={className} style={style} aria-label={ariaLabel}>
       {children}
     </a>
   ),
 }));
 
 vi.mock("@phosphor-icons/react", () => ({
-  House: () => <span />,
-  PlusCircle: () => <span />,
   Chat: () => <span />,
-  User: () => <span />,
   Users: () => <span />,
-}));
-
-vi.mock("@/components/ui/SignOutButton", () => ({
-  SignOutButton: () => <button>サインアウト</button>,
+  PlusCircle: () => <span />,
+  MagnifyingGlass: () => <span />,
+  House: () => <span />,
+  User: () => <span />,
+  SignOut: () => <span />,
 }));
 
 vi.mock("@/components/ui/Logo", () => ({
   Logo: () => <div data-testid="logo" />,
+}));
+
+vi.mock("@/components/ui/UserAvatarMenu", () => ({
+  UserAvatarMenu: () => <button aria-label="ユーザーメニューを開く" />,
 }));
 
 import { Header } from "./Header";
@@ -55,22 +61,21 @@ function getNavLink(label: string) {
   return screen.getByRole("link", { name: new RegExp(label) });
 }
 
-describe("Header - ナビアクティブ状態", () => {
-  it("/ ではトップがアクティブ", () => {
-    mockUsePathname.mockReturnValue("/");
-    render(<Header />);
-    expect(getNavLink("トップ")).toHaveClass("text-white");
-    expect(getNavLink("部屋を探す")).not.toHaveClass("text-white");
+describe("Header - 認証済みナビアクティブ状態", () => {
+  beforeEach(() => {
+    mockUseSession.mockReturnValue({
+      status: "authenticated",
+      data: { user: { username: "testuser", iconUrl: null } },
+    });
   });
 
   it("/games では部屋を探すがアクティブ", () => {
     mockUsePathname.mockReturnValue("/games");
     render(<Header />);
     expect(getNavLink("部屋を探す")).toHaveClass("text-white");
-    expect(getNavLink("トップ")).not.toHaveClass("text-white");
   });
 
-  it("/games/[gameId]/rooms では部屋を探すがアクティブ (AC3)", () => {
+  it("/games/[gameId]/rooms では部屋を探すがアクティブ", () => {
     mockUsePathname.mockReturnValue("/games/123/rooms");
     render(<Header />);
     expect(getNavLink("部屋を探す")).toHaveClass("text-white");
@@ -80,50 +85,56 @@ describe("Header - ナビアクティブ状態", () => {
     mockUsePathname.mockReturnValue("/rooms/new");
     render(<Header />);
     expect(getNavLink("部屋作成")).toHaveClass("text-white");
-    expect(getNavLink("参加中の部屋")).not.toHaveClass("text-white");
   });
 
-  it("/rooms/[roomId] では参加中の部屋がアクティブ (AC1)", () => {
+  it("/rooms/[roomId] ではチャットリンクがアクティブ", () => {
     mockUsePathname.mockReturnValue("/rooms/abc123");
     render(<Header />);
-    expect(getNavLink("参加中の部屋")).toHaveClass("text-white");
-    expect(getNavLink("部屋作成")).not.toHaveClass("text-white");
+    const chatLink = screen.getByRole("link", { name: "参加中の部屋" });
+    expect(chatLink).toHaveClass("text-white");
   });
 
-  it("/rooms/[roomId]/chat では参加中の部屋がアクティブ", () => {
-    mockUsePathname.mockReturnValue("/rooms/abc123/chat");
+  it("/ ではチャットリンクが非アクティブ", () => {
+    mockUsePathname.mockReturnValue("/");
     render(<Header />);
-    expect(getNavLink("参加中の部屋")).toHaveClass("text-white");
+    const chatLink = screen.getByRole("link", { name: "参加中の部屋" });
+    expect(chatLink).not.toHaveClass("text-white");
   });
 
-  it("/rooms/[roomId]/ratings では参加中の部屋がアクティブ", () => {
-    mockUsePathname.mockReturnValue("/rooms/abc123/ratings");
+  it("認証済みのとき UserAvatarMenu が表示される", () => {
+    mockUsePathname.mockReturnValue("/");
     render(<Header />);
-    expect(getNavLink("参加中の部屋")).toHaveClass("text-white");
+    expect(screen.getByRole("button", { name: "ユーザーメニューを開く" })).toBeInTheDocument();
   });
 
-  it("/rooms/current では参加中の部屋がアクティブ", () => {
-    mockUsePathname.mockReturnValue("/rooms/current");
+  it("検索バーのプレースホルダーが表示される", () => {
+    mockUsePathname.mockReturnValue("/");
     render(<Header />);
-    expect(getNavLink("参加中の部屋")).toHaveClass("text-white");
+    expect(screen.getByPlaceholderText("ゲームを検索...")).toBeInTheDocument();
+  });
+});
+
+describe("Header - 未認証状態", () => {
+  beforeEach(() => {
+    mockUseSession.mockReturnValue({ status: "unauthenticated", data: null });
   });
 
-  it("/users/me ではプロフィールがアクティブ", () => {
-    mockUsePathname.mockReturnValue("/users/me");
+  it("未認証のときログインリンクが表示される", () => {
+    mockUsePathname.mockReturnValue("/");
     render(<Header />);
-    expect(getNavLink("プロフィール")).toHaveClass("text-white");
+    expect(screen.getByRole("link", { name: "ログイン" })).toBeInTheDocument();
   });
 
-  it("/users/me/edit ではプロフィールがアクティブ (AC2)", () => {
-    mockUsePathname.mockReturnValue("/users/me/edit");
+  it("未認証のときチャットリンクが表示されない", () => {
+    mockUsePathname.mockReturnValue("/");
     render(<Header />);
-    expect(getNavLink("プロフィール")).toHaveClass("text-white");
+    expect(screen.queryByRole("link", { name: "参加中の部屋" })).toBeNull();
   });
+});
 
-  it("/users/me/history ではプロフィールがアクティブ (AC2)", () => {
-    mockUsePathname.mockReturnValue("/users/me/history");
-    render(<Header />);
-    expect(getNavLink("プロフィール")).toHaveClass("text-white");
+describe("Header - 非表示", () => {
+  beforeEach(() => {
+    mockUseSession.mockReturnValue({ status: "unauthenticated", data: null });
   });
 
   it("/login では Header が非表示", () => {

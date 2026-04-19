@@ -7,8 +7,10 @@ vi.mock("next/navigation", () => ({
   usePathname: () => mockUsePathname(),
 }));
 
+const mockUseSession = vi.fn();
+
 vi.mock("next-auth/react", () => ({
-  useSession: () => ({ status: "authenticated" }),
+  useSession: () => mockUseSession(),
 }));
 
 vi.mock("next/link", () => ({
@@ -37,10 +39,23 @@ vi.mock("@phosphor-icons/react", () => ({
   Users: () => <span />,
 }));
 
+vi.mock("@/components/ui/UserAvatar", () => ({
+  UserAvatar: ({ username }: { username: string }) => (
+    <span data-testid="user-avatar">{username}</span>
+  ),
+}));
+
 import { BottomNav } from "./BottomNav";
 
 afterEach(() => {
   cleanup();
+});
+
+beforeEach(() => {
+  mockUseSession.mockReturnValue({
+    status: "authenticated",
+    data: { user: { username: "testuser", iconUrl: null } },
+  });
 });
 
 function getNavLink(label: string) {
@@ -127,5 +142,24 @@ describe("BottomNav - ナビアクティブ状態", () => {
     mockUsePathname.mockReturnValue("/login");
     const { container } = render(<BottomNav />);
     expect(container.firstChild).toBeNull();
+  });
+});
+
+describe("BottomNav - プロフィール項目のアバター", () => {
+  it("認証済みのときプロフィール項目にアバターが表示される", () => {
+    mockUseSession.mockReturnValue({
+      status: "authenticated",
+      data: { user: { username: "testuser", iconUrl: null } },
+    });
+    mockUsePathname.mockReturnValue("/");
+    render(<BottomNav />);
+    expect(screen.getByTestId("user-avatar")).toBeInTheDocument();
+  });
+
+  it("未認証のときプロフィール項目にアバターが表示されない", () => {
+    mockUseSession.mockReturnValue({ status: "unauthenticated", data: null });
+    mockUsePathname.mockReturnValue("/");
+    render(<BottomNav />);
+    expect(screen.queryByTestId("user-avatar")).toBeNull();
   });
 });

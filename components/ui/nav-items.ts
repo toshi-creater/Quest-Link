@@ -1,4 +1,4 @@
-import { House, PlusCircle, Chat, User, Users } from "@phosphor-icons/react";
+import { House, PlusCircle, Chat, User, Users, Icon, Door, GameControllerIcon, MagnifyingGlassIcon, Plus, ChatText } from "@phosphor-icons/react";
 import type { ComponentType } from "react";
 
 export type NavItem = {
@@ -7,11 +7,10 @@ export type NavItem = {
   label: string;
   /** モバイル用短縮ラベル */
   shortLabel: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: Icon;
   requiresAuth: boolean;
   isActive: (pathname: string) => boolean;
 };
-
 export const NAV_ITEMS: NavItem[] = [
   {
     href: "/",
@@ -25,7 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/games",
     label: "部屋を探す",
     shortLabel: "探す",
-    icon: Users,
+    icon: MagnifyingGlassIcon,
     requiresAuth: false,
     isActive: (p) => p === "/games" || p.startsWith("/games/"),
   },
@@ -33,7 +32,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/rooms/new",
     label: "部屋作成",
     shortLabel: "部屋作成",
-    icon: PlusCircle,
+    icon: Plus,
     requiresAuth: true,
     isActive: (p) => p === "/rooms/new",
   },
@@ -41,7 +40,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/rooms/current/chat",
     label: "参加中の部屋",
     shortLabel: "参加中",
-    icon: Chat,
+    icon: ChatText,
     requiresAuth: true,
     isActive: (p) => p.startsWith("/rooms/") && !p.startsWith("/rooms/new"),
   },
@@ -54,3 +53,7 @@ export const NAV_ITEMS: NavItem[] = [
     isActive: (p) => p.startsWith("/users/me"),
   },
 ];
+
+export const DESKTOP_NAV_ITEMS: NavItem[] = NAV_ITEMS.filter(
+  (item) => item.href === "/games" || item.href === "/rooms/new"
+);
