@@ -12,8 +12,9 @@ export function HeaderSearchBar() {
       className="relative w-full max-w-lg"
     >
       <MagnifyingGlass
-        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
-        style={{ color: "var(--text-secondary)" }}
+        className="absolute left-2 top-1/2 -translate-y-1/2"
+        size={24}
+        color="var(--text-secondary)"
       />
       <input
         type="text"

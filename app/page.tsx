@@ -4,6 +4,7 @@ import { CaretRight } from "@phosphor-icons/react/dist/ssr";
 import { connection } from "next/server";
 import { GameStripSkeleton } from "@/components/ui/skeletons/GameStripSkeleton";
 import { RoomGrid } from "@/components/ui/skeletons/RoomGrid";
+import { MobileHomeHeader } from "@/components/ui/MobileHomeHeader";
 import { HomeRecommendedGames } from "./HomeRecommendedGames";
 import { HomeRecruitingRooms } from "./HomeRecruitingRooms";
 
@@ -11,7 +12,9 @@ export default async function HomePage() {
   await connection();
 
   return (
-    <main className="mx-auto max-w-screen-xl px-4 py-10 pb-24 md:pb-10 space-y-12">
+    <>
+      <MobileHomeHeader />
+      <main className="mx-auto max-w-screen-xl px-4 py-10 pb-24 md:pb-10 space-y-12">
       {/* ── おすすめゲーム ── */}
       <section>
         <div className="mb-4 flex items-center justify-between">
@@ -54,5 +57,6 @@ export default async function HomePage() {
         </Suspense>
       </section>
     </main>
+    </>
   );
 }
