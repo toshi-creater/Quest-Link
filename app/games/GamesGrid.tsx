@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import type { GameResult } from "@/lib/games";
 import { GameCoverImage } from "@/components/ui/GameCoverImage";
+import { useGamesQuery } from "./GamesQueryContext";
 
 type Props = {
   games?: GameResult[];
@@ -14,9 +15,15 @@ type Props = {
 
 export function GamesGrid({ games: gamesProp, roomCounts = {}, onSelect }: Props) {
   const router = useRouter();
-  const [query, setQuery] = useState("");
+  const { query: contextQuery, setQuery: setContextQuery } = useGamesQuery();
+  const [localQuery, setLocalQuery] = useState("");
   const [fetchedGames, setFetchedGames] = useState<GameResult[]>([]);
   const [loading, setLoading] = useState(!gamesProp);
+
+  // gamesProp がある場合はコンテキストのクエリを使用（検索バーは親が担当）
+  const isControlled = gamesProp !== undefined;
+  const query = isControlled ? contextQuery : localQuery;
+  const setQuery = isControlled ? setContextQuery : setLocalQuery;
 
   useEffect(() => {
     if (gamesProp) return;
@@ -45,32 +52,34 @@ export function GamesGrid({ games: gamesProp, roomCounts = {}, onSelect }: Props
 
   return (
     <>
-      {/* Search bar */}
-      <div className="mb-6 flex items-center gap-3">
-        <div className="relative flex-1">
-          <MagnifyingGlass
-            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
-            style={{ color: "var(--text-secondary)" }}
-          />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="ゲームを検索..."
-            className="w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-[var(--accent)]"
-            style={{
-              background: "var(--bg-card)",
-              borderColor: "var(--border)",
-              color: "var(--text-primary)",
-            }}
-          />
+      {/* Search bar — standalone モード（/rooms/new など）のみ自前でレンダリング */}
+      {!isControlled && (
+        <div className="mb-6 flex items-center gap-3">
+          <div className="relative flex-1">
+            <MagnifyingGlass
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+              style={{ color: "var(--text-secondary)" }}
+            />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="ゲームを検索..."
+              className="w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-[var(--accent)]"
+              style={{
+                background: "var(--bg-card)",
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+              }}
+            />
+          </div>
+          {!loading && (
+            <span className="shrink-0 text-sm" style={{ color: "var(--text-secondary)" }}>
+              全{games.length}件
+            </span>
+          )}
         </div>
-        {!loading && (
-          <span className="shrink-0 text-sm" style={{ color: "var(--text-secondary)" }}>
-            全{games.length}件
-          </span>
-        )}
-      </div>
+      )}
 
       {/* Game grid */}
       {loading ? (
