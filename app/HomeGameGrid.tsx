@@ -13,13 +13,12 @@ export function HomeGameGrid({ games }: Props) {
 
   return (
     <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-      {games.map((game, index) => {
+      {games.map((game) => {
         return (
           <button
             key={game.id}
             onClick={() => router.push(`/games/${game.id}/rooms`)}
-            className="group text-left animate-fade-in-up"
-            style={{ animationDelay: `${Math.min(index, 11) * 50}ms` }}
+            className="group text-left"
           >
             <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl">
               <GameCoverImage
