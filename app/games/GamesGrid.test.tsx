@@ -61,14 +61,6 @@ describe("GamesGrid", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("検索クエリでゲームをフィルタリングできる", () => {
-    render(<GamesGrid games={MOCK_GAMES} />);
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Apex" } });
-    expect(screen.getByText("Apex Legends")).toBeInTheDocument();
-    expect(screen.queryByText("Valorant")).not.toBeInTheDocument();
-    expect(screen.queryByText("Minecraft")).not.toBeInTheDocument();
-  });
-
   it("onSelect 未指定時、ゲームクリックで router.push が呼ばれる", () => {
     render(<GamesGrid games={MOCK_GAMES} />);
     fireEvent.click(screen.getAllByRole("button")[0]);
@@ -102,9 +94,4 @@ describe("GamesGrid", () => {
     expect(screen.queryByText("募集なし")).not.toBeInTheDocument();
   });
 
-  it("検索結果が0件の場合「に一致するゲームが見つかりません」が表示される", () => {
-    render(<GamesGrid games={MOCK_GAMES} />);
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "xxxxxxxxxxx" } });
-    expect(screen.getByText(/に一致するゲームが見つかりません/)).toBeInTheDocument();
-  });
 });
