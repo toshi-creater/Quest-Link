@@ -6,7 +6,11 @@ export function HistoryListSkeleton() {
     >
       <ul className="divide-y" style={{ borderColor: "var(--border)" }}>
         {Array.from({ length: 5 }).map((_, i) => (
-          <li key={i} className="flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4">
+          <li
+            key={i}
+            className="flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4"
+            style={{ borderColor: "var(--border)" }}
+          >
             <div className="h-14 w-10 shrink-0 rounded-lg animate-shimmer" />
             <div className="flex-1 min-w-0 space-y-2">
               <div className="h-3 w-20 rounded animate-shimmer" />
