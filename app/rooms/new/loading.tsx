@@ -18,6 +18,9 @@ export default function NewRoomLoading() {
         </div>
       </div>
 
+      {/* 検索バー（/rooms/new の GamesGrid は standalone モードで自前描画） */}
+      <div className="mb-6 h-11 w-full rounded-xl animate-shimmer" />
+
       <GamesGridSkeleton />
     </div>
   );
