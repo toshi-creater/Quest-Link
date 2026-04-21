@@ -119,6 +119,49 @@ describe("GET /api/v1/rooms", () => {
       })
     );
   });
+
+  it("q クエリパラメータが where 句の OR 条件に含まれる", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockRoomFindMany.mockResolvedValueOnce([]);
+    mockRoomCount.mockResolvedValueOnce(0);
+
+    await GET(makeGetRequest({ q: "FPS" }));
+
+    expect(mockRoomFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: [
+            { title: { contains: "FPS", mode: "insensitive" } },
+            { description: { contains: "FPS", mode: "insensitive" } },
+          ],
+        }),
+      })
+    );
+  });
+
+  it("q が 101 文字以上のとき 400 BAD_REQUEST を返す", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+
+    const res = await GET(makeGetRequest({ q: "a".repeat(101) }));
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error.code).toBe("BAD_REQUEST");
+  });
+
+  it("q 未指定時は where 句に OR 条件が含まれない", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockRoomFindMany.mockResolvedValueOnce([]);
+    mockRoomCount.mockResolvedValueOnce(0);
+
+    await GET(makeGetRequest());
+
+    expect(mockRoomFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.not.objectContaining({ OR: expect.anything() }),
+      })
+    );
+  });
 });
 
 describe("POST /api/v1/rooms", () => {

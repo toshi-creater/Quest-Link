@@ -69,6 +69,7 @@ const listQuerySchema = z.object({
   status: z.enum(["waiting", "full", "closed"]).default("waiting"),
   gameId: z.string().uuid().optional(),
   tagSlugs: z.string().optional(),
+  q: z.string().trim().max(100).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
@@ -88,7 +89,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const { status, gameId, tagSlugs, page, limit } = parsed.data;
+  const { status, gameId, tagSlugs, q, page, limit } = parsed.data;
   const skip = (page - 1) * limit;
 
   const tagSlugList = tagSlugs ? tagSlugs.split(",").filter(Boolean) : [];
@@ -100,6 +101,12 @@ export async function GET(request: Request) {
       playStyleTags: {
         some: { tag: { slug: { in: tagSlugList } } },
       },
+    }),
+    ...(q && {
+      OR: [
+        { title: { contains: q, mode: "insensitive" } },
+        { description: { contains: q, mode: "insensitive" } },
+      ],
     }),
   };
 

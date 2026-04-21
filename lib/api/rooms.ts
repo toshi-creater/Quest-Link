@@ -74,6 +74,7 @@ export async function fetchRooms(params?: {
   status?: string;
   gameId?: string;
   tagSlugs?: string;
+  q?: string;
   page?: number;
   limit?: number;
 }): Promise<RoomsListResponse> {
@@ -81,6 +82,7 @@ export async function fetchRooms(params?: {
   if (params?.status) searchParams.set("status", params.status);
   if (params?.gameId) searchParams.set("gameId", params.gameId);
   if (params?.tagSlugs) searchParams.set("tagSlugs", params.tagSlugs);
+  if (params?.q) searchParams.set("q", params.q);
   if (params?.page) searchParams.set("page", String(params.page));
   if (params?.limit) searchParams.set("limit", String(params.limit));
 
