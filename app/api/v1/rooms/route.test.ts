@@ -60,6 +60,13 @@ const SAMPLE_RAW_ROOM = {
   ],
 };
 
+const SAMPLE_RAW_ROOM_WITH_DESC = {
+  ...SAMPLE_RAW_ROOM,
+  id: "room-2",
+  title: "週末ゲーム会",
+  description: "初心者大歓迎！スモーク使える方歓迎！",
+};
+
 // ─── ヘルパー ──────────────────────────────────────────────────────────────────
 
 function makeGetRequest(params: Record<string, string> = {}): Request {
@@ -116,6 +123,77 @@ describe("GET /api/v1/rooms", () => {
     expect(mockRoomFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ gameId: VALID_GAME_ID }),
+      })
+    );
+  });
+
+  it("正常系: q が title に一致する部屋を 200 で返す", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockRoomFindMany.mockResolvedValueOnce([SAMPLE_RAW_ROOM] as never);
+    mockRoomCount.mockResolvedValueOnce(1);
+
+    const res = await GET(makeGetRequest({ q: "テスト" }));
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data).toHaveLength(1);
+    expect(json.data[0].title).toBe("テストルーム");
+    expect(json.meta).toEqual({ total: 1, page: 1, limit: 20 });
+  });
+
+  it("正常系: q が description に一致する部屋を 200 で返す", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockRoomFindMany.mockResolvedValueOnce([SAMPLE_RAW_ROOM_WITH_DESC] as never);
+    mockRoomCount.mockResolvedValueOnce(1);
+
+    const res = await GET(makeGetRequest({ q: "スモーク" }));
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data).toHaveLength(1);
+    expect(json.data[0].title).toBe("週末ゲーム会");
+    expect(json.meta).toEqual({ total: 1, page: 1, limit: 20 });
+  });
+
+  it("q クエリパラメータが where 句の OR 条件に含まれる", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockRoomFindMany.mockResolvedValueOnce([]);
+    mockRoomCount.mockResolvedValueOnce(0);
+
+    await GET(makeGetRequest({ q: "FPS" }));
+
+    expect(mockRoomFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: [
+            { title: { contains: "FPS", mode: "insensitive" } },
+            { description: { contains: "FPS", mode: "insensitive" } },
+          ],
+        }),
+      })
+    );
+  });
+
+  it("q が 101 文字以上のとき 400 BAD_REQUEST を返す", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+
+    const res = await GET(makeGetRequest({ q: "a".repeat(101) }));
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error.code).toBe("BAD_REQUEST");
+  });
+
+  it("q 未指定時は where 句に OR 条件が含まれない", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockRoomFindMany.mockResolvedValueOnce([]);
+    mockRoomCount.mockResolvedValueOnce(0);
+
+    await GET(makeGetRequest());
+
+    expect(mockRoomFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.not.objectContaining({ OR: expect.anything() }),
       })
     );
   });
