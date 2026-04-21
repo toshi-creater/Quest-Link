@@ -5,6 +5,7 @@ const mockUsePathname = vi.fn();
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mockUsePathname(),
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 const mockUseSession = vi.fn();
@@ -38,9 +39,12 @@ vi.mock("@phosphor-icons/react", () => ({
   Users: () => <span />,
   PlusCircle: () => <span />,
   MagnifyingGlass: () => <span />,
+  MagnifyingGlassIcon: () => <span />,
   House: () => <span />,
   User: () => <span />,
   SignOut: () => <span />,
+  Plus: () => <span />,
+  ChatText: () => <span />,
 }));
 
 vi.mock("@/components/ui/Logo", () => ({
@@ -110,7 +114,9 @@ describe("Header - 認証済みナビアクティブ状態", () => {
   it("検索バーのプレースホルダーが表示される", () => {
     mockUsePathname.mockReturnValue("/");
     render(<Header />);
-    expect(screen.getByPlaceholderText("ゲームを検索...")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("ゲーム or 部屋を検索..."),
+    ).toBeInTheDocument();
   });
 });
 

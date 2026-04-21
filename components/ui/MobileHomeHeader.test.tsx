@@ -31,7 +31,12 @@ vi.mock("@/components/ui/Logo", () => ({
 }));
 
 vi.mock("@/components/ui/HeaderSearchBar", () => ({
-  HeaderSearchBar: () => <input placeholder="検索" aria-label="検索" />,
+  HeaderSearchBar: () => (
+    <input
+      placeholder="ゲーム or 部屋を検索..."
+      aria-label="ゲーム or 部屋を検索"
+    />
+  ),
 }));
 
 import { MobileHomeHeader } from "./MobileHomeHeader";
@@ -69,6 +74,8 @@ describe("MobileHomeHeader", () => {
 
   it("検索バーは DOM に存在する", () => {
     render(<MobileHomeHeader />);
-    expect(screen.getByPlaceholderText("検索")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("ゲーム or 部屋を検索..."),
+    ).toBeInTheDocument();
   });
 });
