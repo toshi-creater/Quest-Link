@@ -12,12 +12,13 @@ export default async function HistoryPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-4 sm:py-8 sm:px-6">
-      <BackButton href={"/users/me"} />
-
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+      <div className="relative mb-4 sm:mb-6 text-center md:text-left">
+        <h1 className="text-lg sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
           参加履歴
         </h1>
+        <div className="absolute left-0 top-1/2 -translate-y-1/2">
+          <BackButton href="/users/me" />
+        </div>
       </div>
 
       <Suspense fallback={<HistoryListSkeleton />}>

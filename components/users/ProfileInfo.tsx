@@ -27,7 +27,7 @@ export function ProfileInfo({
   bioFallback,
 }: ProfileInfoProps) {
   return (
-    <div className="px-4 sm:px-6 pt-14 pb-4 text-center">
+    <div className="px-4 sm:px-6 pt-3 pb-4 text-center">
       <h1 className="text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
         {username}
       </h1>

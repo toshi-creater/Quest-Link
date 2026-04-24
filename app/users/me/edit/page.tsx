@@ -144,7 +144,14 @@ export default function EditProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-4 sm:px-6 sm:py-8">
-      <BackButton href={"/users/me"} />
+      <div className="relative mb-4 sm:mb-6 text-center md:text-left">
+        <h1 className="text-lg sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+          プロフィール編集
+        </h1>
+        <div className="absolute left-0 top-1/2 -translate-y-1/2">
+          <BackButton href="/users/me" />
+        </div>
+      </div>
       <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-6 sm:gap-8">
         {/* Avatar section */}
         <div className="flex justify-center">

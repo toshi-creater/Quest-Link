@@ -1,15 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { PencilSimple, ClockCounterClockwise } from "@phosphor-icons/react";
 import { ProfileHero } from "@/components/users/ProfileHero";
 import { ProfileInfo } from "@/components/users/ProfileInfo";
 import { ProfileStats } from "@/components/users/ProfileStats";
 import { GameScrollList } from "@/components/users/GameScrollList";
 import { ReceivedRatingsList } from "@/components/users/ReceivedRatingsList";
+import { ProfileActionsMenu } from "@/components/users/ProfileActionsMenu";
 import { DeleteAccountButton } from "./DeleteAccountButton";
-import { SignOutButton } from "@/components/ui/SignOutButton";
 
 type ReceivedRating = {
   id: string;
@@ -57,47 +55,34 @@ export default function MyProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl pb-8 sm:mt-6 sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
-      <ProfileHero
-        coverImageUrl={user.games[0]?.coverImageUrl}
-        username={user.username}
-        iconUrl={user.iconUrl}
-        actions={
-          <div className="flex justify-end gap-2 px-4 pt-4 sm:px-6">
-            <Link
-              href="/users/me/edit"
-              className="flex items-center gap-2 rounded-xl border p-2 sm:px-4 sm:py-2 text-sm font-medium transition-all hover:border-[var(--accent)]"
-              style={{ borderColor: "var(--border)", color: "var(--text-secondary)", backgroundColor: "var(--bg-input)" }}
-            >
-              <PencilSimple className="h-4 w-4" />
-              <span className="hidden sm:inline">プロフィール編集</span>
-            </Link>
-            <Link
-              href="/users/me/history"
-              className="flex items-center gap-2 rounded-xl border p-2 sm:px-4 sm:py-2 text-sm font-medium transition-all hover:border-[var(--accent)]"
-              style={{ borderColor: "var(--border)", color: "var(--text-secondary)", backgroundColor: "var(--bg-input)" }}
-            >
-              <ClockCounterClockwise className="h-4 w-4" />
-              <span className="hidden sm:inline">参加履歴</span>
-            </Link>
-          </div>
-        }
-      />
-      <ProfileInfo
-        username={user.username}
-        avgRating={user.avgRating}
-        ratingCount={user.ratingCount}
-        playStyleTags={user.playStyleTags}
-        bio={user.bio}
-      />
-      <ProfileStats avgRating={user.avgRating} ratingCount={user.ratingCount} />
-      <GameScrollList games={user.games} />
-      <ReceivedRatingsList ratings={user.receivedRatings} />
-      <div className="mx-4 sm:mx-6 mt-8 space-y-4">
-        <div>
-          <SignOutButton />
+    <div className="mx-auto max-w-3xl pb-8">
+      <div className="relative px-4 md:px-0 pt-4 sm:pt-6 mb-3 sm:mb-4">
+        <h1
+          className="text-lg sm:text-2xl font-bold text-center md:text-left"
+          style={{ color: "var(--text-primary)" }}
+        >
+          プロフィール
+        </h1>
+        <div className="absolute right-2 top-2 md:hidden">
+          <ProfileActionsMenu />
         </div>
-        <div className="border-t pt-4" style={{ borderColor: "var(--border)" }}>
+      </div>
+      <div className="sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
+        <ProfileHero username={user.username} iconUrl={user.iconUrl} />
+        <ProfileInfo
+          username={user.username}
+          avgRating={user.avgRating}
+          ratingCount={user.ratingCount}
+          playStyleTags={user.playStyleTags}
+          bio={user.bio}
+        />
+        <ProfileStats avgRating={user.avgRating} ratingCount={user.ratingCount} />
+        <GameScrollList games={user.games} />
+        <ReceivedRatingsList ratings={user.receivedRatings} />
+        <div
+          className="mx-4 sm:mx-6 mt-8 border-t pt-4 pb-4 sm:pb-6"
+          style={{ borderColor: "var(--border)" }}
+        >
           <DeleteAccountButton />
         </div>
       </div>

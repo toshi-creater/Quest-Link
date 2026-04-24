@@ -50,9 +50,8 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl pb-8 sm:mt-6 sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
+    <div className="mx-auto max-w-3xl pb-8 sm:mt-2 sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
       <ProfileHero
-        coverImageUrl={user.games[0]?.coverImageUrl}
         username={user.username}
         iconUrl={user.iconUrl}
         actions={
