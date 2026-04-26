@@ -24,7 +24,7 @@ export function GameScrollList({ games }: GameScrollListProps) {
         プレイしているゲーム
       </h2>
       {games.length > 0 ? (
-        <div className="flex gap-3 overflow-x-auto px-4 sm:px-6 pb-2 scrollbar-none">
+        <div className="flex gap-3 overflow-x-auto px-4 sm:px-6 pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden">
           {games.map((game) => (
             <div key={game.id} className="flex shrink-0 flex-col items-center gap-2">
               <div
