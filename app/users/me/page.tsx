@@ -67,24 +67,32 @@ export default function MyProfilePage() {
           <ProfileActionsMenu />
         </div>
       </div>
-      <div className="sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
-        <ProfileHero username={user.username} iconUrl={user.iconUrl} />
-        <ProfileInfo
-          username={user.username}
-          avgRating={user.avgRating}
-          ratingCount={user.ratingCount}
-          playStyleTags={user.playStyleTags}
-          bio={user.bio}
-        />
-        <ProfileStats avgRating={user.avgRating} ratingCount={user.ratingCount} />
-        <GameScrollList games={user.games} />
-        <ReceivedRatingsList ratings={user.receivedRatings} />
-        <div
-          className="mx-4 sm:mx-6 mt-8 border-t pt-4 pb-4 sm:pb-6"
-          style={{ borderColor: "var(--border)" }}
-        >
-          <DeleteAccountButton />
+      <div className="sm:space-y-4">
+        <div className="sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
+          <ProfileHero username={user.username} iconUrl={user.iconUrl} />
+          <ProfileInfo
+            username={user.username}
+            avgRating={user.avgRating}
+            ratingCount={user.ratingCount}
+            playStyleTags={user.playStyleTags}
+            bio={user.bio}
+          />
         </div>
+        <div className="sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
+          <ProfileStats avgRating={user.avgRating} ratingCount={user.ratingCount} />
+        </div>
+        <div className="sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)] sm:py-4">
+          <GameScrollList games={user.games} />
+        </div>
+        <div className="sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)] sm:py-4">
+          <ReceivedRatingsList ratings={user.receivedRatings} />
+        </div>
+      </div>
+      <div
+        className="mx-4 sm:mx-6 mt-8 sm:mt-6 border-t pt-4 pb-4"
+        style={{ borderColor: "var(--border)" }}
+      >
+        <DeleteAccountButton />
       </div>
     </div>
   );
