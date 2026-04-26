@@ -68,8 +68,8 @@ export default function MyProfilePage() {
       </div>
       <div className="space-y-4">
         <div
-          className="sm:rounded-2xl sm:border"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
+          className=""
+          style={{ backgroundColor: "var(--bg-card)" }}
         >
           <ProfileHero username={user.username} iconUrl={user.iconUrl} />
           <ProfileInfo
@@ -80,8 +80,8 @@ export default function MyProfilePage() {
         </div>
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <div
-            className="sm:rounded-2xl sm:border flex flex-col items-center py-4"
-            style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
+            className=" flex flex-col items-center py-4"
+            style={{ backgroundColor: "var(--bg-card)" }}
           >
             <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
               {user.avgRating > 0 ? user.avgRating.toFixed(1) : "-"}
@@ -92,8 +92,8 @@ export default function MyProfilePage() {
             <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>平均評価</p>
           </div>
           <div
-            className="sm:rounded-2xl sm:border flex flex-col items-center py-4"
-            style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
+            className=" flex flex-col items-center py-4"
+            style={{ backgroundColor: "var(--bg-card)" }}
           >
             <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
               {user.ratingCount}
@@ -105,14 +105,14 @@ export default function MyProfilePage() {
           </div>
         </div>
         <div
-          className="sm:rounded-2xl sm:border py-4"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
+          className=" py-4"
+          style={{ backgroundColor: "var(--bg-card)" }}
         >
           <GameScrollList games={user.games} />
         </div>
         <div
-          className="sm:rounded-2xl sm:border py-4"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
+          className=" py-4"
+          style={{ backgroundColor: "var(--bg-card)" }}
         >
           <ReceivedRatingsList ratings={user.receivedRatings} />
         </div>
