@@ -66,8 +66,11 @@ export default function MyProfilePage() {
           <ProfileActionsMenu />
         </div>
       </div>
-      <div className="sm:space-y-4">
-        <div className="sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
+      <div className="space-y-4 px-4 md:px-0">
+        <div
+          className="rounded-2xl border"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
+        >
           <ProfileHero username={user.username} iconUrl={user.iconUrl} />
           <ProfileInfo
             username={user.username}
@@ -75,7 +78,7 @@ export default function MyProfilePage() {
             bio={user.bio}
           />
         </div>
-        <div className="grid grid-cols-2 gap-3 px-4 sm:px-0 sm:gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <div
             className="rounded-2xl border flex flex-col items-center py-4"
             style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
@@ -101,10 +104,16 @@ export default function MyProfilePage() {
             <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>評価件数</p>
           </div>
         </div>
-        <div className="sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)] sm:py-4">
+        <div
+          className="rounded-2xl border py-4"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
+        >
           <GameScrollList games={user.games} />
         </div>
-        <div className="sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)] sm:py-4">
+        <div
+          className="rounded-2xl border py-4"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
+        >
           <ReceivedRatingsList ratings={user.receivedRatings} />
         </div>
       </div>

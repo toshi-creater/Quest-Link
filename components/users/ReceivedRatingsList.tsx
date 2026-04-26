@@ -23,7 +23,7 @@ export function ReceivedRatingsList({ ratings }: ReceivedRatingsListProps) {
   const [showAll, setShowAll] = useState(false);
 
   return (
-    <div className="mt-8 sm:mt-0 px-4 sm:px-6">
+    <div className="px-4 sm:px-6">
       <h2
         className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider"
         style={{ color: "var(--text-muted)" }}
