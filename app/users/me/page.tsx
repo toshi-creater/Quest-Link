@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { ProfileHero } from "@/components/users/ProfileHero";
 import { ProfileInfo } from "@/components/users/ProfileInfo";
-import { ProfileStats } from "@/components/users/ProfileStats";
 import { GameScrollList } from "@/components/users/GameScrollList";
 import { ReceivedRatingsList } from "@/components/users/ReceivedRatingsList";
 import { ProfileActionsMenu } from "@/components/users/ProfileActionsMenu";
@@ -72,14 +71,35 @@ export default function MyProfilePage() {
           <ProfileHero username={user.username} iconUrl={user.iconUrl} />
           <ProfileInfo
             username={user.username}
-            avgRating={user.avgRating}
-            ratingCount={user.ratingCount}
             playStyleTags={user.playStyleTags}
             bio={user.bio}
           />
         </div>
-        <div className="sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
-          <ProfileStats avgRating={user.avgRating} ratingCount={user.ratingCount} />
+        <div className="grid grid-cols-2 gap-3 px-4 sm:px-0 sm:gap-4">
+          <div
+            className="rounded-2xl border flex flex-col items-center py-4"
+            style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
+          >
+            <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+              {user.avgRating > 0 ? user.avgRating.toFixed(1) : "-"}
+              <span className="ml-1 text-sm font-normal" style={{ color: "var(--text-secondary)" }}>
+                / 5.0
+              </span>
+            </p>
+            <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>平均評価</p>
+          </div>
+          <div
+            className="rounded-2xl border flex flex-col items-center py-4"
+            style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
+          >
+            <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+              {user.ratingCount}
+              <span className="ml-1 text-sm font-normal" style={{ color: "var(--text-secondary)" }}>
+                件
+              </span>
+            </p>
+            <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>評価件数</p>
+          </div>
         </div>
         <div className="sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)] sm:py-4">
           <GameScrollList games={user.games} />

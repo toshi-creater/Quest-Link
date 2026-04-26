@@ -69,8 +69,6 @@ export default function UserProfilePage() {
       />
       <ProfileInfo
         username={user.username}
-        avgRating={user.avgRating}
-        ratingCount={user.ratingCount}
         playStyleTags={user.playStyleTags}
         bio={user.bio}
         bioFallback="自己紹介はまだありません"

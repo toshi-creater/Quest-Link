@@ -1,7 +1,6 @@
 "use client";
 
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
-import { RatingDisplay } from "@/components/ui/StarRating";
 
 type PlayStyleTagItem = {
   id: string;
@@ -11,8 +10,6 @@ type PlayStyleTagItem = {
 
 type ProfileInfoProps = {
   username: string;
-  avgRating: number;
-  ratingCount: number;
   playStyleTags: PlayStyleTagItem[];
   bio: string | null;
   bioFallback?: string;
@@ -20,8 +17,6 @@ type ProfileInfoProps = {
 
 export function ProfileInfo({
   username,
-  avgRating,
-  ratingCount,
   playStyleTags,
   bio,
   bioFallback,
@@ -31,9 +26,6 @@ export function ProfileInfo({
       <h1 className="text-xl sm:text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
         {username}
       </h1>
-      <div className="mt-1.5 flex justify-center">
-        <RatingDisplay avgRating={avgRating} ratingCount={ratingCount} />
-      </div>
       {playStyleTags.length > 0 && (
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           {playStyleTags.map((tag) => (
