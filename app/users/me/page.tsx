@@ -66,7 +66,7 @@ export default function MyProfilePage() {
           <ProfileActionsMenu />
         </div>
       </div>
-      <div className="space-y-4 px-4 md:px-0">
+      <div className="space-y-4">
         <div
           className="rounded-2xl border"
           style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
