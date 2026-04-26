@@ -1,13 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "@phosphor-icons/react";
-import { ProfileHero } from "@/components/users/ProfileHero";
-import { ProfileInfo } from "@/components/users/ProfileInfo";
-import { ProfileStats } from "@/components/users/ProfileStats";
-import { GameScrollList } from "@/components/users/GameScrollList";
+import { BackButton } from "@/components/ui/BackButton";
+import { ProfileLayout } from "@/components/users/ProfileLayout";
 
 type UserProfile = {
   id: string;
@@ -50,31 +46,16 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl pb-8 sm:mt-2 sm:rounded-2xl sm:border sm:border-[var(--border)] sm:bg-[var(--bg-card)]">
-      <ProfileHero
-        username={user.username}
-        iconUrl={user.iconUrl}
-        actions={
-          <div className="px-4 pt-4 sm:px-6">
-            <Link
-              href="/rooms"
-              className="flex items-center gap-2 text-sm transition-colors hover:text-white"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              部屋一覧
-            </Link>
-          </div>
-        }
-      />
-      <ProfileInfo
-        username={user.username}
-        playStyleTags={user.playStyleTags}
-        bio={user.bio}
-        bioFallback="自己紹介はまだありません"
-      />
-      <ProfileStats avgRating={user.avgRating} ratingCount={user.ratingCount} />
-      <GameScrollList games={user.games} />
-    </div>
+    <ProfileLayout
+      title="プロフィール"
+      username={user.username}
+      iconUrl={user.iconUrl}
+      bio={user.bio}
+      bioFallback="自己紹介はまだありません"
+      playStyleTags={user.playStyleTags}
+      avgRating={user.avgRating}
+      ratingCount={user.ratingCount}
+      games={user.games}
+    />
   );
 }

@@ -1,10 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ProfileInfo } from "@/components/users/ProfileInfo";
-import { UserAvatar } from "@/components/ui/UserAvatar";
-import { GameScrollList } from "@/components/users/GameScrollList";
-import { ReceivedRatingsList } from "@/components/users/ReceivedRatingsList";
+import { ProfileLayout } from "@/components/users/ProfileLayout";
 import { ProfileActionsMenu } from "@/components/users/ProfileActionsMenu";
 import { DeleteAccountButton } from "./DeleteAccountButton";
 
@@ -54,74 +51,29 @@ export default function MyProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl pb-8">
-      <div className="relative px-4 md:px-0 pt-4 sm:pt-6 mb-6 sm:mb-8">
-        <h1
-          className="text-lg sm:text-2xl font-bold text-center md:text-left"
-          style={{ color: "var(--text-primary)" }}
-        >
-          プロフィール
-        </h1>
+    <ProfileLayout
+      title="プロフィール"
+      titleAction={
         <div className="absolute right-2 top-2 md:hidden">
           <ProfileActionsMenu />
         </div>
-      </div>
-      <div className="space-y-4 pt-10">
-        <div className="relative pt-10" style={{ backgroundColor: "var(--bg-card)" }}>
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">
-            <UserAvatar username={user.username} iconUrl={user.iconUrl} size="xl" />
-          </div>
-          <ProfileInfo
-            username={user.username}
-            playStyleTags={user.playStyleTags}
-            bio={user.bio}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          <div
-            className=" flex flex-col items-center py-4"
-            style={{ backgroundColor: "var(--bg-card)" }}
-          >
-            <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-              {user.avgRating > 0 ? user.avgRating.toFixed(1) : "-"}
-              <span className="ml-1 text-sm font-normal" style={{ color: "var(--text-secondary)" }}>
-                / 5.0
-              </span>
-            </p>
-            <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>平均評価</p>
-          </div>
-          <div
-            className=" flex flex-col items-center py-4"
-            style={{ backgroundColor: "var(--bg-card)" }}
-          >
-            <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
-              {user.ratingCount}
-              <span className="ml-1 text-sm font-normal" style={{ color: "var(--text-secondary)" }}>
-                件
-              </span>
-            </p>
-            <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>評価件数</p>
-          </div>
-        </div>
+      }
+      username={user.username}
+      iconUrl={user.iconUrl}
+      bio={user.bio}
+      playStyleTags={user.playStyleTags}
+      avgRating={user.avgRating}
+      ratingCount={user.ratingCount}
+      games={user.games}
+      receivedRatings={user.receivedRatings}
+      footer={
         <div
-          className=" py-4"
-          style={{ backgroundColor: "var(--bg-card)" }}
+          className="mx-4 sm:mx-6 mt-8 sm:mt-6 border-t pt-4 pb-4"
+          style={{ borderColor: "var(--border)" }}
         >
-          <GameScrollList games={user.games} />
+          <DeleteAccountButton />
         </div>
-        <div
-          className=" py-4"
-          style={{ backgroundColor: "var(--bg-card)" }}
-        >
-          <ReceivedRatingsList ratings={user.receivedRatings} />
-        </div>
-      </div>
-      <div
-        className="mx-4 sm:mx-6 mt-8 sm:mt-6 border-t pt-4 pb-4"
-        style={{ borderColor: "var(--border)" }}
-      >
-        <DeleteAccountButton />
-      </div>
-    </div>
+      }
+    />
   );
 }

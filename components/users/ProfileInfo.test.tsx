@@ -5,16 +5,10 @@ vi.mock("@/components/ui/PlayStyleTag", () => ({
   PlayStyleTag: ({ tag }: { tag: { name: string } }) => <span>{tag.name}</span>,
 }));
 
-vi.mock("@/components/ui/StarRating", () => ({
-  RatingDisplay: () => <div data-testid="rating-display" />,
-}));
-
 import { ProfileInfo } from "./ProfileInfo";
 
 const defaultProps = {
   username: "testuser",
-  avgRating: 4.2,
-  ratingCount: 10,
   playStyleTags: [{ id: "t1", name: "ガチ", slug: "serious" }],
   bio: null,
 };
@@ -23,11 +17,6 @@ describe("ProfileInfo", () => {
   it("ユーザー名が表示される", () => {
     render(<ProfileInfo {...defaultProps} />);
     expect(screen.getByText("testuser")).toBeInTheDocument();
-  });
-
-  it("RatingDisplay が表示される", () => {
-    render(<ProfileInfo {...defaultProps} />);
-    expect(screen.getByTestId("rating-display")).toBeInTheDocument();
   });
 
   it("playStyleTags が表示される", () => {
