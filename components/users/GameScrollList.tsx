@@ -16,7 +16,7 @@ type GameScrollListProps = {
 
 export function GameScrollList({ games }: GameScrollListProps) {
   return (
-    <div className="mt-4">
+    <div className="mt-4 sm:mt-0">
       <h2
         className="mb-3 px-4 sm:px-6 text-sm font-semibold uppercase tracking-wider"
         style={{ color: "var(--text-muted)" }}
