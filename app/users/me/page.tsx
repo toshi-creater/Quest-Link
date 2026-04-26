@@ -55,7 +55,7 @@ export default function MyProfilePage() {
 
   return (
     <div className="mx-auto max-w-3xl pb-8">
-      <div className="relative px-4 md:px-0 pt-4 sm:pt-6 mb-3 sm:mb-4">
+      <div className="relative px-4 md:px-0 pt-4 sm:pt-6 mb-6 sm:mb-8">
         <h1
           className="text-lg sm:text-2xl font-bold text-center md:text-left"
           style={{ color: "var(--text-primary)" }}
