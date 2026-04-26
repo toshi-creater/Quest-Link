@@ -68,7 +68,7 @@ export default function MyProfilePage() {
       </div>
       <div className="space-y-4">
         <div
-          className="rounded-2xl border"
+          className="rounded-2xl sm:border"
           style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
         >
           <ProfileHero username={user.username} iconUrl={user.iconUrl} />
@@ -80,7 +80,7 @@ export default function MyProfilePage() {
         </div>
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <div
-            className="rounded-2xl border flex flex-col items-center py-4"
+            className="rounded-2xl sm:border flex flex-col items-center py-4"
             style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
           >
             <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
@@ -92,7 +92,7 @@ export default function MyProfilePage() {
             <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>平均評価</p>
           </div>
           <div
-            className="rounded-2xl border flex flex-col items-center py-4"
+            className="rounded-2xl sm:border flex flex-col items-center py-4"
             style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
           >
             <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
@@ -105,13 +105,13 @@ export default function MyProfilePage() {
           </div>
         </div>
         <div
-          className="rounded-2xl border py-4"
+          className="rounded-2xl sm:border py-4"
           style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
         >
           <GameScrollList games={user.games} />
         </div>
         <div
-          className="rounded-2xl border py-4"
+          className="rounded-2xl sm:border py-4"
           style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}
         >
           <ReceivedRatingsList ratings={user.receivedRatings} />
