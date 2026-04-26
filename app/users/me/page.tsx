@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ProfileHero } from "@/components/users/ProfileHero";
 import { ProfileInfo } from "@/components/users/ProfileInfo";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { GameScrollList } from "@/components/users/GameScrollList";
 import { ReceivedRatingsList } from "@/components/users/ReceivedRatingsList";
 import { ProfileActionsMenu } from "@/components/users/ProfileActionsMenu";
@@ -66,12 +66,11 @@ export default function MyProfilePage() {
           <ProfileActionsMenu />
         </div>
       </div>
-      <div className="space-y-4">
-        <div
-          className=""
-          style={{ backgroundColor: "var(--bg-card)" }}
-        >
-          <ProfileHero username={user.username} iconUrl={user.iconUrl} />
+      <div className="space-y-4 pt-10">
+        <div className="relative pt-10" style={{ backgroundColor: "var(--bg-card)" }}>
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">
+            <UserAvatar username={user.username} iconUrl={user.iconUrl} size="xl" />
+          </div>
           <ProfileInfo
             username={user.username}
             playStyleTags={user.playStyleTags}
