@@ -22,8 +22,8 @@ export const RoomCard = memo(function RoomCard({ room }: Props) {
   return (
     <Link
       href={`/rooms/${room.id}`}
-      className="group block rounded-xl border transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(124,58,237,0.5)] hover:shadow-[0_8px_24px_rgba(124,58,237,0.12)] overflow-hidden"
-      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+      className="group block rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(124,58,237,0.12)] overflow-hidden"
+      style={{ backgroundColor: "var(--bg-card)" }}
     >
       {/* Game cover banner */}
       <div
