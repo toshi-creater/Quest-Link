@@ -56,8 +56,8 @@ export function ChatView({
       <div className="flex flex-1 flex-col min-w-0 min-h-0">
         {/* Mobile header */}
         <div
-          className="flex items-center gap-3 border-b px-4 py-3 md:hidden"
-          style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+          className="flex items-center gap-3 px-4 py-3 md:hidden"
+          style={{ backgroundColor: "var(--bg-card)" }}
         >
           <BackButton href={`/rooms/${roomId}`} />
           <div>
@@ -73,10 +73,9 @@ export function ChatView({
         {/* Connection error banner */}
         {(connectionStatus === "error" || connectionStatus === "failed") && (
           <div
-            className="flex items-center gap-2 border-b px-4 py-2 text-sm animate-slide-in-bottom"
+            className="flex items-center gap-2 px-4 py-2 text-sm animate-slide-in-bottom"
             style={{
               backgroundColor: "rgba(239, 68, 68, 0.1)",
-              borderColor: "rgba(239, 68, 68, 0.3)",
               color: "#f87171",
             }}
           >

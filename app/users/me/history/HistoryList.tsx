@@ -28,8 +28,8 @@ export async function HistoryList({ userId }: Props) {
   if (participations.length === 0) {
     return (
       <div
-        className="rounded-2xl border px-4 py-10 sm:px-6 sm:py-16 text-center"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+        className="rounded-2xl px-4 py-10 sm:px-6 sm:py-16 text-center"
+        style={{ backgroundColor: "var(--bg-card)" }}
       >
         <p className="text-sm" style={{ color: "var(--text-muted)" }}>
           まだ参加した部屋がありません
@@ -40,10 +40,10 @@ export async function HistoryList({ userId }: Props) {
 
   return (
     <div
-      className="rounded-2xl border overflow-hidden"
-      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+      className="rounded-2xl overflow-hidden"
+      style={{ backgroundColor: "var(--bg-card)" }}
     >
-      <ul className="divide-y" style={{ borderColor: "var(--border)" }}>
+      <ul>
         {participations.map((p, idx) => {
           const joinedDate = p.joinedAt;
           const endDate = p.leftAt ?? p.room.closedAt;
@@ -55,7 +55,6 @@ export async function HistoryList({ userId }: Props) {
             <li
               key={`${p.room.id}-${idx}`}
               className="flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4"
-              style={{ borderColor: "var(--border)" }}
             >
               <GameCover game={p.room.game} size="md" />
               <div className="flex-1 min-w-0">
@@ -88,7 +87,6 @@ export async function HistoryList({ userId }: Props) {
                 style={{
                   backgroundColor: "rgba(100,100,120,0.15)",
                   color: "var(--text-muted)",
-                  border: "1px solid rgba(100,100,120,0.3)",
                 }}
               >
                 終了

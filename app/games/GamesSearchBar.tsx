@@ -16,10 +16,9 @@ export function GamesSearchBar() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="ゲームを検索..."
-        className="w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-[var(--accent)]"
+        className="w-full rounded-xl py-2.5 pl-9 pr-4 text-sm outline-none"
         style={{
           background: "var(--bg-card)",
-          borderColor: "var(--border)",
           color: "var(--text-primary)",
         }}
       />

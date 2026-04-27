@@ -68,8 +68,7 @@ export default function MyProfilePage() {
       receivedRatings={user.receivedRatings}
       footer={
         <div
-          className="mx-4 sm:mx-6 mt-8 sm:mt-6 border-t pt-4 pb-4"
-          style={{ borderColor: "var(--border)" }}
+          className="mx-4 sm:mx-6 mt-8 sm:mt-6 pt-4 pb-4"
         >
           <DeleteAccountButton />
         </div>

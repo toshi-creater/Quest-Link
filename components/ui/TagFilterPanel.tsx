@@ -59,8 +59,8 @@ export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, ap
   return (
     <div
       ref={panelRef}
-      className="animate-slide-down mt-2 rounded-xl border p-4"
-      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+      className="animate-slide-down mt-2 rounded-xl p-4"
+      style={{ backgroundColor: "var(--bg-card)" }}
     >
       <div className="flex flex-col gap-4">
         {Array.from(categoryMap.entries()).map(([key, { name, tags: catTags }]) => (
@@ -84,12 +84,10 @@ export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, ap
                         ? {
                             backgroundColor: "rgba(124,58,237,0.3)",
                             color: "var(--accent-light)",
-                            border: "1px solid rgba(124,58,237,0.6)",
                           }
                         : {
                             backgroundColor: "var(--bg-card-hover)",
                             color: "var(--text-secondary)",
-                            border: "1px solid var(--border)",
                           }
                     }
                   >

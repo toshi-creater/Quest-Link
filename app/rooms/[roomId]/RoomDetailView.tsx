@@ -61,7 +61,7 @@ export function RoomDetailView({ roomId }: Props) {
         <div className="mb-6 h-5 w-20 rounded animate-shimmer" />
         <div className="grid gap-6 md:grid-cols-[1fr_260px] lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--bg-card)" }}>
               <div className="h-32 animate-shimmer" />
               <div className="px-4 py-4 sm:px-6 sm:py-5 space-y-3">
                 <div className="h-6 w-2/3 rounded animate-shimmer" />
@@ -72,7 +72,7 @@ export function RoomDetailView({ roomId }: Props) {
             <div className="h-14 rounded-xl animate-shimmer" />
           </div>
           <div>
-            <div className="rounded-2xl border p-5 space-y-3" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}>
+            <div className="rounded-2xl p-5 space-y-3" style={{ backgroundColor: "var(--bg-card)" }}>
               <div className="h-5 w-20 rounded animate-shimmer" />
               <div className="h-2 w-full rounded-full animate-shimmer" />
               {[1, 2, 3].map((i) => (
@@ -137,8 +137,8 @@ export function RoomDetailView({ roomId }: Props) {
           {isParticipant && (
             <Link
               href={`/rooms/${room.id}/chat`}
-              className="flex items-center justify-between rounded-xl border px-5 py-4 transition-all hover:border-[var(--accent)]"
-              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+              className="flex items-center justify-between rounded-xl px-5 py-4 transition-all hover:brightness-110"
+              style={{ backgroundColor: "var(--bg-card)" }}
             >
               <div className="flex items-center gap-3">
                 <div

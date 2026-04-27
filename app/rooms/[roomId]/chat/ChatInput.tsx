@@ -39,10 +39,9 @@ export function ChatInput({ roomId }: Props) {
       style={{ backgroundColor: "transparent" }}
     >
       <div
-        className="flex items-end gap-3 rounded-xl border p-1.5 md:p-2 focus-within:border-[var(--accent)] transition-colors"
+        className="flex items-end gap-3 rounded-xl p-1.5 md:p-2"
         style={{
           backgroundColor: "var(--bg-input)",
-          borderColor: message.length > MAX_LENGTH ? "rgba(239,68,68,0.6)" : "var(--border)",
         }}
       >
         <textarea

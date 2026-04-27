@@ -52,7 +52,6 @@ export function RoomHeaderCard({ room }: RoomHeaderCardProps) {
                 style={{
                   backgroundColor: status.bg,
                   color: status.color,
-                  border: `1px solid ${status.border}`,
                 }}
               >
                 {status.label}

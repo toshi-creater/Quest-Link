@@ -61,8 +61,8 @@ export function RatingForm({ user, roomId }: Props) {
   if (mutation.isSuccess) {
     return (
       <div
-        className="flex items-center gap-4 rounded-2xl border p-5 opacity-60 animate-scale-in"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+        className="flex items-center gap-4 rounded-2xl p-5 opacity-60 animate-scale-in"
+        style={{ backgroundColor: "var(--bg-card)" }}
       >
         <UserAvatar username={user.username} iconUrl={user.iconUrl} size="md" />
         <div className="flex-1">
@@ -78,8 +78,8 @@ export function RatingForm({ user, roomId }: Props) {
 
   return (
     <div
-      className="rounded-2xl border p-5"
-      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+      className="rounded-2xl p-5"
+      style={{ backgroundColor: "var(--bg-card)" }}
     >
       <div className="flex items-center gap-3 mb-4">
         <UserAvatar username={user.username} iconUrl={user.iconUrl} size="md" />
@@ -115,10 +115,9 @@ export function RatingForm({ user, roomId }: Props) {
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           maxLength={500}
-          className="w-full resize-none rounded-xl border px-3 py-2 text-sm outline-none focus:border-[var(--accent)] transition-colors"
+          className="w-full resize-none rounded-xl px-3 py-2 text-sm outline-none"
           style={{
             backgroundColor: "var(--bg-input)",
-            borderColor: "var(--border)",
             color: "var(--text-primary)",
           }}
         />

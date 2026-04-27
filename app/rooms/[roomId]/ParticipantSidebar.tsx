@@ -22,8 +22,8 @@ export function ParticipantSidebar({
   return (
     <div className="space-y-4">
       <div
-        className="rounded-2xl border p-4 sm:p-5"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+        className="rounded-2xl p-4 sm:p-5"
+        style={{ backgroundColor: "var(--bg-card)" }}
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -43,7 +43,7 @@ export function ParticipantSidebar({
         {/* Progress bar */}
         <div
           className="mb-4 h-2 w-full rounded-full overflow-hidden"
-          style={{ backgroundColor: "var(--border)" }}
+          style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
         >
           <div
             className="h-full rounded-full transition-all"
@@ -115,7 +115,6 @@ export function ParticipantSidebar({
                       style={{
                         backgroundColor: "rgba(34, 197, 94, 0.15)",
                         color: "#4ade80",
-                        border: "1px solid rgba(34, 197, 94, 0.3)",
                       }}
                     >
                       ゲスト
@@ -133,12 +132,12 @@ export function ParticipantSidebar({
           {Array.from({ length: maxPlayers - currentPlayers }).map((_, i) => (
             <li
               key={`empty-${i}`}
-              className="flex items-center gap-3 rounded-lg border border-dashed px-3 py-2"
-              style={{ borderColor: "var(--border)" }}
+              className="flex items-center gap-3 rounded-lg px-3 py-2"
+              style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
             >
               <div
-                className="h-9 w-9 rounded-full border-2 border-dashed"
-                style={{ borderColor: "var(--border)" }}
+                className="h-9 w-9 rounded-full"
+                style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
               />
               <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                 募集中...

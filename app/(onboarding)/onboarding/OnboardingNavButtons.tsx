@@ -33,8 +33,8 @@ export function OnboardingNavButtons({
         <button
           type="button"
           onClick={onBack}
-          className="flex flex-1 items-center justify-center gap-1 rounded-xl border px-4 py-3 text-sm font-medium transition-all hover:opacity-80"
-          style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+          className="flex flex-1 items-center justify-center gap-1 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80"
+          style={{ backgroundColor: "var(--bg-card-hover)", color: "var(--text-secondary)" }}
         >
           <ArrowLeft className="h-4 w-4" />
           戻る

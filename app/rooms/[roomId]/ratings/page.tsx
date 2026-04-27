@@ -59,8 +59,8 @@ export default async function RatingsPage({ params }: Props) {
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
       {/* Header */}
       <div
-        className="mb-6 rounded-2xl border p-6 text-center"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+        className="mb-6 rounded-2xl p-6 text-center"
+        style={{ backgroundColor: "var(--bg-card)" }}
       >
         <div
           className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full"

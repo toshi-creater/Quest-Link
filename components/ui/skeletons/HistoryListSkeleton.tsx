@@ -1,15 +1,14 @@
 export function HistoryListSkeleton() {
   return (
     <div
-      className="rounded-2xl border overflow-hidden"
-      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+      className="rounded-2xl overflow-hidden"
+      style={{ backgroundColor: "var(--bg-card)" }}
     >
-      <ul className="divide-y" style={{ borderColor: "var(--border)" }}>
+      <ul>
         {Array.from({ length: 5 }).map((_, i) => (
           <li
             key={i}
             className="flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4"
-            style={{ borderColor: "var(--border)" }}
           >
             <div className="h-14 w-10 shrink-0 rounded-lg animate-shimmer" />
             <div className="flex-1 min-w-0 space-y-2">

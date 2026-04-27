@@ -27,20 +27,18 @@ export default async function LoginPage({ searchParams }: Props) {
 
         {/* Login Card */}
         <div
-          className="rounded-2xl border p-8 animate-fade-in-up"
+          className="rounded-2xl p-8 animate-fade-in-up"
           style={{
             backgroundColor: "var(--bg-card)",
-            borderColor: "var(--border)",
             animationDelay: "120ms",
           }}
         >
           {hasInviteToken && (
             <div
-              className="mb-4 rounded-lg border px-4 py-3 text-sm text-center"
+              className="mb-4 rounded-lg px-4 py-3 text-sm text-center"
               style={{
-                borderColor: "var(--accent)",
                 color: "var(--text-secondary)",
-                backgroundColor: "rgba(124,58,237,0.08)",
+                backgroundColor: "rgba(124,58,237,0.12)",
               }}
             >
               この部屋に参加するにはログインが必要です

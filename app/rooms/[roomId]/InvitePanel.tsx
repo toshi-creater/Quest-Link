@@ -32,8 +32,8 @@ export function InvitePanel({ roomId }: Props) {
 
   return (
     <div
-      className="rounded-xl border px-5 py-4"
-      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+      className="rounded-xl px-5 py-4"
+      style={{ backgroundColor: "var(--bg-card)" }}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -47,11 +47,10 @@ export function InvitePanel({ roomId }: Props) {
         ) : (
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all hover:opacity-80 active:scale-[0.97]"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all hover:opacity-80 active:scale-[0.97]"
             style={{
-              borderColor: copied ? "var(--accent)" : "var(--border)",
               color: copied ? "var(--accent-light)" : "var(--text-secondary)",
-              backgroundColor: copied ? "rgba(124,58,237,0.08)" : "transparent",
+              backgroundColor: copied ? "rgba(124,58,237,0.15)" : "var(--bg-card-hover)",
             }}
             title="コピー"
           >

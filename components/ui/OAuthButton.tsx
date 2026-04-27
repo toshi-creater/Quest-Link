@@ -45,17 +45,17 @@ const PROVIDER_CONFIG: Record<
 > = {
   google: {
     label: "Googleでログイン",
-    style: { backgroundColor: "#fff", borderColor: "#dadce0", color: "#3c4043" },
+    style: { backgroundColor: "#fff", color: "#3c4043" },
     hoverClass: "", // Googleのhoverはsizeで分岐
   },
   twitter: {
     label: "X（Twitter）でログイン",
-    style: { backgroundColor: "#000", borderColor: "#333", color: "#fff" },
+    style: { backgroundColor: "#000", color: "#fff" },
     hoverClass: "hover:opacity-80",
   },
   discord: {
     label: "Discordでログイン",
-    style: { backgroundColor: "#5865F2", borderColor: "#4752c4", color: "#fff" },
+    style: { backgroundColor: "#5865F2", color: "#fff" },
     hoverClass: "hover:opacity-80",
   },
 };
@@ -83,7 +83,7 @@ export function OAuthButton({ provider, size = "sm", onClick, type = "button" }:
       type={type}
       onClick={onClick}
       className={clsx(
-        "flex w-full items-center justify-center gap-3 rounded-xl border text-sm font-medium transition-all active:scale-[0.97]",
+        "flex w-full items-center justify-center gap-3 rounded-xl text-sm font-medium transition-all active:scale-[0.97]",
         paddingClass,
         hoverClass
       )}

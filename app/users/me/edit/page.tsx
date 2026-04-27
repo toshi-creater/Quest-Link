@@ -136,7 +136,6 @@ export default function EditProfilePage() {
 
   const inputStyle = {
     backgroundColor: "var(--bg-input)",
-    borderColor: "var(--border)",
     color: "var(--text-primary)",
   };
 
@@ -194,7 +193,7 @@ export default function EditProfilePage() {
             maxLength={50}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--accent)]"
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
             style={inputStyle}
           />
         </div>
@@ -213,7 +212,7 @@ export default function EditProfilePage() {
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             maxLength={500}
-            className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:border-[var(--accent)]"
+            className="w-full resize-none rounded-xl px-4 py-2.5 text-sm outline-none"
             style={inputStyle}
           />
         </div>
@@ -231,7 +230,7 @@ export default function EditProfilePage() {
 
         {/* Error */}
         {error && (
-          <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <p className="mb-4 rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
             {error}
           </p>
         )}
@@ -243,8 +242,8 @@ export default function EditProfilePage() {
         >
           <Link
             href="/users/me"
-            className="flex-1 rounded-xl border px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"
-            style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+            className="flex-1 rounded-xl px-6 py-3 text-center text-sm font-medium transition-all hover:opacity-80"
+            style={{ backgroundColor: "var(--bg-card-hover)", color: "var(--text-secondary)" }}
           >
             キャンセル
           </Link>
