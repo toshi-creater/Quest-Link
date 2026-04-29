@@ -2,6 +2,38 @@ import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 import Twitter from "next-auth/providers/twitter";
 import Discord from "next-auth/providers/discord";
+import Credentials from "next-auth/providers/credentials";
+
+const LOADTEST_EMAIL_RE = /^loadtest\+\d+@example\.com$/;
+
+export async function stagingCredentialsAuthorize(
+  credentials: Partial<Record<string, unknown>>
+): Promise<{ id: string; email: string; name: string } | null> {
+  const email = typeof credentials.email === "string" ? credentials.email : "";
+  const password =
+    typeof credentials.password === "string" ? credentials.password : "";
+  const secret = process.env.CREDENTIALS_LOGIN_SECRET;
+  if (!secret) return null;
+  if (!LOADTEST_EMAIL_RE.test(email)) return null;
+  if (password !== secret) return null;
+  const username = email.split("@")[0];
+  return { id: email, email, name: username };
+}
+
+const stagingProviders: NextAuthConfig["providers"] =
+  process.env.STAGING_AUTH_BYPASS === "1"
+    ? [
+        Credentials({
+          id: "staging-credentials",
+          name: "Staging Test Account",
+          credentials: {
+            email: { label: "Email", type: "email" },
+            password: { label: "Password", type: "password" },
+          },
+          authorize: stagingCredentialsAuthorize,
+        }),
+      ]
+    : [];
 
 export const authConfig = {
   providers: [
@@ -10,6 +42,7 @@ export const authConfig = {
     Discord({
       authorization: { params: { scope: "identify email" } },
     }),
+    ...stagingProviders,
   ],
   pages: {
     signIn: "/login",
