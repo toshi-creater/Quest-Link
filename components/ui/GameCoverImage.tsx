@@ -10,6 +10,7 @@ type GameCoverImageProps = {
   name: string;
   size?: "sm" | "md" | "lg";
   className?: string;
+  priority?: boolean;
 };
 
 const coverSizes = {
@@ -37,6 +38,7 @@ export const GameCoverImage = memo(function GameCoverImage({
   name,
   size,
   className,
+  priority = false,
 }: GameCoverImageProps) {
   const [error, setError] = useState(false);
 
@@ -70,6 +72,7 @@ export const GameCoverImage = memo(function GameCoverImage({
           fill
           className="object-cover"
           sizes="64px"
+          priority={priority}
           onError={() => setError(true)}
         />
       </div>
@@ -93,6 +96,7 @@ export const GameCoverImage = memo(function GameCoverImage({
           fill
           className="object-cover"
           sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
+          priority={priority}
           onError={() => setError(true)}
         />
       )}

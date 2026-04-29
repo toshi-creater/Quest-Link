@@ -13,7 +13,7 @@ export function HomeGameGrid({ games }: Props) {
 
   return (
     <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-      {games.map((game) => {
+      {games.map((game, index) => {
         return (
           <button
             key={game.id}
@@ -24,6 +24,7 @@ export function HomeGameGrid({ games }: Props) {
               <GameCoverImage
                 coverImageUrl={game.coverImageUrl}
                 name={game.name}
+                priority={index === 0}
                 className="transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-transparent p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
