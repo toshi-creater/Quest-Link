@@ -2,8 +2,8 @@ import { PrismaClient, RoomStatus } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const LOAD_TEST_USER_COUNT = 50;
-const LOAD_TEST_ROOM_COUNT = 100;
+const LOAD_TEST_USER_COUNT = 500;
+const LOAD_TEST_ROOM_COUNT = 200;
 const MAX_PLAYERS_OPTIONS = [2, 3, 4, 5] as const;
 
 async function main() {
@@ -89,7 +89,7 @@ async function main() {
     `  ゲーム分散: ${games.map((g) => g.name).join(", ")} (${games.length} 種類)`
   );
   console.log(
-    `  ステータス分散: waiting×50, full×25, closed×25 (概算)`
+    `  ステータス分散: waiting×100, full×50, closed×50 (概算)`
   );
 }
 
