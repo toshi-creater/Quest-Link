@@ -48,3 +48,6 @@ next-env.d.ts
 # claude code
 .claude/
 .worktrees/
+
+# lighthouse ci
+.lighthouseci/
