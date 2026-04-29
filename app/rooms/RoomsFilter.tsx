@@ -79,8 +79,8 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
     <>
       {/* MagnifyingGlass */}
       <div
-        className="relative mb-4 flex items-center rounded-xl border px-4 py-2.5 focus-within:border-[var(--accent)] transition-colors"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+        className="relative mb-4 flex items-center rounded-xl px-4 py-2.5"
+        style={{ backgroundColor: "var(--bg-card)" }}
       >
         <MagnifyingGlass className="mr-3 h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
         <input
@@ -134,8 +134,8 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-2xl border overflow-hidden"
-              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+              className="rounded-2xl overflow-hidden"
+              style={{ backgroundColor: "var(--bg-card)" }}
             >
               <div className="h-32 animate-shimmer" />
               <div className="p-4 space-y-3">

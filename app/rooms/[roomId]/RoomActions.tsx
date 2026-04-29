@@ -52,8 +52,8 @@ export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, on
   if (status === "closed") {
     return (
       <div
-        className="rounded-xl border px-5 py-4 text-center text-sm"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", color: "var(--text-muted)" }}
+        className="rounded-xl px-5 py-4 text-center text-sm"
+        style={{ backgroundColor: "var(--bg-card)", color: "var(--text-muted)" }}
       >
         この部屋は終了しました
       </div>
@@ -94,11 +94,10 @@ export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, on
         <button
           onClick={() => leaveMutation.mutate()}
           disabled={leaveMutation.isPending}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all hover:opacity-80 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
-            borderColor: "var(--border)",
             color: "var(--text-secondary)",
-            backgroundColor: "var(--bg-card)",
+            backgroundColor: "var(--bg-card-hover)",
           }}
         >
           {leaveMutation.isPending ? (
@@ -112,7 +111,7 @@ export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, on
           <button
             onClick={() => setIsConfirmOpen(true)}
             disabled={closeMutation.isPending}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: "rgba(239,68,68,0.05)" }}
           >
             {closeMutation.isPending ? (

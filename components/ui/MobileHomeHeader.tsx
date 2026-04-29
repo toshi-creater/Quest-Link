@@ -30,8 +30,8 @@ export function MobileHomeHeader() {
 
   return (
     <header
-      className="sticky top-0 z-40 border-b md:hidden"
-      style={{ backgroundColor: "var(--bg-base)", borderColor: "var(--border)" }}
+      className="sticky top-0 z-40 md:hidden"
+      style={{ backgroundColor: "var(--bg-base)" }}
     >
       <div className="flex h-14 items-center px-4">
         {/* Logo: collapses + fades when search is open */}

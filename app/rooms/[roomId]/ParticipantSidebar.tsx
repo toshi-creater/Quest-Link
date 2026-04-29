@@ -22,43 +22,44 @@ export function ParticipantSidebar({
   return (
     <div className="space-y-4">
       <div
-        className="rounded-2xl border p-4 sm:p-5"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+        className="rounded-2xl px-2 py-4 sm:py-5 sm:px-2.5"
+        style={{ backgroundColor: "var(--bg-card)" }}
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4" style={{ color: "var(--text-muted)" }} />
-            <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-              参加者
+        <div className="px-3">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4" style={{ color: "var(--text-muted)" }} />
+              <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                参加者
+              </span>
+            </div>
+            <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+              <span className="font-bold" style={{ color: "var(--text-primary)" }}>
+                {currentPlayers}
+              </span>
+              /{maxPlayers}
             </span>
           </div>
-          <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            <span className="font-bold" style={{ color: "var(--text-primary)" }}>
-              {currentPlayers}
-            </span>
-            /{maxPlayers}
-          </span>
-        </div>
 
-        {/* Progress bar */}
-        <div
-          className="mb-4 h-2 w-full rounded-full overflow-hidden"
-          style={{ backgroundColor: "var(--border)" }}
-        >
+          {/* Progress bar */}
           <div
-            className="h-full rounded-full transition-all"
-            style={{
-              width: `${(currentPlayers / maxPlayers) * 100}%`,
-              background: "linear-gradient(90deg, var(--accent), var(--accent-light))",
-            }}
-          />
+            className="mb-4 h-2 w-full rounded-full overflow-hidden"
+            style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+          >
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width: `${(currentPlayers / maxPlayers) * 100}%`,
+                background: "linear-gradient(90deg, var(--accent), var(--accent-light))",
+              }}
+            />
+          </div>
         </div>
-
         <ul className="space-y-3">
           {participants.map((p, idx) => (
             <li
               key={p.userId ?? p.guestSessionId ?? `participant-${idx}`}
-              className="flex items-center gap-3"
+              className="flex items-center gap-3 px-3"
             >
               {p.userId != null ? (
                 <Link
@@ -115,7 +116,6 @@ export function ParticipantSidebar({
                       style={{
                         backgroundColor: "rgba(34, 197, 94, 0.15)",
                         color: "#4ade80",
-                        border: "1px solid rgba(34, 197, 94, 0.3)",
                       }}
                     >
                       ゲスト
@@ -133,12 +133,12 @@ export function ParticipantSidebar({
           {Array.from({ length: maxPlayers - currentPlayers }).map((_, i) => (
             <li
               key={`empty-${i}`}
-              className="flex items-center gap-3 rounded-lg border border-dashed px-3 py-2"
-              style={{ borderColor: "var(--border)" }}
+              className="flex items-center gap-3 rounded-lg px-3 py-2"
+              style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
             >
               <div
-                className="h-9 w-9 rounded-full border-2 border-dashed"
-                style={{ borderColor: "var(--border)" }}
+                className="h-9 w-9 rounded-full"
+                style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
               />
               <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                 募集中...

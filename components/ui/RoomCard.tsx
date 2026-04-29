@@ -22,8 +22,8 @@ export const RoomCard = memo(function RoomCard({ room }: Props) {
   return (
     <Link
       href={`/rooms/${room.id}`}
-      className="group block rounded-xl border transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(124,58,237,0.5)] hover:shadow-[0_8px_24px_rgba(124,58,237,0.12)] overflow-hidden"
-      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+      className="group block rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(124,58,237,0.12)] overflow-hidden"
+      style={{ backgroundColor: "var(--bg-card)" }}
     >
       {/* Game cover banner */}
       <div
@@ -56,7 +56,7 @@ export const RoomCard = memo(function RoomCard({ room }: Props) {
               </p>
               <span
                 className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                style={{ backgroundColor: status.bg, color: status.color, border: `1px solid ${status.border}` }}
+                style={{ backgroundColor: status.bg, color: status.color }}
               >
                 {status.label}
               </span>
@@ -71,7 +71,7 @@ export const RoomCard = memo(function RoomCard({ room }: Props) {
                 <span className="font-normal" style={{ color: "var(--text-muted)" }}>/{room.maxPlayers}</span>
               </span>
             </div>
-            <div className="h-1.5 w-14 rounded-full overflow-hidden" style={{ backgroundColor: "var(--border)" }}>
+            <div className="h-1.5 w-14 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
               <div
                 className="h-full rounded-full"
                 style={{
@@ -109,7 +109,7 @@ export const RoomCard = memo(function RoomCard({ room }: Props) {
         </div>
 
         {/* Host */}
-        <div className="mt-3 flex items-center gap-2 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+        <div className="mt-3 flex items-center gap-2 pt-3">
           <UserAvatar username={room.host.username} iconUrl={room.host.iconUrl} size="sm" />
           <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
             {room.host.username}

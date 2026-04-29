@@ -18,8 +18,8 @@ export function RoomHeaderCard({ room }: RoomHeaderCardProps) {
 
   return (
     <div
-      className="rounded-2xl border overflow-hidden"
-      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+      className="rounded-xl overflow-hidden"
+      style={{ backgroundColor: "var(--bg-card)" }}
     >
       {/* Game cover header */}
       <div
@@ -52,7 +52,6 @@ export function RoomHeaderCard({ room }: RoomHeaderCardProps) {
                 style={{
                   backgroundColor: status.bg,
                   color: status.color,
-                  border: `1px solid ${status.border}`,
                 }}
               >
                 {status.label}

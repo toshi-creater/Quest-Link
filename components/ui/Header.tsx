@@ -22,10 +22,9 @@ export function Header() {
 
   return (
     <header
-      className="sticky top-0 z-50 hidden h-16 border-b md:block"
+      className="sticky top-0 z-50 hidden h-16 md:block"
       style={{
         backgroundColor: "var(--bg-base)",
-        borderColor: "var(--border)",
       }}
     >
       <div className="mx-auto flex h-full max-w-7xl items-center gap-6 px-4 sm:px-6">

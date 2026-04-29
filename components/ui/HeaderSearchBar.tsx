@@ -108,10 +108,9 @@ export function HeaderSearchBar() {
         placeholder="ゲーム or 部屋を検索..."
         aria-label="ゲーム or 部屋を検索"
         maxLength={100}
-        className="w-full rounded-xl border py-2 pl-9 pr-4 text-sm outline-none transition-colors focus:border-[var(--accent)]"
+        className="w-full rounded-xl py-2 pl-9 pr-4 text-sm outline-none"
         style={{
           background: "var(--bg-card)",
-          borderColor: "var(--border)",
           color: "var(--text-primary)",
         }}
       />
@@ -120,10 +119,9 @@ export function HeaderSearchBar() {
         <ul
           id={listboxId}
           role="listbox"
-          className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-xl border shadow-2xl animate-fade-in-up"
+          className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-xl shadow-2xl animate-fade-in-up"
           style={{
             backgroundColor: "var(--bg-card)",
-            borderColor: "var(--border)",
             boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
             animationDuration: "150ms",
           }}

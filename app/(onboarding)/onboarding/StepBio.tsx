@@ -11,7 +11,6 @@ interface StepBioProps {
 
 const inputStyle = {
   backgroundColor: "var(--bg-input)",
-  borderColor: "var(--border)",
   color: "var(--text-primary)",
 };
 
@@ -44,7 +43,7 @@ export function StepBio({ bio, onBioChange, onNext, onBack }: StepBioProps) {
             value={bio}
             onChange={(e) => onBioChange(e.target.value)}
             maxLength={500}
-            className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
+            className="w-full resize-none rounded-xl px-4 py-2.5 text-sm outline-none"
             style={inputStyle}
           />
           <p className="mt-1 text-right text-xs" style={{ color: "var(--text-muted)" }}>

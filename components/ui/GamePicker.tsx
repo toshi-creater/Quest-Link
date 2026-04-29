@@ -62,11 +62,11 @@ export function SingleGamePicker({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-all text-left"
+        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all text-left"
         style={
           open
-            ? { backgroundColor: "var(--bg-input)", borderColor: "var(--accent)", color: "var(--text-primary)" }
-            : { backgroundColor: "var(--bg-input)", borderColor: "var(--border)", color: value ? "var(--text-primary)" : "var(--text-muted)" }
+            ? { backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }
+            : { backgroundColor: "var(--bg-input)", color: value ? "var(--text-primary)" : "var(--text-muted)" }
         }
       >
         {value ? (
@@ -98,13 +98,12 @@ export function SingleGamePicker({
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute z-50 mt-1.5 w-full rounded-xl border shadow-2xl overflow-hidden animate-fade-in-up"
-          style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)", animationDuration: "150ms" }}
+          className="absolute z-50 mt-1.5 w-full rounded-xl shadow-2xl overflow-hidden animate-fade-in-up"
+          style={{ backgroundColor: "var(--bg-card)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)", animationDuration: "150ms" }}
         >
           {/* Search */}
           <div
-            className="flex items-center gap-2 border-b px-3 py-2.5"
-            style={{ borderColor: "var(--border)" }}
+            className="flex items-center gap-2 px-3 py-2.5"
           >
             <MagnifyingGlass className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
             <input
@@ -204,8 +203,8 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
           {value.map((game) => (
             <div
               key={game.id}
-              className="flex items-center gap-2 rounded-xl border pr-2 overflow-hidden"
-              style={{ backgroundColor: "rgba(124,58,237,0.1)", borderColor: "rgba(124,58,237,0.3)" }}
+              className="flex items-center gap-2 rounded-xl pr-2 overflow-hidden"
+              style={{ backgroundColor: "rgba(124,58,237,0.15)" }}
             >
               <GameCover game={game} size="sm" className="rounded-l-xl rounded-r-none" />
               <span className="text-xs font-medium" style={{ color: "var(--accent-light)" }}>
@@ -231,11 +230,11 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
           <button
             type="button"
             onClick={() => setOpen(!open)}
-            className="flex w-full items-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition-all"
+            className="flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-sm transition-all"
             style={
               open
-                ? { backgroundColor: "var(--bg-input)", borderColor: "var(--accent)", color: "var(--text-primary)" }
-                : { backgroundColor: "var(--bg-input)", borderColor: "var(--border)", color: "var(--text-muted)" }
+                ? { backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }
+                : { backgroundColor: "var(--bg-input)", color: "var(--text-muted)" }
             }
           >
             <MagnifyingGlass className="h-4 w-4 shrink-0" />
@@ -247,12 +246,11 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
 
           {open && (
             <div
-              className="absolute z-50 mt-1.5 w-full rounded-xl border shadow-2xl overflow-hidden animate-fade-in-up"
-              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)", animationDuration: "150ms" }}
+              className="absolute z-50 mt-1.5 w-full rounded-xl shadow-2xl overflow-hidden animate-fade-in-up"
+              style={{ backgroundColor: "var(--bg-card)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)", animationDuration: "150ms" }}
             >
               <div
-                className="flex items-center gap-2 border-b px-3 py-2.5"
-                style={{ borderColor: "var(--border)" }}
+                className="flex items-center gap-2 px-3 py-2.5"
               >
                 <MagnifyingGlass className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
                 <input
@@ -367,10 +365,9 @@ export function GridGamePicker({ value, onChange, max = 20 }: GridGamePickerProp
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="ゲームを検索..."
-            className="w-full rounded-xl border py-2.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-[var(--accent)]"
+            className="w-full rounded-xl py-2.5 pl-9 pr-4 text-sm outline-none"
             style={{
               backgroundColor: "var(--bg-input)",
-              borderColor: "var(--border)",
               color: "var(--text-primary)",
             }}
           />

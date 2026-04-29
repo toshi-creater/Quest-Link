@@ -106,7 +106,6 @@ export default function NewRoomPage() {
 
   const inputStyle = {
     backgroundColor: "var(--bg-input)",
-    borderColor: "var(--border)",
     color: "var(--text-primary)",
   };
 
@@ -134,20 +133,17 @@ export default function NewRoomPage() {
                     style={
                       isCurrent
                         ? {
-                            backgroundColor: "rgba(124,58,237,0.2)",
+                            backgroundColor: "rgba(124,58,237,0.3)",
                             color: "var(--accent-light)",
-                            border: "2px solid var(--accent)",
                           }
                         : isCompleted
                           ? {
                               backgroundColor: "var(--accent)",
                               color: "#fff",
-                              border: "2px solid var(--accent)",
                             }
                           : {
-                              backgroundColor: "var(--bg-card)",
+                              backgroundColor: "var(--bg-card-hover)",
                               color: "var(--text-muted)",
-                              border: "2px solid var(--border)",
                             }
                     }
                   >
@@ -174,8 +170,8 @@ export default function NewRoomPage() {
 
       {errorMessage && (
         <div
-          className="mb-4 rounded-xl border px-4 py-3 text-sm"
-          style={{ borderColor: "rgba(239,68,68,0.4)", backgroundColor: "rgba(239,68,68,0.08)", color: "#f87171" }}
+          className="mb-4 rounded-xl px-4 py-3 text-sm"
+          style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#f87171" }}
         >
           {errorMessage}
         </div>
@@ -241,7 +237,7 @@ export default function NewRoomPage() {
               placeholder=""
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
+              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
               style={inputStyle}
             />
           </div>
@@ -251,20 +247,20 @@ export default function NewRoomPage() {
             <label className="mb-1.5 block text-sm font-medium" style={{ color: "var(--text-primary)" }}>
               最大人数 <span className="text-red-400">*</span>
             </label>
-            <div className="inline-flex items-center rounded-xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+            <div className="inline-flex items-center rounded-xl overflow-hidden" style={{ backgroundColor: "var(--bg-input)" }}>
               <button
                 type="button"
                 onClick={() => setMaxPlayers((v) => Math.max(2, v - 1))}
                 disabled={maxPlayers <= 2}
                 className="h-10 w-10 flex items-center justify-center transition-colors hover:opacity-80 disabled:opacity-30"
-                style={{ backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }}
+                style={{ color: "var(--text-primary)" }}
                 aria-label="人数を減らす"
               >
                 <Minus className="h-4 w-4" />
               </button>
               <div
-                className="h-10 w-14 flex items-center justify-center text-sm font-semibold border-x"
-                style={{ backgroundColor: "var(--bg-input)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+                className="h-10 w-14 flex items-center justify-center text-sm font-semibold"
+                style={{ backgroundColor: "rgba(255,255,255,0.05)", color: "var(--text-primary)" }}
               >
                 {maxPlayers}人
               </div>
@@ -273,7 +269,7 @@ export default function NewRoomPage() {
                 onClick={() => setMaxPlayers((v) => Math.min(16, v + 1))}
                 disabled={maxPlayers >= 16}
                 className="h-10 w-10 flex items-center justify-center transition-colors hover:opacity-80 disabled:opacity-30"
-                style={{ backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }}
+                style={{ color: "var(--text-primary)" }}
                 aria-label="人数を増やす"
               >
                 <Plus className="h-4 w-4" />
@@ -339,7 +335,7 @@ export default function NewRoomPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={500}
-              className="w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors"
+              className="w-full resize-none rounded-xl px-4 py-2.5 text-sm outline-none"
               style={inputStyle}
             />
           </div>
@@ -349,8 +345,8 @@ export default function NewRoomPage() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="flex items-center justify-center gap-2 rounded-xl border px-6 py-3 text-sm font-medium transition-all hover:opacity-80"
-              style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+              className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-medium transition-all hover:opacity-80"
+              style={{ backgroundColor: "var(--bg-card-hover)", color: "var(--text-secondary)" }}
             >
               <ArrowLeft className="h-4 w-4" />
               戻る

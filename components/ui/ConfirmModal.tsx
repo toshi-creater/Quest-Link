@@ -19,8 +19,8 @@ export function ConfirmModal({ title, description, confirmLabel, onConfirm, onCa
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-sm rounded-2xl border p-6 space-y-5 animate-scale-in"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+        className="w-full max-w-sm rounded-2xl p-6 space-y-5 animate-scale-in"
+        style={{ backgroundColor: "var(--bg-card)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="space-y-1">
@@ -35,15 +35,15 @@ export function ConfirmModal({ title, description, confirmLabel, onConfirm, onCa
           <button
             onClick={onCancel}
             disabled={isPending}
-            className="flex flex-1 items-center justify-center rounded-xl border px-4 py-3 text-sm font-medium transition-all hover:opacity-80 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ borderColor: "var(--border)", color: "var(--text-secondary)", backgroundColor: "var(--bg-card)" }}
+            className="flex flex-1 items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ color: "var(--text-secondary)", backgroundColor: "var(--bg-card-hover)" }}
           >
             キャンセル
           </button>
           <button
             onClick={onConfirm}
             disabled={isPending}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/30 px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: "rgba(239,68,68,0.05)" }}
           >
             {isPending ? <CircleNotch className="h-4 w-4 animate-spin" /> : null}

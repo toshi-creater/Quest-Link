@@ -6,10 +6,10 @@ export default function ChatLoading() {
     >
       {/* Desktop sidebar */}
       <aside
-        className="hidden w-64 shrink-0 flex-col border-r md:flex"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+        className="hidden w-64 shrink-0 flex-col md:flex"
+        style={{ backgroundColor: "var(--bg-card)" }}
       >
-        <div className="border-b p-4 space-y-2" style={{ borderColor: "var(--border)" }}>
+        <div className="p-4 space-y-2">
           <div className="h-8 w-8 rounded-lg animate-shimmer mb-3" />
           <div className="h-4 w-40 rounded animate-shimmer" />
           <div className="h-3 w-28 rounded animate-shimmer" />
@@ -38,8 +38,8 @@ export default function ChatLoading() {
       <div className="flex flex-1 flex-col min-w-0 min-h-0">
         {/* Mobile header */}
         <div
-          className="flex items-center gap-3 border-b px-4 py-3 md:hidden"
-          style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+          className="flex items-center gap-3 px-4 py-3 md:hidden"
+          style={{ backgroundColor: "var(--bg-card)" }}
         >
           <div className="h-8 w-8 rounded-lg animate-shimmer shrink-0" />
           <div className="space-y-1 flex-1">
@@ -87,8 +87,8 @@ export default function ChatLoading() {
 
         {/* Input area */}
         <div
-          className="border-t p-3 flex items-end gap-2"
-          style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+          className="p-3 flex items-end gap-2"
+          style={{ backgroundColor: "var(--bg-card)" }}
         >
           <div className="flex-1 h-10 rounded-xl animate-shimmer" />
           <div className="h-10 w-10 rounded-xl animate-shimmer shrink-0" />
