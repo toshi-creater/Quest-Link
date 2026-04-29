@@ -1,0 +1,69 @@
+name: Lighthouse CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: '計測対象のベースURL (例: https://staging.example.com)。空欄の場合はローカルビルドを起動して計測'
+        required: false
+        default: ''
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Next.js app
+        if: ${{ inputs.base_url == '' }}
+        run: pnpm build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: http://localhost:3000
+
+      - name: Start server
+        if: ${{ inputs.base_url == '' }}
+        run: pnpm start &
+
+      - name: Wait for server
+        if: ${{ inputs.base_url == '' }}
+        run: npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Run Lighthouse CI (collect)
+        run: pnpm dlx lhci collect
+        env:
+          LHCI_COLLECT_URL: ${{ inputs.base_url || 'http://localhost:3000' }}
+
+      - name: Run Lighthouse CI (assert)
+        run: pnpm dlx lhci assert
+
+      - name: Upload Lighthouse reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 30
+
+      - name: Post summary
+        if: always()
+        run: |
+          echo "## Lighthouse CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "計測対象URL: ${{ inputs.base_url || 'http://localhost:3000' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "レポートは Artifacts タブからダウンロードできます。" >> $GITHUB_STEP_SUMMARY
