@@ -44,12 +44,12 @@ jobs:
         run: npx wait-on http://localhost:3000 --timeout 60000
 
       - name: Run Lighthouse CI (collect)
-        run: pnpm dlx lhci collect
+        run: pnpm exec lhci collect
         env:
           LHCI_COLLECT_URL: ${{ inputs.base_url || 'http://localhost:3000' }}
 
       - name: Run Lighthouse CI (assert)
-        run: pnpm dlx lhci assert
+        run: pnpm exec lhci assert
 
       - name: Upload Lighthouse reports
         uses: actions/upload-artifact@v4
