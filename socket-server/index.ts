@@ -29,6 +29,9 @@ if (!REDIS_URL) {
 const pubClient = new Redis(REDIS_URL);
 const subClient = pubClient.duplicate();
 
+pubClient.on("error", (err) => console.error("Redis pubClient error:", err));
+subClient.on("error", (err) => console.error("Redis subClient error:", err));
+
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
