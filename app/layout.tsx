@@ -3,6 +3,7 @@ import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/ui/Header";
 import { BottomNav } from "@/components/ui/BottomNav";
+import { WebVitalsReporter } from "@/components/ui/WebVitalsReporter";
 import { Providers } from "./providers";
 
 const notoSansJP = Noto_Sans_JP({
@@ -27,6 +28,7 @@ export default function RootLayout({
     <html lang="ja" className={notoSansJP.variable}>
       <body className="antialiased min-h-screen" style={{ backgroundColor: "var(--bg-base)", color: "var(--text-primary)" }}>
         <Providers>
+          <WebVitalsReporter />
           <Header />
           <main className="min-h-screen md:min-h-[calc(100vh_-_64px)] pb-[calc(60px_+_env(safe-area-inset-bottom))] md:pb-0">{children}</main>
           <BottomNav />
