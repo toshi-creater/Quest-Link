@@ -24,6 +24,9 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
       return session;
     },
     async signIn({ account, profile }) {
+      // Credentials provider は authorize() で認証済み。DB upsert は jwt コールバックで行う
+      if (account?.type === "credentials") return true;
+
       if (!account?.provider || !profile) return false;
 
       const provider = toDbProvider(account.provider);
@@ -63,19 +66,36 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
 
       return true;
     },
-    async jwt({ token, account, profile, trigger }) {
+    async jwt({ token, account, profile, user, trigger }) {
       // セッション更新時（プロフィール設定完了後）: DBから最新usernameを取得
       if (trigger === "update" && token["userId"]) {
-        const user = await prisma.user.findUnique({
+        const dbUser = await prisma.user.findUnique({
           where: { id: token["userId"] as string },
           select: { username: true, iconUrl: true, avgRating: true },
         });
-        if (user) {
-          token["username"] = user.username;
-          token["iconUrl"] = user.iconUrl;
-          token["avgRating"] = Number(user.avgRating);
+        if (dbUser) {
+          token["username"] = dbUser.username;
+          token["iconUrl"] = dbUser.iconUrl;
+          token["avgRating"] = Number(dbUser.avgRating);
           token["needsProfileSetup"] = false;
         }
+        return token;
+      }
+
+      // Credentials (staging bypass) 初回ログイン: ユーザーを upsert してトークンに格納
+      if (account?.type === "credentials" && user?.email) {
+        const username = user.email.split("@")[0];
+        const dbUser = await prisma.user.upsert({
+          where: { username },
+          update: {},
+          create: { username, iconUrl: null },
+          select: { id: true, username: true, iconUrl: true, avgRating: true },
+        });
+        token["userId"] = dbUser.id;
+        token["username"] = dbUser.username;
+        token["iconUrl"] = dbUser.iconUrl;
+        token["avgRating"] = Number(dbUser.avgRating);
+        token["needsProfileSetup"] = false;
         return token;
       }
 

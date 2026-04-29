@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import type { Session } from "next-auth";
 import type { NextRequest } from "next/server";
-import { authConfig } from "./auth.config";
+import { authConfig, stagingCredentialsAuthorize } from "./auth.config";
 
 const authorized = authConfig.callbacks!.authorized!;
 
@@ -221,5 +221,71 @@ describe("authorized コールバック", () => {
       });
       expect(result).toBe(true);
     });
+  });
+});
+
+describe("stagingCredentialsAuthorize", () => {
+  const SECRET = "test-secret";
+
+  beforeEach(() => vi.stubEnv("CREDENTIALS_LOGIN_SECRET", SECRET));
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("正しい email + password で User を返す", async () => {
+    const result = await stagingCredentialsAuthorize({
+      email: "loadtest+1@example.com",
+      password: SECRET,
+    });
+    expect(result).toMatchObject({ id: "loadtest+1@example.com", name: "loadtest+1" });
+  });
+
+  it("loadtest+99 も受け付ける", async () => {
+    const result = await stagingCredentialsAuthorize({
+      email: "loadtest+99@example.com",
+      password: SECRET,
+    });
+    expect(result).toMatchObject({ id: "loadtest+99@example.com", name: "loadtest+99" });
+  });
+
+  it("数字なしの loadtest メールは null を返す", async () => {
+    const result = await stagingCredentialsAuthorize({
+      email: "loadtest@example.com",
+      password: SECRET,
+    });
+    expect(result).toBeNull();
+  });
+
+  it("パターン外の email は null を返す", async () => {
+    const result = await stagingCredentialsAuthorize({
+      email: "admin@example.com",
+      password: SECRET,
+    });
+    expect(result).toBeNull();
+  });
+
+  it("パスワード不一致は null を返す", async () => {
+    const result = await stagingCredentialsAuthorize({
+      email: "loadtest+1@example.com",
+      password: "wrong",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("CREDENTIALS_LOGIN_SECRET 未設定は null を返す", async () => {
+    vi.stubEnv("CREDENTIALS_LOGIN_SECRET", "");
+    const result = await stagingCredentialsAuthorize({
+      email: "loadtest+1@example.com",
+      password: "",
+    });
+    expect(result).toBeNull();
+  });
+});
+
+describe("STAGING_AUTH_BYPASS 未設定のとき", () => {
+  it("staging-credentials provider が providers 配列に存在しない", () => {
+    // テスト実行時は STAGING_AUTH_BYPASS が未設定のため、static import で providers = 3件
+    const found = authConfig.providers.some(
+      (p) => (p as { id?: string }).id === "staging-credentials"
+    );
+    expect(found).toBe(false);
   });
 });
