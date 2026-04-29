@@ -92,7 +92,7 @@ export function GamesGrid({ games: gamesProp, roomCounts = {}, onSelect }: Props
         </div>
       ) : filteredGames.length > 0 ? (
         <div className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {filteredGames.map((game) => {
+          {filteredGames.map((game, index) => {
             const roomCount = roomCounts[game.id] ?? 0;
 
             return (
@@ -106,6 +106,7 @@ export function GamesGrid({ games: gamesProp, roomCounts = {}, onSelect }: Props
                   <GameCoverImage
                     coverImageUrl={game.coverImageUrl}
                     name={game.name}
+                    priority={index === 0}
                     className="transition-transform duration-300 group-hover:scale-105"
                   />
 
