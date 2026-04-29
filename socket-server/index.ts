@@ -7,6 +7,8 @@ dotenv.config();
 import { createServer } from "http";
 import type { IncomingMessage, ServerResponse } from "http";
 import { Server as SocketIOServer } from "socket.io";
+import { createAdapter } from "@socket.io/redis-adapter";
+import Redis from "ioredis";
 import { decode } from "next-auth/jwt";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -18,7 +20,19 @@ type AuthenticatedSocketData =
 
 const GUEST_ID_RE = /^guest_[0-9a-f]{32}$/;
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const REDIS_URL = process.env.REDIS_URL;
+if (!REDIS_URL) {
+  console.error("REDIS_URL is not set. Exiting.");
+  process.exit(1);
+}
+
+const pubClient = new Redis(REDIS_URL);
+const subClient = pubClient.duplicate();
+
+pubClient.on("error", (err) => console.error("Redis pubClient error:", err));
+subClient.on("error", (err) => console.error("Redis subClient error:", err));
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
@@ -58,6 +72,8 @@ const io = new SocketIOServer(httpServer, {
     credentials: true,
   },
 });
+
+io.adapter(createAdapter(pubClient, subClient));
 
 // Next.js APIルートからSocket.IOイベントを emit するための内部エンドポイント
 httpServer.on("request", async (req: IncomingMessage, res: ServerResponse) => {
