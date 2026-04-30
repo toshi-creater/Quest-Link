@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Noto_Sans_JP } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { Header } from "@/components/ui/Header";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { WebVitalsReporter } from "@/components/ui/WebVitalsReporter";
 import { Providers } from "./providers";
+import { auth } from "@/auth";
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ["latin"],
@@ -19,6 +21,18 @@ export const metadata: Metadata = {
   description: "オンラインゲームで一緒にプレイする相手をリアルタイムで見つけるマッチングプラットフォーム",
 };
 
+async function LayoutProviders({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  return (
+    <Providers session={session}>
+      <WebVitalsReporter />
+      <Header />
+      <main className="min-h-screen md:min-h-[calc(100vh_-_64px)] pb-[calc(60px_+_env(safe-area-inset-bottom))] md:pb-0">{children}</main>
+      <BottomNav />
+    </Providers>
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,12 +41,9 @@ export default function RootLayout({
   return (
     <html lang="ja" className={notoSansJP.variable}>
       <body className="antialiased min-h-screen" style={{ backgroundColor: "var(--bg-base)", color: "var(--text-primary)" }}>
-        <Providers>
-          <WebVitalsReporter />
-          <Header />
-          <main className="min-h-screen md:min-h-[calc(100vh_-_64px)] pb-[calc(60px_+_env(safe-area-inset-bottom))] md:pb-0">{children}</main>
-          <BottomNav />
-        </Providers>
+        <Suspense fallback={null}>
+          <LayoutProviders>{children}</LayoutProviders>
+        </Suspense>
       </body>
     </html>
   );

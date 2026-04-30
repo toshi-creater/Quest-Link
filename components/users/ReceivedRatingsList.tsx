@@ -46,7 +46,7 @@ export function ReceivedRatingsList({ ratings }: ReceivedRatingsListProps) {
               >
                 <div className="flex items-start gap-3">
                   <UserAvatar
-                    username={rating.reviewer.username}
+                    username={rating.reviewer.username ?? "退会済みユーザー"}
                     iconUrl={rating.reviewer.iconUrl}
                     size="sm"
                   />
