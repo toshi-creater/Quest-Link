@@ -1,6 +1,10 @@
 // @ts-check
 'use strict';
 
+// ローカル実行時に .env.local / .env を読み込む（CI では process.env に直接注入済み）
+require('dotenv').config({ path: '.env.local' });
+require('dotenv').config();
+
 /**
  * LHCI puppeteer auth script.
  * Runs before each Lighthouse measurement. Logs in via the CI-only
