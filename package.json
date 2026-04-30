@@ -8,6 +8,8 @@
     "dev:socket": "tsx socket-server/index.ts",
     "build": "next build",
     "start": "next start",
+    "start:web": "next start",
+    "start:socket": "tsx socket-server/index.ts",
     "lint": "eslint",
     "generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -42,6 +44,7 @@
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "web-vitals": "^5.2.0",
+    "tsx": "^4.21.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"
   },
@@ -65,7 +68,6 @@
     "jsdom": "^28.1.0",
     "prisma": "^7.4.1",
     "tailwindcss": "^4",
-    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.0.18"
   },
