@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { emitToRoom } from "@/lib/socket-emitter";
-import { Prisma } from "@prisma/client";
 
 const bodySchema = z.object({
   displayName: z
@@ -99,7 +98,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
         return p;
       },
-      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+      { isolationLevel: "Serializable" }
     );
 
     const systemMsg = await prisma.chatMessage.create({
