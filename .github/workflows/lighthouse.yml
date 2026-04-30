@@ -58,6 +58,8 @@ jobs:
           LHCI_COLLECT_URL: ${{ inputs.base_url || 'http://localhost:3000' }}
           LHCI_TEST_EMAIL: ${{ secrets.LHCI_TEST_EMAIL }}
           LHCI_TEST_PASSWORD: ${{ secrets.LHCI_TEST_PASSWORD }}
+          LHCI_ROOM_ID: ${{ secrets.LHCI_ROOM_ID }}
+          LHCI_GAME_ID: ${{ secrets.LHCI_GAME_ID }}
 
       - name: Run Lighthouse CI (assert)
         run: pnpm exec lhci assert
