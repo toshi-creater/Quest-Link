@@ -35,6 +35,36 @@ const stagingProviders: NextAuthConfig["providers"] =
       ]
     : [];
 
+export async function lhciCredentialsAuthorize(
+  credentials: Partial<Record<string, unknown>>
+): Promise<{ id: string; email: string; name: string } | null> {
+  const email = typeof credentials.email === "string" ? credentials.email : "";
+  const password =
+    typeof credentials.password === "string" ? credentials.password : "";
+  const expectedEmail = process.env.LHCI_TEST_EMAIL;
+  const expectedPassword = process.env.LHCI_TEST_PASSWORD;
+  if (!expectedEmail || !expectedPassword) return null;
+  if (email !== expectedEmail) return null;
+  if (password !== expectedPassword) return null;
+  const username = email.split("@")[0];
+  return { id: email, email, name: username };
+}
+
+const lhciProviders: NextAuthConfig["providers"] =
+  process.env.LHCI_TEST_ENABLED === "true"
+    ? [
+        Credentials({
+          id: "lhci-credentials",
+          name: "LHCI Test Account",
+          credentials: {
+            email: { label: "Email", type: "email" },
+            password: { label: "Password", type: "password" },
+          },
+          authorize: lhciCredentialsAuthorize,
+        }),
+      ]
+    : [];
+
 export const authConfig = {
   providers: [
     Google,
@@ -43,6 +73,7 @@ export const authConfig = {
       authorization: { params: { scope: "identify email" } },
     }),
     ...stagingProviders,
+    ...lhciProviders,
   ],
   pages: {
     signIn: "/login",

@@ -16,6 +16,10 @@ module.exports = {
         `${BASE_URL}/rooms/1/chat`,
       ],
       numberOfRuns: 3,
+      puppeteerScript: './lhci-auth.cjs',
+      puppeteerLaunchOptions: {
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      },
       settings: {
         formFactor: 'mobile',
         throttling: {
