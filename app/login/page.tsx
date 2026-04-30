@@ -81,6 +81,54 @@ export default async function LoginPage({ searchParams }: Props) {
             </form>
           </div>
 
+          {process.env.LHCI_TEST_ENABLED === "true" && (
+            <>
+              <hr className="my-4" style={{ borderColor: "var(--border-subtle)" }} />
+              <form
+                action={async (formData: FormData) => {
+                  "use server";
+                  const email = formData.get("email") as string;
+                  const password = formData.get("password") as string;
+                  await signIn("lhci-credentials", { email, password, redirectTo: "/" });
+                }}
+                className="space-y-3"
+              >
+                <input
+                  id="lhci-email"
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="CI test email"
+                  className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
+                  style={{
+                    backgroundColor: "var(--bg-input)",
+                    color: "var(--text-primary)",
+                  }}
+                />
+                <input
+                  id="lhci-password"
+                  name="password"
+                  type="password"
+                  required
+                  placeholder="CI test password"
+                  className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
+                  style={{
+                    backgroundColor: "var(--bg-input)",
+                    color: "var(--text-primary)",
+                  }}
+                />
+                <button
+                  id="lhci-submit"
+                  type="submit"
+                  className="w-full rounded-xl px-6 py-3.5 text-sm font-medium transition-all active:scale-[0.97]"
+                  style={{ backgroundColor: "var(--accent)", color: "#fff" }}
+                >
+                  CI Login
+                </button>
+              </form>
+            </>
+          )}
+
           <p className="mt-4 text-center text-xs" style={{ color: "var(--text-muted)" }}>
             ログインすることで
             <span style={{ color: "var(--accent-light)" }}>利用規約</span>・

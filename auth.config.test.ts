@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import type { Session } from "next-auth";
 import type { NextRequest } from "next/server";
-import { authConfig, stagingCredentialsAuthorize } from "./auth.config";
+import { authConfig, stagingCredentialsAuthorize, lhciCredentialsAuthorize } from "./auth.config";
 
 const authorized = authConfig.callbacks!.authorized!;
 
@@ -285,6 +285,66 @@ describe("STAGING_AUTH_BYPASS 未設定のとき", () => {
     // テスト実行時は STAGING_AUTH_BYPASS が未設定のため、static import で providers = 3件
     const found = authConfig.providers.some(
       (p) => (p as { id?: string }).id === "staging-credentials"
+    );
+    expect(found).toBe(false);
+  });
+});
+
+describe("lhciCredentialsAuthorize", () => {
+  beforeEach(() => {
+    vi.stubEnv("LHCI_TEST_EMAIL", "lhci@example.com");
+    vi.stubEnv("LHCI_TEST_PASSWORD", "test-password");
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("正しい email + password で User を返す", async () => {
+    const result = await lhciCredentialsAuthorize({
+      email: "lhci@example.com",
+      password: "test-password",
+    });
+    expect(result).toMatchObject({ id: "lhci@example.com", email: "lhci@example.com", name: "lhci" });
+  });
+
+  it("email 不一致は null を返す", async () => {
+    const result = await lhciCredentialsAuthorize({
+      email: "other@example.com",
+      password: "test-password",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("password 不一致は null を返す", async () => {
+    const result = await lhciCredentialsAuthorize({
+      email: "lhci@example.com",
+      password: "wrong",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("LHCI_TEST_EMAIL 未設定は null を返す", async () => {
+    vi.stubEnv("LHCI_TEST_EMAIL", "");
+    const result = await lhciCredentialsAuthorize({
+      email: "lhci@example.com",
+      password: "test-password",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("LHCI_TEST_PASSWORD 未設定は null を返す", async () => {
+    vi.stubEnv("LHCI_TEST_PASSWORD", "");
+    const result = await lhciCredentialsAuthorize({
+      email: "lhci@example.com",
+      password: "",
+    });
+    expect(result).toBeNull();
+  });
+});
+
+describe("LHCI_TEST_ENABLED 未設定のとき", () => {
+  it("lhci-credentials provider が providers 配列に存在しない", () => {
+    // テスト実行時は LHCI_TEST_ENABLED が未設定のため lhci-credentials は含まれない
+    const found = authConfig.providers.some(
+      (p) => (p as { id?: string }).id === "lhci-credentials"
     );
     expect(found).toBe(false);
   });

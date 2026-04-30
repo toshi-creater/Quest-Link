@@ -34,10 +34,19 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL: http://localhost:3000
+          LHCI_TEST_ENABLED: 'true'
 
       - name: Start server
         if: ${{ inputs.base_url == '' }}
         run: pnpm start &
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          AUTH_URL: http://localhost:3000
+          LHCI_TEST_ENABLED: 'true'
+          LHCI_TEST_EMAIL: ${{ secrets.LHCI_TEST_EMAIL }}
+          LHCI_TEST_PASSWORD: ${{ secrets.LHCI_TEST_PASSWORD }}
 
       - name: Wait for server
         if: ${{ inputs.base_url == '' }}
@@ -47,6 +56,10 @@ jobs:
         run: pnpm exec lhci collect
         env:
           LHCI_COLLECT_URL: ${{ inputs.base_url || 'http://localhost:3000' }}
+          LHCI_TEST_EMAIL: ${{ secrets.LHCI_TEST_EMAIL }}
+          LHCI_TEST_PASSWORD: ${{ secrets.LHCI_TEST_PASSWORD }}
+          LHCI_ROOM_ID: ${{ secrets.LHCI_ROOM_ID }}
+          LHCI_GAME_ID: ${{ secrets.LHCI_GAME_ID }}
 
       - name: Run Lighthouse CI (assert)
         run: pnpm exec lhci assert
