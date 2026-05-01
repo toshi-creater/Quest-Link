@@ -17,7 +17,7 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "QuestLink - ゲーム仲間を見つけよう",
+  title: "QuestLink",
   description: "オンラインゲームで一緒にプレイする相手をリアルタイムで見つけるマッチングプラットフォーム",
 };
 
