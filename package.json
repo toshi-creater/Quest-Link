@@ -2,6 +2,9 @@
   "name": "questlink",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.19"
+  },
   "scripts": {
     "dev": "concurrently --names \"next,socket\" --prefix-colors \"blue,green\" \"next dev --turbopack --port 3000\" \"tsx socket-server/index.ts\"",
     "dev:next": "next dev --turbopack --port 3000",
