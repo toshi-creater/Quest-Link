@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { getPopularGames, getPopularGamesExcluding } from "@/lib/games";
+import { getPopularGames, getPopularGamesExcluding, type GameResult } from "@/lib/games";
 import { prisma } from "@/lib/prisma";
 import { HomeGameGrid } from "./HomeGameGrid";
 
@@ -12,7 +12,7 @@ export async function HomeRecommendedGames() {
     return <HomeGameGrid games={games} />;
   }
 
-  const userGameRows = await prisma.userGame.findMany({
+  const userGameRows: { game: GameResult }[] = await prisma.userGame.findMany({
     where: { userId },
     select: { game: { select: { id: true, name: true, coverImageUrl: true } } },
   });
