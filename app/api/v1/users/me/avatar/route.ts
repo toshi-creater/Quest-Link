@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { supabase, AVATAR_BUCKET } from "@/lib/supabase";
+import { getSupabaseClient, AVATAR_BUCKET } from "@/lib/supabase";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = new Uint8Array(arrayBuffer);
 
+  const supabase = getSupabaseClient();
   const { error: uploadError } = await supabase.storage
     .from(AVATAR_BUCKET)
     .upload(path, buffer, {
