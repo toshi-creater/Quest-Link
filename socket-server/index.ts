@@ -116,10 +116,40 @@ httpServer.on("request", async (req: IncomingMessage, res: ServerResponse) => {
   res.end("Not Found");
 });
 
-// 認証ミドルウェア: セッションCookieを検証し未認証接続を拒否する
-// 通常ユーザー: authjs.session-token / ゲスト: quest_link_guest_session
+// 認証ミドルウェア: トークン認証（クロスドメイン対応）→ Cookieフォールバックの順で検証
+// トークン認証: socket.handshake.auth.token（socket-auth salt の短命JWT）
+// Cookie認証: authjs.session-token / ゲスト: quest_link_guest_session
 io.use(async (socket, next) => {
   try {
+    // 1. トークンベース認証（本番クロスドメイン環境向け）
+    const authToken = socket.handshake.auth?.token as string | undefined;
+    if (authToken) {
+      const decoded = await decode({
+        token: authToken,
+        secret: process.env.AUTH_SECRET ?? "",
+        salt: "socket-auth",
+      });
+
+      if (decoded?.userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: decoded.userId as string },
+          select: { id: true, username: true, iconUrl: true, avgRating: true },
+        });
+
+        if (user) {
+          socket.data = {
+            kind: "user",
+            userId: user.id,
+            username: user.username,
+            iconUrl: user.iconUrl,
+            avgRating: user.avgRating,
+          } satisfies AuthenticatedSocketData;
+          return next();
+        }
+      }
+    }
+
+    // 2. Cookieベース認証（ローカル開発フォールバック）
     const cookieHeader = socket.request.headers.cookie ?? "";
     const cookies = parseCookies(cookieHeader);
     const cookieName =
