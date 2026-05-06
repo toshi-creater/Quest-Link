@@ -38,6 +38,9 @@ const prisma = new PrismaClient({ adapter });
 
 const PORT = parseInt(process.env.SOCKET_PORT ?? "3001", 10);
 const NEXT_APP_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+if (process.env.NODE_ENV === "production" && NEXT_APP_URL === "http://localhost:3000") {
+  console.warn("[socket-server] NEXTAUTH_URL is not set. CORS will reject production origins.");
+}
 const INTERNAL_SECRET = process.env.SOCKET_INTERNAL_SECRET;
 
 function parseCookies(cookieHeader: string): Record<string, string> {
