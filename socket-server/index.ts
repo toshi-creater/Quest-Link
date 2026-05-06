@@ -147,6 +147,24 @@ io.use(async (socket, next) => {
           return next();
         }
       }
+
+      if (decoded?.guestSessionId) {
+        const tokenGuestId = decoded.guestSessionId as string;
+        if (GUEST_ID_RE.test(tokenGuestId)) {
+          const guest = await prisma.guest.findUnique({
+            where: { guestSessionId: tokenGuestId },
+            select: { displayName: true },
+          });
+          if (guest) {
+            socket.data = {
+              kind: "guest",
+              guestSessionId: tokenGuestId,
+              displayName: guest.displayName,
+            } satisfies AuthenticatedSocketData;
+            return next();
+          }
+        }
+      }
     }
 
     // 2. Cookieベース認証（ローカル開発フォールバック）
