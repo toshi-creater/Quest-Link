@@ -145,7 +145,7 @@ io.use(async (socket, next) => {
             userId: user.id,
             username: user.username,
             iconUrl: user.iconUrl,
-            avgRating: user.avgRating,
+            avgRating: user.avgRating.toNumber(),
           } satisfies AuthenticatedSocketData;
           return next();
         }
