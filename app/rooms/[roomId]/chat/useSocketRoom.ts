@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { getSocket, disconnectSocket } from "@/lib/socket";
+import { getSocket, connectSocket, disconnectSocket } from "@/lib/socket";
 import { useChatStore, type ChatMessage, type Participant } from "@/lib/stores/chatStore";
 
 type UseSocketRoomOptions = {
@@ -24,7 +24,7 @@ export function useSocketRoom({ roomId, initialMessages, initialParticipants }: 
     const socket = getSocket();
 
     setConnectionStatus("connecting");
-    socket.connect();
+    void connectSocket();
 
     socket.on("connect", () => {
       setConnectionStatus("connected");

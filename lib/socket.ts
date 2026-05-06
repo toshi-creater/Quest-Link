@@ -15,6 +15,20 @@ export function getSocket(): Socket {
   return socket;
 }
 
+export async function connectSocket(): Promise<void> {
+  const s = getSocket();
+  try {
+    const res = await fetch("/api/v1/auth/socket-token");
+    if (res.ok) {
+      const data = (await res.json()) as { token: string };
+      s.auth = { token: data.token };
+    }
+  } catch {
+    // フォールバック: Cookieベース認証で接続
+  }
+  s.connect();
+}
+
 export function disconnectSocket(): void {
   socket?.disconnect();
   socket = null;

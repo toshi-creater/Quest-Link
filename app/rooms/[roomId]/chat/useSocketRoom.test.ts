@@ -10,9 +10,11 @@ const mockSocket = vi.hoisted(() => ({
 }));
 
 const mockDisconnectSocket = vi.hoisted(() => vi.fn());
+const mockConnectSocket = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 
 vi.mock("@/lib/socket", () => ({
   getSocket: () => mockSocket,
+  connectSocket: mockConnectSocket,
   disconnectSocket: mockDisconnectSocket,
 }));
 
@@ -70,9 +72,9 @@ describe("useSocketRoom", () => {
       expect(state.participants).toEqual(initialParticipants);
     });
 
-    it("マウント時に socket.connect() が呼ばれ connectionStatus が connecting になる", () => {
+    it("マウント時に connectSocket() が呼ばれ connectionStatus が connecting になる", () => {
       renderHook(() => useSocketRoom(defaultOptions));
-      expect(mockSocket.connect).toHaveBeenCalledOnce();
+      expect(mockConnectSocket).toHaveBeenCalledOnce();
       expect(useChatStore.getState().connectionStatus).toBe("connecting");
     });
   });
