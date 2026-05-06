@@ -19,6 +19,7 @@ Google / X / Discord の3プロバイダに対応。複数プロバイダを同�
 | POST | `/auth/guest` | 不要 | ゲストセッション発行 |
 | POST | `/auth/{provider}/link` | 必要 | 追加プロバイダを現アカウントに連携 |
 | DELETE | `/auth/{provider}/unlink` | 必要 | プロバイダ連携の解除 |
+| GET | `/auth/socket-token` | 必要（ユーザーまたはゲスト） | Socket.io 接続用短命トークン発行 |
 
 **`{provider}` の値**: `google` / `x` / `discord`
 
@@ -206,6 +207,39 @@ DELETE /auth/{provider}/unlink
 |------|------------|------|
 | 400 | `LAST_PROVIDER` | 唯一のプロバイダは解除できない |
 | 404 | `PROVIDER_NOT_LINKED` | そのプロバイダは連携されていない |
+
+---
+
+---
+
+## 8. Socket.io 接続用トークン発行
+
+Socket.io のクロスドメイン接続（本番環境）向けに、60秒有効の短命 JWT を発行する。
+クライアントはこのトークンを `io.connect({ auth: { token } })` に渡す。
+
+```
+GET /auth/socket-token
+```
+
+**認証**: ユーザーセッション Cookie または `quest_link_guest_session` Cookie のいずれか
+
+### レスポンス `200 OK`
+
+```json
+{ "token": "<JWT文字列>" }
+```
+
+### エラー
+
+| HTTP | エラーコード | 説明 |
+|------|------------|------|
+| 401 | `UNAUTHORIZED` | 有効なセッションもゲストセッションも存在しない |
+
+### 備考
+
+- トークンの有効期限は **60秒**。接続直前に取得して即座に使用すること
+- ゲストの場合は現在アクティブな部屋参加（`leftAt IS NULL`）が必要
+- salt: `"socket-auth"`（セッション Cookie の salt とは分離）
 
 ---
 
