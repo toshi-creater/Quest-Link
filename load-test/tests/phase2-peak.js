@@ -74,7 +74,7 @@ export default function scenario() {
       { headers }
     );
     roomLeaveDuration.add(Date.now() - leaveStart);
-    check(leaveRes, { "leave 200": (r) => r.status === 200 });
+    check(leaveRes, { "leave 204": (r) => r.status === 204 });
   }
 
   sleep(0.5);

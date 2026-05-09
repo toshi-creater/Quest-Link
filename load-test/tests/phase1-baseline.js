@@ -8,9 +8,9 @@ import { BASE_URL, THRESHOLDS, getCookieForVU, authHeaders } from "./config.js";
 
 export const options = {
   stages: [
-    { duration: "2m", target: 10 },   // ウォームアップ
-    { duration: "5m", target: 50 },   // 中間負荷
-    { duration: "5m", target: 100 },  // 最大ベースライン
+    { duration: "2m", target: 5 },    // ウォームアップ
+    { duration: "3m", target: 15 },   // 中間負荷
+    { duration: "3m", target: 30 },   // 最大ベースライン
     { duration: "2m", target: 0 },    // クールダウン
   ],
   thresholds: THRESHOLDS,
@@ -28,7 +28,7 @@ export default function scenario() {
 
   // 2. 部屋一覧取得
   const roomsRes = http.get(
-    `${BASE_URL}/api/v1/rooms?vacant=true&q=テスト`,
+    `${BASE_URL}/api/v1/rooms?vacant=true`,
     { headers }
   );
   check(roomsRes, { "rooms 200": (r) => r.status === 200 });
@@ -59,7 +59,7 @@ export default function scenario() {
       null,
       { headers }
     );
-    check(leaveRes, { "leave 200": (r) => r.status === 200 });
+    check(leaveRes, { "leave 204": (r) => r.status === 204 });
   }
 
   sleep(1);

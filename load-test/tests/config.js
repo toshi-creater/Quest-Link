@@ -1,7 +1,7 @@
 import { SharedArray } from "k6/data";
 
-export const BASE_URL = __ENV.BASE_URL || "https://quest-link.up.railway.app";
-export const WS_URL = __ENV.WS_URL || "wss://quest-link-socket.up.railway.app";
+export const BASE_URL = __ENV.BASE_URL || "https://web-staging-7ace.up.railway.app";
+export const WS_URL = __ENV.WS_URL || "wss://socket-staging-c5d5.up.railway.app";
 
 export const COOKIES = new SharedArray("cookies", function () {
   const raw = open("../cookies.csv");
@@ -31,7 +31,7 @@ export function getCookieForVU() {
 
 export function authHeaders(token) {
   return {
-    Cookie: `authjs.session-token=${token}`,
+    Cookie: `__Secure-authjs.session-token=${token}`,
     "Content-Type": "application/json",
   };
 }
