@@ -4,9 +4,7 @@
 
 - [k6](https://k6.io/docs/get-started/installation/) インストール済み（`brew install k6`）
 - Node.js 18+ / `npx tsx` が使える環境
-- staging 環境（[#183](https://github.com/toshi-creater/Quest-Link/issues/183)）がデプロイ済みで URL が確定していること
-- テストデータ 100 部屋・50 ユーザーが投入済みであること（[#180](https://github.com/toshi-creater/Quest-Link/issues/180) / `pnpm db:seed`）
-- Socket.IO Redis adapter が動作していること（[#179](https://github.com/toshi-creater/Quest-Link/issues/179)）
+- テストデータ 100 部屋・50 ユーザーが投入済みであること(`db:seed:load` シード投入)
 
 ## ディレクトリ構成
 
@@ -104,8 +102,6 @@ k6 run --out web-dashboard load-test/tests/phase2-peak.js
 
 ## 注意事項
 
-- **レート制限・SNS シェア API は未実装のため本テストの対象外**。結果レポートにその旨を明記すること。
-- Phase 4 の WebSocket テストは Socket.IO EIO=4 プロトコルを手動実装している。Socket.IO のバージョンアップ時は互換性を確認すること。
 - `cookies.csv` が古い場合（セッション期限切れ）は `get-cookies.ts` を再実行すること。
 
 ## クリーンアップ
