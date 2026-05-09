@@ -51,3 +51,7 @@ next-env.d.ts
 
 # lighthouse ci
 .lighthouseci/
+
+# k6 load test outputs
+load-test/results/
+load-test/cookies.csv
