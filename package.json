@@ -19,7 +19,7 @@
     "generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
-    "db:seed:load": "tsx prisma/seed-load.ts",
+    "db:seed:load": "tsx --env-file=.env prisma/seed-load.ts",
     "batch:games": "tsx batch/syncGames.ts",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",

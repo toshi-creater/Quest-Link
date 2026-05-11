@@ -1,6 +1,10 @@
 import { PrismaClient, RoomStatus } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env["DATABASE_URL"] });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 const LOAD_TEST_USER_COUNT = 500;
 const LOAD_TEST_ROOM_COUNT = 200;
@@ -98,4 +102,6 @@ main()
     console.error(e);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(() => {
+    void prisma.$disconnect();
+  });
