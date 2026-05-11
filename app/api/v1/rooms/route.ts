@@ -98,9 +98,9 @@ export async function GET(request: Request) {
     status,
     ...(gameId && { gameId }),
     ...(tagSlugList.length > 0 && {
-      playStyleTags: {
-        some: { tag: { slug: { in: tagSlugList } } },
-      },
+      AND: tagSlugList.map(slug => ({
+        playStyleTags: { some: { tag: { slug } } },
+      })),
     }),
     ...(q && {
       OR: [

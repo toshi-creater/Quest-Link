@@ -197,6 +197,55 @@ describe("GET /api/v1/rooms", () => {
       })
     );
   });
+
+  it("複数タグ指定時: AND 条件が where 句に展開される", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockRoomFindMany.mockResolvedValueOnce([]);
+    mockRoomCount.mockResolvedValueOnce(0);
+
+    await GET(makeGetRequest({ tagSlugs: "casual,competitive" }));
+
+    expect(mockRoomFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [
+            { playStyleTags: { some: { tag: { slug: "casual" } } } },
+            { playStyleTags: { some: { tag: { slug: "competitive" } } } },
+          ],
+        }),
+      })
+    );
+  });
+
+  it("単一タグ指定時: AND 配列が1要素で展開される", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockRoomFindMany.mockResolvedValueOnce([]);
+    mockRoomCount.mockResolvedValueOnce(0);
+
+    await GET(makeGetRequest({ tagSlugs: "casual" }));
+
+    expect(mockRoomFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [{ playStyleTags: { some: { tag: { slug: "casual" } } } }],
+        }),
+      })
+    );
+  });
+
+  it("タグ未指定時は where 句に AND 条件が含まれない", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockRoomFindMany.mockResolvedValueOnce([]);
+    mockRoomCount.mockResolvedValueOnce(0);
+
+    await GET(makeGetRequest());
+
+    expect(mockRoomFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.not.objectContaining({ AND: expect.anything() }),
+      })
+    );
+  });
 });
 
 describe("POST /api/v1/rooms", () => {
