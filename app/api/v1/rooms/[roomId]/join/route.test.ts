@@ -113,6 +113,18 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
     expect(body.error.code).toBe("ROOM_CLOSED");
   });
 
+  it("ホストが別の部屋に参加しようとした場合 409 HOST_CANNOT_JOIN を返す", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
+    mockRoomFindUnique.mockResolvedValueOnce({ id: "room-1", status: "open", maxPlayers: 4 } as never);
+    mockRoomFindUnique.mockResolvedValueOnce({ id: "room-2" } as never);
+
+    const res = await POST(makeRequest(), makeParams());
+    const body = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(body.error.code).toBe("HOST_CANNOT_JOIN");
+  });
+
   it("既に参加済みの場合 409 ALREADY_JOINED を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
