@@ -37,7 +37,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
     );
   }
 
-  const hostRoom = await prisma.room.findUnique({ where: { hostId: userId } });
+  const hostRoom = await prisma.room.findFirst({ where: { hostId: userId } });
   if (hostRoom && hostRoom.id !== roomId) {
     return NextResponse.json(
       { error: { code: "HOST_CANNOT_JOIN", message: "ホストは他の部屋に参加できません" } },
