@@ -5,7 +5,7 @@ vi.mock("@/auth", () => ({ auth: vi.fn() }));
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    room: { findMany: vi.fn(), count: vi.fn(), findUnique: vi.fn() },
+    room: { findMany: vi.fn(), count: vi.fn(), findFirst: vi.fn() },
     game: { findUnique: vi.fn() },
     playStyleTag: { findMany: vi.fn() },
     roomParticipant: { findFirst: vi.fn() },
@@ -20,7 +20,7 @@ import { GET, POST } from "@/app/api/v1/rooms/route";
 const mockAuth = vi.mocked(auth);
 const mockRoomFindMany = vi.mocked(prisma.room.findMany);
 const mockRoomCount = vi.mocked(prisma.room.count);
-const mockRoomFindUnique = vi.mocked(prisma.room.findUnique);
+const mockRoomFindFirst = vi.mocked(prisma.room.findFirst);
 const mockGameFindUnique = vi.mocked(prisma.game.findUnique);
 const mockRoomParticipantFindFirst = vi.mocked(prisma.roomParticipant.findFirst);
 const mockTransaction = prisma.$transaction as ReturnType<typeof vi.fn>;
@@ -225,7 +225,7 @@ describe("POST /api/v1/rooms", () => {
 
   it("既に部屋を持つユーザーの場合 409 ROOM_ALREADY_EXISTS を返す", async () => {
     mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
-    mockRoomFindUnique.mockResolvedValueOnce({ id: "existing-room" } as never);
+    mockRoomFindFirst.mockResolvedValueOnce({ id: "existing-room", status: "waiting" } as never);
 
     const res = await POST(makePostRequest({ title: "ルーム", gameId: VALID_GAME_ID, maxPlayers: 4 }));
     const json = await res.json();
@@ -234,9 +234,33 @@ describe("POST /api/v1/rooms", () => {
     expect(json.error.code).toBe("ROOM_ALREADY_EXISTS");
   });
 
+  it("解散済みの部屋のホストは新しい部屋を作成できる", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockRoomFindFirst.mockResolvedValueOnce(null); // closed room は除外されるため null
+    mockRoomParticipantFindFirst.mockResolvedValueOnce(null);
+    mockGameFindUnique.mockResolvedValueOnce({ id: VALID_GAME_ID } as never);
+
+    const mockTxCreate = {
+      room: {
+        create: vi.fn().mockResolvedValue({ id: "room-new" }),
+        findUniqueOrThrow: vi.fn().mockResolvedValue({ ...SAMPLE_RAW_ROOM, id: "room-new" }),
+      },
+      roomParticipant: { create: vi.fn().mockResolvedValue({}) },
+    };
+    mockTransaction.mockImplementationOnce(
+      (fn: (tx: typeof mockTxCreate) => Promise<unknown>) => fn(mockTxCreate)
+    );
+
+    const res = await POST(makePostRequest({ title: "新しいルーム", gameId: VALID_GAME_ID, maxPlayers: 4 }));
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(json.data.id).toBe("room-new");
+  });
+
   it("他の部屋に参加中のユーザーの場合 409 ALREADY_IN_ROOM を返す", async () => {
     mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
-    mockRoomFindUnique.mockResolvedValueOnce(null);
+    mockRoomFindFirst.mockResolvedValueOnce(null);
     mockRoomParticipantFindFirst.mockResolvedValueOnce({ id: "p-1" } as never);
 
     const res = await POST(makePostRequest({ title: "ルーム", gameId: VALID_GAME_ID, maxPlayers: 4 }));
@@ -248,7 +272,7 @@ describe("POST /api/v1/rooms", () => {
 
   it("存在しない gameId の場合 400 INVALID_GAME を返す", async () => {
     mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
-    mockRoomFindUnique.mockResolvedValueOnce(null);
+    mockRoomFindFirst.mockResolvedValueOnce(null);
     mockRoomParticipantFindFirst.mockResolvedValueOnce(null);
     mockGameFindUnique.mockResolvedValueOnce(null);
 
@@ -261,7 +285,7 @@ describe("POST /api/v1/rooms", () => {
 
   it("正常系: 201 と data.id を返す", async () => {
     mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
-    mockRoomFindUnique.mockResolvedValueOnce(null);
+    mockRoomFindFirst.mockResolvedValueOnce(null);
     mockRoomParticipantFindFirst.mockResolvedValueOnce(null);
     mockGameFindUnique.mockResolvedValueOnce({ id: VALID_GAME_ID } as never);
 
@@ -286,7 +310,7 @@ describe("POST /api/v1/rooms", () => {
 
   it("正常系: 部屋作成時に inviteToken が自動生成される", async () => {
     mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
-    mockRoomFindUnique.mockResolvedValueOnce(null);
+    mockRoomFindFirst.mockResolvedValueOnce(null);
     mockRoomParticipantFindFirst.mockResolvedValueOnce(null);
     mockGameFindUnique.mockResolvedValueOnce({ id: VALID_GAME_ID } as never);
 

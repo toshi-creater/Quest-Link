@@ -156,7 +156,7 @@ export async function POST(request: Request) {
 
   const userId = session.user.id;
 
-  const existingRoom = await prisma.room.findFirst({ where: { hostId: userId } });
+  const existingRoom = await prisma.room.findFirst({ where: { hostId: userId, status: { not: "closed" } } });
   if (existingRoom) {
     return NextResponse.json(
       { error: { code: "ROOM_ALREADY_EXISTS", message: "すでに部屋を作成しています" } },

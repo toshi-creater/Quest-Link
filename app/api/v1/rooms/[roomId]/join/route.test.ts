@@ -8,6 +8,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     room: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
     user: {
       findUnique: vi.fn(),
@@ -28,6 +29,7 @@ import { POST } from "./route";
 
 const mockAuth = vi.mocked(auth);
 const mockRoomFindUnique = vi.mocked(prisma.room.findUnique);
+const mockRoomFindFirst = vi.mocked(prisma.room.findFirst);
 const mockUserFindUnique = vi.mocked(prisma.user.findUnique);
 const mockChatMessageCreate = vi.mocked(prisma.chatMessage.create);
 const mockTransaction = vi.mocked(prisma.$transaction);
@@ -116,13 +118,35 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
   it("ホストが別の部屋に参加しようとした場合 409 HOST_CANNOT_JOIN を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockRoomFindUnique.mockResolvedValueOnce({ id: "room-1", status: "open", maxPlayers: 4 } as never);
-    mockRoomFindUnique.mockResolvedValueOnce({ id: "room-2" } as never);
+    mockRoomFindFirst.mockResolvedValueOnce({ id: "room-2", status: "waiting" } as never);
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
 
     expect(res.status).toBe(409);
     expect(body.error.code).toBe("HOST_CANNOT_JOIN");
+  });
+
+  it("解散済みの部屋のホストは別の部屋に参加できる", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
+    mockRoomFindUnique.mockResolvedValueOnce({ id: "room-1", status: "open", maxPlayers: 4 } as never);
+    mockRoomFindFirst.mockResolvedValueOnce(null); // closed room は除外されるため null
+
+    const now = new Date();
+    mockTx.roomParticipant.count.mockResolvedValue(1);
+    mockTx.roomParticipant.findFirst.mockResolvedValue(null);
+    mockTx.roomParticipant.create.mockResolvedValue({
+      roomId: "room-1",
+      userId: "user-1",
+      isHost: false,
+      joinedAt: now,
+    });
+
+    const res = await POST(makeRequest(), makeParams());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.roomId).toBe("room-1");
   });
 
   it("既に参加済みの場合 409 ALREADY_JOINED を返す", async () => {
