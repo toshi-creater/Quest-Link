@@ -78,7 +78,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
 
         return newParticipant;
       },
-      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+      { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted }
     );
 
     // 入室システムメッセージとイベント通知
