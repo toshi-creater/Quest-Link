@@ -84,8 +84,8 @@ model Room {
   playStyleTags RoomPlayStyleTag[]
   snsShareLogs  SnsShareLog[]
 
-  @@index([status])
   @@index([hostId])
+  @@index([status])
   @@index([gameId])
   @@index([createdAt(sort: Desc)])
   @@map("rooms")
