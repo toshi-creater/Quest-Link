@@ -17,9 +17,9 @@ const { mockUpload, mockGetPublicUrl, mockFrom } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/supabase", () => ({
-  supabase: {
+  getSupabaseClient: vi.fn(() => ({
     storage: { from: mockFrom },
-  },
+  })),
   AVATAR_BUCKET: "avatar_images",
 }));
 
