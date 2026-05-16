@@ -37,6 +37,14 @@ export async function POST(_request: Request, { params }: RouteParams) {
     );
   }
 
+  const hostRoom = await prisma.room.findFirst({ where: { hostId: userId, status: { not: "closed" } } });
+  if (hostRoom && hostRoom.id !== roomId) {
+    return NextResponse.json(
+      { error: { code: "HOST_CANNOT_JOIN", message: "ホストは他の部屋に参加できません" } },
+      { status: 409 }
+    );
+  }
+
   try {
     const participant = await prisma.$transaction(
       async (tx) => {
@@ -70,7 +78,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
 
         return newParticipant;
       },
-      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+      { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted }
     );
 
     // 入室システムメッセージとイベント通知

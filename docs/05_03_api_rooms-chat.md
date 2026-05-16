@@ -52,7 +52,7 @@ GET /rooms
 | パラメータ | 型 | デフォルト | 説明 |
 |-----------|-----|-----------|------|
 | `gameId` | string (UUID) | - | ゲーム ID で絞り込み（ゲーム選択画面から渡す） |
-| `tagSlugs` | string | - | slug のカンマ区切り（OR 検索） |
+| `tagSlugs` | string | - | slug のカンマ区切り（AND 検索） |
 | `vacant` | boolean | - | `true` で空き枠あり（`status=waiting`）の部屋のみ表示 |
 | `q` | string | - | 部屋名・募集文のフリーワード検索（100文字以内） |
 | `page` | integer | 1 | ページ番号 |

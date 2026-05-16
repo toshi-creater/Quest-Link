@@ -98,9 +98,9 @@ export async function GET(request: Request) {
     status,
     ...(gameId && { gameId }),
     ...(tagSlugList.length > 0 && {
-      playStyleTags: {
-        some: { tag: { slug: { in: tagSlugList } } },
-      },
+      AND: tagSlugList.map(slug => ({
+        playStyleTags: { some: { tag: { slug } } },
+      })),
     }),
     ...(q && {
       OR: [
@@ -154,6 +154,26 @@ export async function POST(request: Request) {
 
   const { title, gameId, maxPlayers, description, playStyleTagIds } = parsed.data;
 
+  const userId = session.user.id;
+
+  const existingRoom = await prisma.room.findFirst({ where: { hostId: userId, status: { not: "closed" } } });
+  if (existingRoom) {
+    return NextResponse.json(
+      { error: { code: "ROOM_ALREADY_EXISTS", message: "すでに部屋を作成しています" } },
+      { status: 409 }
+    );
+  }
+
+  const activeParticipation = await prisma.roomParticipant.findFirst({
+    where: { userId, leftAt: null },
+  });
+  if (activeParticipation) {
+    return NextResponse.json(
+      { error: { code: "ALREADY_IN_ROOM", message: "既に他の部屋に参加しています" } },
+      { status: 409 }
+    );
+  }
+
   // ゲーム存在確認
   const game = await prisma.game.findUnique({ where: { id: gameId } });
   if (!game) {
@@ -171,36 +191,44 @@ export async function POST(request: Request) {
     }
   }
 
-  const userId = session.user.id;
+  try {
+    const room = await prisma.$transaction(async (tx) => {
+      const newRoom = await tx.room.create({
+        data: {
+          title,
+          gameId,
+          maxPlayers,
+          description,
+          hostId: userId,
+          inviteToken: randomBytes(32).toString("hex"),
+          ...(playStyleTagIds && playStyleTagIds.length > 0 && {
+            playStyleTags: {
+              createMany: { data: playStyleTagIds.map((tagId) => ({ tagId })) },
+            },
+          }),
+        },
+        select: { id: true },
+      });
 
-  const room = await prisma.$transaction(async (tx) => {
-    const newRoom = await tx.room.create({
-      data: {
-        title,
-        gameId,
-        maxPlayers,
-        description,
-        hostId: userId,
-        inviteToken: randomBytes(32).toString("hex"),
-        ...(playStyleTagIds && playStyleTagIds.length > 0 && {
-          playStyleTags: {
-            createMany: { data: playStyleTagIds.map((tagId) => ({ tagId })) },
-          },
-        }),
-      },
-      select: { id: true },
+      // ホストを参加者として追加
+      await tx.roomParticipant.create({
+        data: { roomId: newRoom.id, userId, isHost: true },
+      });
+
+      return tx.room.findUniqueOrThrow({
+        where: { id: newRoom.id },
+        select: roomSelect,
+      });
     });
 
-    // ホストを参加者として追加
-    await tx.roomParticipant.create({
-      data: { roomId: newRoom.id, userId, isHost: true },
-    });
-
-    return tx.room.findUniqueOrThrow({
-      where: { id: newRoom.id },
-      select: roomSelect,
-    });
-  });
-
-  return NextResponse.json({ data: formatRoom(room) }, { status: 201 });
+    return NextResponse.json({ data: formatRoom(room) }, { status: 201 });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json(
+        { error: { code: "ROOM_ALREADY_EXISTS", message: "すでに部屋を作成しています" } },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
 }
