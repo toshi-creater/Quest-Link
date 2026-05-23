@@ -6,14 +6,15 @@
  *   - chat:message が 2 ノード双方のクライアントに届く
  *   - 60 分後にメモリリーク・接続枯渇がない（Railway メモリグラフで確認）
  *
- * 注意: Socket.IO の EIO=4 プロトコルを手動実装している
- *   - HTTP polling で sid を取得 → WebSocket にアップグレード
+ * 認証フロー:
+ *   1. session cookie で /api/v1/auth/socket-token を呼び出し短命 JWT を取得
+ *   2. WebSocket handshake の auth.token に渡す（socket サーバーの一次認証）
  */
 import http from "k6/http";
 import { check } from "k6";
 import ws from "k6/ws";
 import { Counter, Rate } from "k6/metrics";
-import { BASE_URL, WS_URL, getCookieForVU } from "./config.js";
+import { BASE_URL, WS_URL, getCookieForVU, COOKIES, authHeaders } from "./config.js";
 
 const wsConnected = new Counter("ws_connected");
 const wsDisconnected = new Counter("ws_disconnected");
@@ -41,11 +42,14 @@ function buildSioEvent(event, payload) {
 }
 
 export function setup() {
-  // テスト用部屋 ID を事前取得（テストデータ #180 が投入済みであること）
-  const res = http.get(`${BASE_URL}/api/v1/rooms?vacant=true&limit=1`);
+  // テスト用部屋 ID を事前取得（認証が必要なため最初の cookie を使用）
+  const { token } = COOKIES[0];
+  const res = http.get(`${BASE_URL}/api/v1/rooms?status=waiting&limit=1`, {
+    headers: authHeaders(token),
+  });
   const rooms = res.json("data");
   if (!rooms || rooms.length === 0) {
-    throw new Error("テスト用部屋が見つかりません。pnpm db:seed を実行してください。");
+    throw new Error("テスト用部屋が見つかりません。pnpm db:seed:load を実行してください。");
   }
   return { roomId: rooms[0].id };
 }
@@ -54,51 +58,35 @@ export default function scenario(data) {
   const { roomId } = data;
   const { token } = getCookieForVU();
 
-  // 1. Socket.IO HTTP polling で sid を取得
-  const pollRes = http.get(
-    `${BASE_URL.replace(/^https/, "http").replace(/^wss/, "ws")}/../socket.io/?EIO=4&transport=polling`,
-    {
-      headers: {
-        Cookie: `authjs.session-token=${token}`,
-      },
-    }
-  );
+  // 1. socket-auth 短命 JWT を取得（接続直前に発行）
+  const tokenRes = http.get(`${BASE_URL}/api/v1/auth/socket-token`, {
+    headers: authHeaders(token),
+  });
+  const socketToken = tokenRes.status === 200 ? tokenRes.json("token") : null;
 
-  // sid が取れなくてもテストを継続（接続成功率の分母として計上）
-  let sid = null;
-  if (pollRes.status === 200) {
-    const body = pollRes.body;
-    const match = body.match(/"sid":"([^"]+)"/);
-    if (match) sid = match[1];
-  }
-
-  // Socket.IO WebSocket 接続
-  const wsEndpoint = (() => {
-    const base = WS_URL.replace(/^https/, "wss").replace(/^http/, "ws");
-    const qs = sid
-      ? `?EIO=4&transport=websocket&sid=${sid}`
-      : "?EIO=4&transport=websocket";
-    return `${base}/socket.io/${qs}`;
-  })();
+  // 2. Socket.IO WebSocket に直接接続（EIO=4 / transport=websocket）
+  const wsEndpoint = `${WS_URL}/socket.io/?EIO=4&transport=websocket`;
 
   const res = ws.connect(
     wsEndpoint,
     {
       headers: {
-        Cookie: `authjs.session-token=${token}`,
+        Cookie: `__Secure-authjs.session-token=${token}`,
       },
     },
     function (socket) {
       let connected = false;
-      let pingInterval = null;
       let chatInterval = null;
 
       socket.on("open", () => {
         wsConnected.add(1);
         wsConnectSuccess.add(true);
 
-        // Socket.IO 接続確立: 部屋チャンネルに参加
-        socket.send(SIO_CONNECT);
+        // Socket.IO 接続確立: auth token を渡してネームスペースに接続
+        const connectPayload = socketToken
+          ? `${SIO_CONNECT}{"token":"${socketToken}"}`
+          : SIO_CONNECT;
+        socket.send(connectPayload);
       });
 
       socket.on("message", (msg) => {
@@ -127,11 +115,6 @@ export default function scenario(data) {
               );
               chatSent.add(1);
             }, 30000);
-
-            // ping は pingInterval ms ごとに送信（EIO デフォルト 25000ms）
-            pingInterval = socket.setInterval(() => {
-              socket.send(EIO_PING);
-            }, 25000);
           }
           return;
         }
@@ -156,7 +139,6 @@ export default function scenario(data) {
 
       socket.on("close", () => {
         wsDisconnected.add(1);
-        if (pingInterval) socket.clearInterval(pingInterval);
         if (chatInterval) socket.clearInterval(chatInterval);
       });
 

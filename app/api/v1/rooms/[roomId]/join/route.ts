@@ -1,10 +1,17 @@
+import { after } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { emitToRoom } from "@/lib/socket-emitter";
-import { Prisma } from "@prisma/client";
 
 type RouteParams = { params: Promise<{ roomId: string }> };
+
+type CteRow = {
+  max_players: bigint;
+  cnt: bigint;
+  ins_id: string | null;
+  ins_joined_at: Date | null;
+};
 
 export async function POST(_request: Request, { params }: RouteParams) {
   const session = await auth();
@@ -18,10 +25,20 @@ export async function POST(_request: Request, { params }: RouteParams) {
   const { roomId } = await params;
   const userId = session.user.id;
 
-  const room = await prisma.room.findUnique({
-    where: { id: roomId },
-    select: { id: true, status: true, maxPlayers: true },
-  });
+  const [room, hostRoom, user] = await Promise.all([
+    prisma.room.findUnique({
+      where: { id: roomId },
+      select: { id: true, status: true, maxPlayers: true },
+    }),
+    prisma.room.findFirst({
+      where: { hostId: userId, status: { not: "closed" }, id: { not: roomId } },
+      select: { id: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { username: true, iconUrl: true, avgRating: true },
+    }),
+  ]);
 
   if (!room) {
     return NextResponse.json(
@@ -37,48 +54,83 @@ export async function POST(_request: Request, { params }: RouteParams) {
     );
   }
 
-  try {
-    const participant = await prisma.$transaction(
-      async (tx) => {
-        // SELECT FOR UPDATE でロックを取得し競合状態を防ぐ
-        await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${roomId}::uuid FOR UPDATE`;
-
-        const [currentCount, existing] = await Promise.all([
-          tx.roomParticipant.count({ where: { roomId, leftAt: null } }),
-          tx.roomParticipant.findFirst({ where: { roomId, userId, leftAt: null } }),
-        ]);
-
-        if (existing) {
-          throw new Error("ALREADY_JOINED");
-        }
-
-        if (currentCount >= room.maxPlayers) {
-          throw new Error("ROOM_FULL");
-        }
-
-        const newParticipant = await tx.roomParticipant.create({
-          data: { roomId, userId, isHost: false },
-        });
-
-        // 満員到達時に status を full へ自動遷移
-        if (currentCount + 1 >= room.maxPlayers) {
-          await tx.room.update({
-            where: { id: roomId },
-            data: { status: "full" },
-          });
-        }
-
-        return newParticipant;
-      },
-      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+  if (hostRoom) {
+    return NextResponse.json(
+      { error: { code: "HOST_CANNOT_JOIN", message: "ホストは他の部屋に参加できません" } },
+      { status: 409 }
     );
+  }
 
-    // 入室システムメッセージとイベント通知
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { username: true, iconUrl: true, avgRating: true },
-    });
+  // DB ラウンドトリップを 1RTT に削減のため、$transaction（5RTT）を単一 CTE に置き換え。
+  let rows: CteRow[];
+  try {
+    rows = await prisma.$queryRaw<CteRow[]>`
+      WITH
+        lock AS (
+          SELECT id, max_players FROM rooms WHERE id = ${roomId}::uuid FOR UPDATE
+        ),
+        active AS (
+          SELECT COUNT(*) AS cnt FROM room_participants
+          WHERE room_id = ${roomId}::uuid AND left_at IS NULL
+        ),
+        ins AS (
+          INSERT INTO room_participants (id, room_id, user_id, is_host, joined_at)
+          SELECT gen_random_uuid(), ${roomId}::uuid, ${userId}::uuid, false, NOW()
+          WHERE (SELECT cnt FROM active) < (SELECT max_players FROM lock)
+          RETURNING id, joined_at
+        ),
+        upd AS (
+          UPDATE rooms SET status = 'full'
+          WHERE id = ${roomId}::uuid
+            AND (SELECT cnt FROM active) + 1 >= (SELECT max_players FROM lock)
+            AND EXISTS (SELECT 1 FROM ins)
+        )
+      SELECT
+        (SELECT max_players FROM lock)  AS max_players,
+        (SELECT cnt FROM active)        AS cnt,
+        (SELECT id FROM ins)            AS ins_id,
+        (SELECT joined_at FROM ins)     AS ins_joined_at
+    `;
+  } catch (error: unknown) {
+    // 一意部分インデックス違反 (#226) → 既に参加中
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      (error as { code: string }).code === "P2010"
+    ) {
+      const meta = (error as { meta?: { code?: string; message?: string } }).meta;
+      if (meta?.code === "23505" || meta?.message?.includes("23505")) {
+        return NextResponse.json(
+          { error: { code: "ALREADY_JOINED", message: "既にこの部屋に参加しています" } },
+          { status: 409 }
+        );
+      }
+    }
+    throw error;
+  }
 
+  const row = rows[0];
+
+  if (!row?.ins_id) {
+    return NextResponse.json(
+      { error: { code: "ROOM_FULL", message: "この部屋は満員です" } },
+      { status: 409 }
+    );
+  }
+
+  const joinedAt = row.ins_joined_at!;
+
+  const response = NextResponse.json({
+    data: {
+      roomId,
+      userId,
+      isHost: false,
+      joinedAt,
+    },
+  });
+
+  after(async () => {
     const systemMsg = await prisma.chatMessage.create({
       data: {
         roomId,
@@ -101,32 +153,9 @@ export async function POST(_request: Request, { params }: RouteParams) {
       username: user?.username ?? "",
       iconUrl: user?.iconUrl ?? null,
       avgRating: Number(user?.avgRating ?? 0),
-      joinedAt: participant.joinedAt,
+      joinedAt,
     });
+  });
 
-    return NextResponse.json({
-      data: {
-        roomId: participant.roomId,
-        userId: participant.userId,
-        isHost: participant.isHost,
-        joinedAt: participant.joinedAt,
-      },
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === "ALREADY_JOINED") {
-        return NextResponse.json(
-          { error: { code: "ALREADY_JOINED", message: "既にこの部屋に参加しています" } },
-          { status: 409 }
-        );
-      }
-      if (error.message === "ROOM_FULL") {
-        return NextResponse.json(
-          { error: { code: "ROOM_FULL", message: "この部屋は満員です" } },
-          { status: 409 }
-        );
-      }
-    }
-    throw error;
-  }
+  return response;
 }
