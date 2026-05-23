@@ -63,8 +63,23 @@ const SAMPLE_RAW_ROOM = {
   ],
 };
 
-const SAMPLE_RAW_ROOM_WITH_DESC = {
-  ...SAMPLE_RAW_ROOM,
+// list 用フィクスチャ（participants を _count に置き換え）
+const SAMPLE_RAW_ROOM_LIST = {
+  id: "room-1",
+  title: "テストルーム",
+  description: null,
+  maxPlayers: 4,
+  status: "waiting",
+  createdAt: new Date("2024-01-01"),
+  closedAt: null,
+  game: { id: VALID_GAME_ID, name: "Apex Legends", coverImageUrl: null },
+  host: { id: "user-1", username: "host_user", iconUrl: null, avgRating: 4.5 },
+  playStyleTags: [],
+  _count: { participants: 1 },
+};
+
+const SAMPLE_RAW_ROOM_WITH_DESC_LIST = {
+  ...SAMPLE_RAW_ROOM_LIST,
   id: "room-2",
   title: "週末ゲーム会",
   description: "初心者大歓迎！スモーク使える方歓迎！",
@@ -105,7 +120,7 @@ describe("GET /api/v1/rooms", () => {
 
   it("正常系: data配列とmetaを返す", async () => {
     mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
-    mockRoomFindMany.mockResolvedValueOnce([SAMPLE_RAW_ROOM] as never);
+    mockRoomFindMany.mockResolvedValueOnce([SAMPLE_RAW_ROOM_LIST] as never);
     mockRoomCount.mockResolvedValueOnce(1);
 
     const res = await GET(makeGetRequest());
@@ -132,7 +147,7 @@ describe("GET /api/v1/rooms", () => {
 
   it("正常系: q が title に一致する部屋を 200 で返す", async () => {
     mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
-    mockRoomFindMany.mockResolvedValueOnce([SAMPLE_RAW_ROOM] as never);
+    mockRoomFindMany.mockResolvedValueOnce([SAMPLE_RAW_ROOM_LIST] as never);
     mockRoomCount.mockResolvedValueOnce(1);
 
     const res = await GET(makeGetRequest({ q: "テスト" }));
@@ -146,7 +161,7 @@ describe("GET /api/v1/rooms", () => {
 
   it("正常系: q が description に一致する部屋を 200 で返す", async () => {
     mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
-    mockRoomFindMany.mockResolvedValueOnce([SAMPLE_RAW_ROOM_WITH_DESC] as never);
+    mockRoomFindMany.mockResolvedValueOnce([SAMPLE_RAW_ROOM_WITH_DESC_LIST] as never);
     mockRoomCount.mockResolvedValueOnce(1);
 
     const res = await GET(makeGetRequest({ q: "スモーク" }));
