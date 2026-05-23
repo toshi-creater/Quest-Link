@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Prisma } from "@prisma/client";
 
 vi.mock("@/auth", () => ({
   auth: vi.fn(),
@@ -203,6 +204,26 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
     expect(mockEmitToRoom).toHaveBeenCalledTimes(2);
     expect(mockEmitToRoom).toHaveBeenCalledWith("chat:message", "room-1", expect.objectContaining({ isSystem: true }));
     expect(mockEmitToRoom).toHaveBeenCalledWith("room:user_joined", "room-1", expect.objectContaining({ userId: "user-1" }));
+  });
+
+  it("DB一意制約違反（P2002）の場合 409 ALREADY_JOINED を返す", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
+    mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
+
+    mockTx.roomParticipant.count.mockResolvedValue(1);
+    mockTx.roomParticipant.findFirst.mockResolvedValue(null);
+    const p2002 = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+      code: "P2002",
+      clientVersion: "7.0.0",
+      meta: { target: "room_participants_active_unique" },
+    });
+    mockTx.roomParticipant.create.mockRejectedValue(p2002);
+
+    const res = await POST(makeRequest(), makeParams());
+    const body = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(body.error.code).toBe("ALREADY_JOINED");
   });
 
   it("正常参加（満員になる）場合 room.update({ status: 'full' }) が呼ばれる", async () => {
