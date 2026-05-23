@@ -61,7 +61,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
     );
   }
 
-  // $transaction（5RTT）を単一 CTE に置き換え、DB ラウンドトリップを 1RTT に削減
+  // DB ラウンドトリップを 1RTT に削減のため、$transaction（5RTT）を単一 CTE に置き換え。
   let rows: CteRow[];
   try {
     rows = await prisma.$queryRaw<CteRow[]>`
