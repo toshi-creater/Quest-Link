@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Prisma } from "@prisma/client";
+
+vi.mock("next/server", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/server")>();
+  return { ...actual, after: vi.fn((fn: () => Promise<void>) => fn()) };
+});
 
 vi.mock("@/auth", () => ({
   auth: vi.fn(),
@@ -17,7 +21,7 @@ vi.mock("@/lib/prisma", () => ({
     chatMessage: {
       create: vi.fn(),
     },
-    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
   },
 }));
 
@@ -33,42 +37,23 @@ const mockRoomFindUnique = vi.mocked(prisma.room.findUnique);
 const mockRoomFindFirst = vi.mocked(prisma.room.findFirst);
 const mockUserFindUnique = vi.mocked(prisma.user.findUnique);
 const mockChatMessageCreate = vi.mocked(prisma.chatMessage.create);
-const mockTransaction = vi.mocked(prisma.$transaction);
+const mockQueryRaw = vi.mocked(prisma.$queryRaw);
 const mockEmitToRoom = vi.mocked(emitToRoom);
-
-type MockTx = {
-  $queryRaw: ReturnType<typeof vi.fn>;
-  roomParticipant: {
-    count: ReturnType<typeof vi.fn>;
-    findFirst: ReturnType<typeof vi.fn>;
-    create: ReturnType<typeof vi.fn>;
-  };
-  room: {
-    update: ReturnType<typeof vi.fn>;
-  };
-};
-
-let mockTx: MockTx;
 
 const makeRequest = () => new Request("http://localhost/api/v1/rooms/room-1/join", { method: "POST" });
 const makeParams = () => ({ params: Promise.resolve({ roomId: "room-1" }) });
 
+const now = new Date();
+const successRow = [{ max_players: 4n, cnt: 1n, ins_id: "participant-uuid", ins_joined_at: now }];
+const fullRow = [{ max_players: 4n, cnt: 4n, ins_id: null, ins_joined_at: null }];
+const makeAlreadyJoinedError = () =>
+  Object.assign(new Error("Raw query failed"), {
+    code: "P2010",
+    meta: { code: "23505", message: "ERROR: duplicate key value violates unique constraint" },
+  });
+
 beforeEach(() => {
   vi.clearAllMocks();
-
-  mockTx = {
-    $queryRaw: vi.fn().mockResolvedValue([]),
-    roomParticipant: {
-      count: vi.fn(),
-      findFirst: vi.fn(),
-      create: vi.fn(),
-    },
-    room: {
-      update: vi.fn(),
-    },
-  };
-
-  mockTransaction.mockImplementation(async (fn) => fn(mockTx as never));
 
   mockUserFindUnique.mockResolvedValue({
     username: "test-user",
@@ -79,13 +64,15 @@ beforeEach(() => {
   mockChatMessageCreate.mockResolvedValue({
     id: "msg-1",
     content: "test-userさんが入室しました",
-    createdAt: new Date(),
+    createdAt: now,
   } as never);
+
+  mockQueryRaw.mockResolvedValue(successRow);
 });
 
 describe("POST /api/v1/rooms/[roomId]/join", () => {
   it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
@@ -97,6 +84,7 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
   it("room が存在しない場合 404 ROOM_NOT_FOUND を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockRoomFindUnique.mockResolvedValue(null);
+    mockRoomFindFirst.mockResolvedValue(null);
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
@@ -108,6 +96,7 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
   it("room.status が closed の場合 400 ROOM_CLOSED を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "closed", maxPlayers: 4 } as never);
+    mockRoomFindFirst.mockResolvedValue(null);
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
@@ -118,8 +107,8 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
 
   it("ホストが別の部屋に参加しようとした場合 409 HOST_CANNOT_JOIN を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockRoomFindUnique.mockResolvedValueOnce({ id: "room-1", status: "open", maxPlayers: 4 } as never);
-    mockRoomFindFirst.mockResolvedValueOnce({ id: "room-2", status: "waiting" } as never);
+    mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
+    mockRoomFindFirst.mockResolvedValue({ id: "room-2" } as never);
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
@@ -128,20 +117,10 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
     expect(body.error.code).toBe("HOST_CANNOT_JOIN");
   });
 
-  it("解散済みの部屋のホストは別の部屋に参加できる", async () => {
+  it("解散済みの部屋のホストは別の部屋に参加できる（findFirst が null）", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockRoomFindUnique.mockResolvedValueOnce({ id: "room-1", status: "open", maxPlayers: 4 } as never);
-    mockRoomFindFirst.mockResolvedValueOnce(null); // closed room は除外されるため null
-
-    const now = new Date();
-    mockTx.roomParticipant.count.mockResolvedValue(1);
-    mockTx.roomParticipant.findFirst.mockResolvedValue(null);
-    mockTx.roomParticipant.create.mockResolvedValue({
-      roomId: "room-1",
-      userId: "user-1",
-      isHost: false,
-      joinedAt: now,
-    });
+    mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
+    mockRoomFindFirst.mockResolvedValue(null);
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
@@ -153,9 +132,8 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
   it("既に参加済みの場合 409 ALREADY_JOINED を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
-
-    mockTx.roomParticipant.count.mockResolvedValue(1);
-    mockTx.roomParticipant.findFirst.mockResolvedValue({ id: "participant-1" });
+    mockRoomFindFirst.mockResolvedValue(null);
+    mockQueryRaw.mockRejectedValue(makeAlreadyJoinedError());
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
@@ -167,9 +145,8 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
   it("満員の場合 409 ROOM_FULL を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
-
-    mockTx.roomParticipant.count.mockResolvedValue(4);
-    mockTx.roomParticipant.findFirst.mockResolvedValue(null);
+    mockRoomFindFirst.mockResolvedValue(null);
+    mockQueryRaw.mockResolvedValue(fullRow);
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
@@ -178,19 +155,10 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
     expect(body.error.code).toBe("ROOM_FULL");
   });
 
-  it("正常参加（満員にならない）場合 200 と data を返す", async () => {
+  it("正常参加の場合 200 と data を返す", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
-
-    const now = new Date();
-    mockTx.roomParticipant.count.mockResolvedValue(1);
-    mockTx.roomParticipant.findFirst.mockResolvedValue(null);
-    mockTx.roomParticipant.create.mockResolvedValue({
-      roomId: "room-1",
-      userId: "user-1",
-      isHost: false,
-      joinedAt: now,
-    });
+    mockRoomFindFirst.mockResolvedValue(null);
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
@@ -200,55 +168,41 @@ describe("POST /api/v1/rooms/[roomId]/join", () => {
     expect(body.data.userId).toBe("user-1");
     expect(body.data.isHost).toBe(false);
     expect(body.data.joinedAt).toBeDefined();
-    expect(mockTx.room.update).not.toHaveBeenCalled();
+  });
+
+  it("正常参加後に after() で emitToRoom が 2 回呼ばれる", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
+    mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
+    mockRoomFindFirst.mockResolvedValue(null);
+
+    await POST(makeRequest(), makeParams());
+    // after() モックが fn() を即時実行するため、Promise チェーンを drain する
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
     expect(mockEmitToRoom).toHaveBeenCalledTimes(2);
-    expect(mockEmitToRoom).toHaveBeenCalledWith("chat:message", "room-1", expect.objectContaining({ isSystem: true }));
-    expect(mockEmitToRoom).toHaveBeenCalledWith("room:user_joined", "room-1", expect.objectContaining({ userId: "user-1" }));
+    expect(mockEmitToRoom).toHaveBeenCalledWith(
+      "chat:message",
+      "room-1",
+      expect.objectContaining({ isSystem: true })
+    );
+    expect(mockEmitToRoom).toHaveBeenCalledWith(
+      "room:user_joined",
+      "room-1",
+      expect.objectContaining({ userId: "user-1" })
+    );
   });
 
-  it("DB一意制約違反（P2002）の場合 409 ALREADY_JOINED を返す", async () => {
+  it("pre-tx で room・hostRoom・user が並列取得される", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
     mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
+    mockRoomFindFirst.mockResolvedValue(null);
 
-    mockTx.roomParticipant.count.mockResolvedValue(1);
-    mockTx.roomParticipant.findFirst.mockResolvedValue(null);
-    const p2002 = new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
-      code: "P2002",
-      clientVersion: "7.0.0",
-      meta: { target: "room_participants_active_unique" },
-    });
-    mockTx.roomParticipant.create.mockRejectedValue(p2002);
+    await POST(makeRequest(), makeParams());
 
-    const res = await POST(makeRequest(), makeParams());
-    const body = await res.json();
-
-    expect(res.status).toBe(409);
-    expect(body.error.code).toBe("ALREADY_JOINED");
-  });
-
-  it("正常参加（満員になる）場合 room.update({ status: 'full' }) が呼ばれる", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    mockRoomFindUnique.mockResolvedValue({ id: "room-1", status: "open", maxPlayers: 4 } as never);
-
-    const now = new Date();
-    mockTx.roomParticipant.count.mockResolvedValue(3);
-    mockTx.roomParticipant.findFirst.mockResolvedValue(null);
-    mockTx.roomParticipant.create.mockResolvedValue({
-      roomId: "room-1",
-      userId: "user-1",
-      isHost: false,
-      joinedAt: now,
-    });
-    mockTx.room.update.mockResolvedValue({});
-
-    const res = await POST(makeRequest(), makeParams());
-    const body = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(mockTx.room.update).toHaveBeenCalledWith({
-      where: { id: "room-1" },
-      data: { status: "full" },
-    });
-    expect(body.data.roomId).toBe("room-1");
+    expect(mockRoomFindUnique).toHaveBeenCalledTimes(1);
+    expect(mockRoomFindFirst).toHaveBeenCalledTimes(1);
+    expect(mockUserFindUnique).toHaveBeenCalledTimes(1);
   });
 });
