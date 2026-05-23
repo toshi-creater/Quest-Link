@@ -121,6 +121,12 @@ export async function POST(_request: Request, { params }: RouteParams) {
       },
     });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json(
+        { error: { code: "ALREADY_JOINED", message: "既にこの部屋に参加しています" } },
+        { status: 409 }
+      );
+    }
     if (error instanceof Error) {
       if (error.message === "ALREADY_JOINED") {
         return NextResponse.json(
