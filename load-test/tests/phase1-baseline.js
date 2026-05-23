@@ -8,9 +8,9 @@ import { BASE_URL, THRESHOLDS, getCookieForVU, authHeaders } from "./config.js";
 
 export const options = {
   stages: [
-    { duration: "2m", target: 5 },    // ウォームアップ
-    { duration: "3m", target: 15 },   // 中間負荷
-    { duration: "3m", target: 30 },   // 最大ベースライン
+    { duration: "2m", target: 10 },    // ウォームアップ
+    { duration: "3m", target: 50 },   // 中間負荷
+    { duration: "3m", target: 100 },   // 最大ベースライン
     { duration: "2m", target: 0 },    // クールダウン
   ],
   thresholds: THRESHOLDS,
