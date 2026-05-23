@@ -33,6 +33,49 @@ const roomSelect = {
 
 type RawRoom = Prisma.RoomGetPayload<{ select: typeof roomSelect }>;
 
+// ─── list 用軽量セレクト（participants を _count に置き換え）─────────────────
+
+const roomListSelect = {
+  id: true,
+  title: true,
+  description: true,
+  maxPlayers: true,
+  status: true,
+  createdAt: true,
+  closedAt: true,
+  game: { select: { id: true, name: true, coverImageUrl: true } },
+  host: { select: { id: true, username: true, iconUrl: true, avgRating: true } },
+  playStyleTags: {
+    select: { tag: { select: { id: true, name: true, slug: true } } },
+  },
+  _count: {
+    select: { participants: { where: { leftAt: null } } },
+  },
+} satisfies Prisma.RoomSelect;
+
+type RawRoomList = Prisma.RoomGetPayload<{ select: typeof roomListSelect }>;
+
+function formatRoomList(room: RawRoomList) {
+  return {
+    id: room.id,
+    title: room.title,
+    description: room.description,
+    maxPlayers: room.maxPlayers,
+    currentPlayers: room._count.participants,
+    status: room.status,
+    createdAt: room.createdAt,
+    closedAt: room.closedAt,
+    game: room.game,
+    host: {
+      id: room.host.id,
+      username: room.host.username,
+      iconUrl: room.host.iconUrl,
+      avgRating: Number(room.host.avgRating),
+    },
+    playStyleTags: room.playStyleTags.map((t) => t.tag),
+  };
+}
+
 function formatRoom(room: RawRoom) {
   const currentPlayers = room.participants.length;
   return {
@@ -116,13 +159,13 @@ export async function GET(request: Request) {
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
-      select: roomSelect,
+      select: roomListSelect,
     }),
     prisma.room.count({ where }),
   ]);
 
   return NextResponse.json({
-    data: rooms.map(formatRoom),
+    data: rooms.map(formatRoomList),
     meta: { total, page, limit },
   });
 }
