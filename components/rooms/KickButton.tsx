@@ -26,13 +26,19 @@ export function KickButton({ roomId, target, targetName, onSuccess }: Props) {
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="shrink-0 rounded p-1 transition-colors hover:bg-red-500/10"
-        title={`${targetName}さんを退室させる`}
-      >
-        <HandWaving size={20} style={{ color: "#f87171" }} />
-      </button>
+      <div className="group relative shrink-0">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="rounded p-1 transition-colors hover:bg-red-500/10"
+        >
+          <HandWaving size={20} style={{ color: "#f87171" }} />
+        </button>
+        <div className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium opacity-0 transition-opacity group-hover:opacity-100"
+          style={{ backgroundColor: "var(--bg-card-hover)", color: "var(--text-primary)" }}
+        >
+          退室させる
+        </div>
+      </div>
 
       {isOpen && (
         <ConfirmModal
