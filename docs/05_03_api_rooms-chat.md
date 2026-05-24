@@ -264,6 +264,7 @@ POST /rooms/{roomId}/join
 | 404 | `ROOM_NOT_FOUND` | 部屋が存在しない |
 | 409 | `ALREADY_JOINED` | 既に参加中 |
 | 409 | `ROOM_FULL` | 定員に達している |
+| 409 | `HOST_CANNOT_JOIN` | 自分がホストの別部屋（未終了）が存在する |
 
 ---
 

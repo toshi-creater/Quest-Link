@@ -10,6 +10,7 @@
 | `users` | ユーザー情報 |
 | `oauth_providers` | OAuthプロバイダ連携情報 |
 | `rooms` | マッチング部屋 |
+| `guests` | ゲストユーザー情報 |
 | `room_participants` | 部屋参加者（現在・履歴） |
 | `chat_messages` | 部屋内チャット |
 | `ratings` | セッション後の相互評価 |
@@ -95,14 +96,30 @@ Google / X / Discord の3プロバイダに対応するため、プロバイダ�
 | `closed` | 終了済み |
 
 **制約**
-- `FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE SET NULL`
+- `FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE RESTRICT`
 - `FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE RESTRICT`
 - `CHECK (max_players >= 2 AND max_players <= 16)`
 - `UNIQUE (invite_token)`
 
 ---
 
-### 2.4 `room_participants`
+### 2.4 `guests`
+
+招待リンク経由で参加したゲストユーザーの情報。`guest_session_id` を一意キーとして管理し、`room_participants` および `chat_messages` から参照される。
+
+| カラム名 | 型 | NULL | デフォルト | 説明 |
+|---------|-----|------|-----------|------|
+| `id` | `UUID` | NOT NULL | `gen_random_uuid()` | PK |
+| `guest_session_id` | `VARCHAR(50)` | NOT NULL | - | ゲストセッションID（`guest_` + 32桁hex）|
+| `display_name` | `VARCHAR(50)` | NOT NULL | - | ゲスト表示名 |
+| `created_at` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | - |
+
+**制約**
+- `UNIQUE (guest_session_id)`
+
+---
+
+### 2.5 `room_participants`
 
 `left_at IS NULL` のレコードが現在参加中を表す。同一ユーザーの再参加は新規レコードで表現する。ゲスト参加者は `user_id` が NULL となり、`guest_session_id` で識別する。ホスト移譲の対象はログイン済み参加者（`user_id IS NOT NULL`）のみ。
 
@@ -111,8 +128,7 @@ Google / X / Discord の3プロバイダに対応するため、プロバイダ�
 | `id` | `UUID` | NOT NULL | `gen_random_uuid()` | PK |
 | `room_id` | `UUID` | NOT NULL | - | FK: rooms.id |
 | `user_id` | `UUID` | NULL | - | FK: users.id（NULL = ゲスト参加者） |
-| `guest_session_id` | `VARCHAR(50)` | NULL | - | ゲストセッションID（例: `guest_xxxxxxxx`）。ログイン済みはNULL |
-| `display_name` | `VARCHAR(50)` | NULL | - | ゲスト表示名。ログイン済みはNULL（usersから取得） |
+| `guest_session_id` | `VARCHAR(50)` | NULL | - | ゲストセッションID。ログイン済みはNULL |
 | `is_host` | `BOOLEAN` | NOT NULL | `false` | ホストかどうか（ゲストは常にfalse） |
 | `joined_at` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | 参加日時 |
 | `left_at` | `TIMESTAMPTZ` | NULL | - | 退室日時 |
@@ -120,19 +136,18 @@ Google / X / Discord の3プロバイダに対応するため、プロバイダ�
 **制約**
 - `FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE`
 - `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`
-- `CHECK (user_id IS NOT NULL OR guest_session_id IS NOT NULL)` — どちらか必須
-- `UNIQUE (room_id, user_id, joined_at)` WHERE `user_id IS NOT NULL` — ログイン済みの重複参加防止
-- `UNIQUE (room_id, guest_session_id)` WHERE `guest_session_id IS NOT NULL` — ゲストの重複参加防止
+- `CHECK (user_id IS NOT NULL AND guest_session_id IS NULL) OR (user_id IS NULL AND guest_session_id IS NOT NULL)` — ユーザーとゲストは排他、どちらか必須
 
 ---
 
-### 2.5 `chat_messages`
+### 2.6 `chat_messages`
 
 | カラム名 | 型 | NULL | デフォルト | 説明 |
 |---------|-----|------|-----------|------|
 | `id` | `UUID` | NOT NULL | `gen_random_uuid()` | PK |
 | `room_id` | `UUID` | NOT NULL | - | FK: rooms.id |
-| `user_id` | `UUID` | NULL | - | FK: users.id（NULL = システムメッセージ） |
+| `user_id` | `UUID` | NULL | - | FK: users.id（ログイン済みユーザーのメッセージ） |
+| `guest_id` | `UUID` | NULL | - | FK: guests.id（ゲストのメッセージ） |
 | `content` | `TEXT` | NOT NULL | - | メッセージ本文 |
 | `is_system` | `BOOLEAN` | NOT NULL | `false` | システムメッセージかどうか |
 | `created_at` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | - |
@@ -140,11 +155,12 @@ Google / X / Discord の3プロバイダに対応するため、プロバイダ�
 **制約**
 - `FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE`
 - `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL`
-- `CHECK (is_system = true OR user_id IS NOT NULL)`
+- `FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE SET NULL`
+- `CHECK (is_system = true OR user_id IS NOT NULL OR guest_id IS NOT NULL)`
 
 ---
 
-### 2.6 `ratings`
+### 2.7 `ratings`
 
 | カラム名 | 型 | NULL | デフォルト | 説明 |
 |---------|-----|------|-----------|------|
@@ -167,7 +183,7 @@ Google / X / Discord の3プロバイダに対応するため、プロバイダ�
 
 ---
 
-### 2.7 `play_style_tags`
+### 2.8 `play_style_tags`
 
 | カラム名 | 型 | NULL | デフォルト | 説明 |
 |---------|-----|------|-----------|------|
@@ -193,7 +209,7 @@ Google / X / Discord の3プロバイダに対応するため、プロバイダ�
 
 ---
 
-### 2.8 `room_play_style_tags`
+### 2.9 `room_play_style_tags`
 
 | カラム名 | 型 | NULL | 説明 |
 |---------|-----|------|------|
@@ -218,7 +234,7 @@ Google / X / Discord の3プロバイダに対応するため、プロバイダ�
 | `igdb_id` | `INTEGER` | NULL | - | 任意の外部参照ID（運営作業時の参照用。NULL可） |
 | `name` | `VARCHAR(255)` | NOT NULL | - | ゲーム名 |
 | `cover_image_url` | `TEXT` | NULL | - | カバー画像URL（表示時に直接参照） |
-| `genre` | `VARCHAR(50)` | NULL | - | ジャンル（例: FPS / RPG / MOBA） |
+| `genre` | `TEXT[]` | NOT NULL | `{}` | ジャンル配列（例: `["FPS", "MOBA"]`） |
 | `is_active` | `BOOLEAN` | NOT NULL | `true` | falseでゲーム選択画面から非表示 |
 | `display_order` | `SMALLINT` | NOT NULL | `0` | ゲーム選択画面でのグリッド表示順 |
 | `cached_at` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | マスター登録・更新日時 |
@@ -276,9 +292,11 @@ SNSシェア投稿のログ。1部屋・1時間あたり3回の投稿制限を�
 |---------|--------|------|------|
 | `oauth_providers` | `(provider, provider_user_id)` | UNIQUE | OAuth認証時のユーザー特定 |
 | `oauth_providers` | `user_id` | INDEX | ユーザー別プロバイダ取得 |
+| `guests` | `guest_session_id` | UNIQUE | ゲストセッションIDによるユーザー特定 |
 | `rooms` | `status` | INDEX | ステータス絞り込み |
 | `rooms` | `game_id` | INDEX | ゲーム別絞り込み |
 | `rooms` | `created_at DESC` | INDEX | 新着順ソート |
+| `rooms` | `(game_id, status, created_at DESC)` | INDEX | ゲーム別部屋一覧の複合絞り込み |
 | `rooms` | `(title, description)` tsvector | GIN INDEX | フリーワード全文検索（Phase 1） |
 | `room_participants` | `room_id` WHERE `left_at IS NULL` | PARTIAL INDEX | 現在参加中ユーザーの取得 |
 | `room_participants` | `guest_session_id` | INDEX | ゲストセッションによる参加状態確認 |
@@ -318,8 +336,9 @@ ALTER TABLE ratings ADD CONSTRAINT chk_score_range
 ALTER TABLE rooms ADD CONSTRAINT chk_max_players_range
   CHECK (max_players >= 2 AND max_players <= 16);
 
+-- システムメッセージ以外は user_id か guest_id のどちらかが必須
 ALTER TABLE chat_messages ADD CONSTRAINT chk_user_or_system
-  CHECK (is_system = true OR user_id IS NOT NULL);
+  CHECK (is_system = true OR user_id IS NOT NULL OR guest_id IS NOT NULL);
 
 -- ログイン済みとゲストは排他。どちらか必ず存在する
 ALTER TABLE room_participants ADD CONSTRAINT chk_participant_identity
@@ -331,27 +350,76 @@ ALTER TABLE room_participants ADD CONSTRAINT chk_participant_identity
 
 ### 4.2 評価スコアの集計
 
-`ratings` INSERT後、同一トランザクション内で `users` を更新する。
+`ratings` INSERT後、同一トランザクション内で `ratings` テーブルを集計し直して `users` を更新する。
+インクリメンタル更新（`(avg * count + score) / (count + 1)`）は浮動小数点誤差が蓄積するため、
+全件 `AVG` + `COUNT` の再集計方式を採用している。
 
-```sql
-UPDATE users
-SET
-  rating_count = rating_count + 1,
-  avg_rating   = ((avg_rating * rating_count) + :new_score) / (rating_count + 1),
-  updated_at   = NOW()
-WHERE id = :reviewee_id;
+```typescript
+// アプリ層（Prisma）での実装
+const aggregate = await tx.rating.aggregate({
+  where: { revieweeId },
+  _avg: { score: true },
+  _count: { score: true },
+});
+await tx.user.update({
+  where: { id: revieweeId },
+  data: {
+    avgRating: aggregate._avg.score ?? 0,
+    ratingCount: aggregate._count.score,
+  },
+});
 ```
 
 ### 4.3 参加人数上限チェック
 
-競合を防ぐため `FOR UPDATE` でロックを取得してからINSERT判定する。
+#### ログイン済みユーザーの参加（単一 CTE・1RTT）
+
+`$transaction`（5RTT）の代わりに、ロック・カウント・INSERT・ステータス更新を単一CTEクエリで実行する。
+DB ラウンドトリップを 1RTT に削減するためのパフォーマンス最適化。
 
 ```sql
-BEGIN;
-SELECT COUNT(*) FROM room_participants
-WHERE room_id = :room_id AND left_at IS NULL
-FOR UPDATE;
--- COUNT < max_players の場合のみINSERT
+WITH
+  lock AS (
+    SELECT id, max_players FROM rooms WHERE id = :room_id FOR UPDATE
+  ),
+  active AS (
+    SELECT COUNT(*) AS cnt FROM room_participants
+    WHERE room_id = :room_id AND left_at IS NULL
+  ),
+  ins AS (
+    INSERT INTO room_participants (id, room_id, user_id, is_host, joined_at)
+    SELECT gen_random_uuid(), :room_id, :user_id, false, NOW()
+    WHERE (SELECT cnt FROM active) < (SELECT max_players FROM lock)
+    RETURNING id, joined_at
+  ),
+  upd AS (
+    UPDATE rooms SET status = 'full'
+    WHERE id = :room_id
+      AND (SELECT cnt FROM active) + 1 >= (SELECT max_players FROM lock)
+      AND EXISTS (SELECT 1 FROM ins)
+  )
+SELECT
+  (SELECT max_players FROM lock) AS max_players,
+  (SELECT cnt FROM active)       AS cnt,
+  (SELECT id FROM ins)           AS ins_id,
+  (SELECT joined_at FROM ins)    AS ins_joined_at;
+-- ins_id が NULL → ROOM_FULL
+-- UNIQUE 制約違反（23505）→ ALREADY_JOINED
+```
+
+#### ゲスト参加（Serializable トランザクション）
+
+招待リンク経由のゲスト参加は `guests` テーブルへの upsert を含むため、
+`isolationLevel: "Serializable"` + `SELECT ... FOR UPDATE` のトランザクションで実装する。
+
+```sql
+BEGIN ISOLATION LEVEL SERIALIZABLE;
+SELECT id FROM rooms WHERE id = :room_id FOR UPDATE;
+-- 現在参加数を確認
+-- COUNT >= max_players なら ROOM_FULL
+-- guests に upsert
+-- room_participants に INSERT
+-- 満員になった場合は rooms.status = 'full' に更新
 COMMIT;
 ```
 
