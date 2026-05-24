@@ -1,24 +1,48 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Crown, Users } from "@phosphor-icons/react";
+import { Crown, Users, UserMinus } from "@phosphor-icons/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { RatingDisplay } from "@/components/ui/StarRating";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { kickParticipant } from "@/lib/api/rooms";
 import type { RoomParticipant } from "@/lib/api/rooms";
 
+type KickTarget = { userId?: string; guestSessionId?: string; name: string } | null;
+
 type ParticipantSidebarProps = {
+  roomId: string;
   participants: RoomParticipant[];
   maxPlayers: number;
   currentPlayers: number;
   currentUserId: string | null;
   currentGuestSessionId: string | null;
+  isCurrentUserHost: boolean;
 };
 
 export function ParticipantSidebar({
+  roomId,
   participants,
   maxPlayers,
   currentPlayers,
   currentUserId,
   currentGuestSessionId,
+  isCurrentUserHost,
 }: ParticipantSidebarProps) {
+  const queryClient = useQueryClient();
+  const [kickTarget, setKickTarget] = useState<KickTarget>(null);
+
+  const kickMutation = useMutation({
+    mutationFn: (target: { userId?: string; guestSessionId?: string }) =>
+      kickParticipant(roomId, target as Parameters<typeof kickParticipant>[1]),
+    onSuccess: async () => {
+      setKickTarget(null);
+      await queryClient.invalidateQueries({ queryKey: ["room", roomId] });
+    },
+  });
+
   return (
     <div className="space-y-4">
       <div
@@ -56,80 +80,101 @@ export function ParticipantSidebar({
           </div>
         </div>
         <ul className="space-y-3">
-          {participants.map((p, idx) => (
-            <li
-              key={p.userId ?? p.guestSessionId ?? `participant-${idx}`}
-              className="flex items-center gap-3 px-3"
-            >
-              {p.userId != null ? (
-                <Link
-                  href={p.userId === currentUserId ? "/users/me" : `/users/${p.userId}`}
-                  className="shrink-0"
-                >
-                  <UserAvatar username={p.username} iconUrl={p.iconUrl} size="md" />
-                </Link>
-              ) : (
-                <span className="shrink-0">
-                  <UserAvatar username={p.username} iconUrl={p.iconUrl} size="md" />
-                </span>
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  {p.isHost && (
-                    <Crown className="h-3.5 w-3.5 shrink-0" style={{ color: "#eab308" }} />
-                  )}
-                  {p.userId != null ? (
-                    <Link
-                      href={p.userId === currentUserId ? "/users/me" : `/users/${p.userId}`}
-                      className="truncate text-sm font-medium hover:underline"
-                      style={{
-                        color:
-                          p.userId === currentUserId
-                            ? "var(--accent-light)"
-                            : "var(--text-primary)",
-                      }}
-                    >
-                      {p.username}
-                      {p.userId === currentUserId && (
-                        <span className="ml-1 text-xs" style={{ color: "var(--text-muted)" }}>
-                          (あなた)
-                        </span>
-                      )}
-                    </Link>
-                  ) : (
-                    <span
-                      className="truncate text-sm font-medium"
-                      style={{
-                        color:
-                          currentGuestSessionId !== null &&
-                          p.guestSessionId === currentGuestSessionId
-                            ? "var(--accent-light)"
-                            : "var(--text-primary)",
-                      }}
-                    >
-                      {p.username}
-                    </span>
-                  )}
-                  {p.userId == null && (
-                    <span
-                      className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none"
-                      style={{
-                        backgroundColor: "rgba(34, 197, 94, 0.15)",
-                        color: "#4ade80",
-                      }}
-                    >
-                      ゲスト
-                    </span>
-                  )}
+          {participants.map((p, idx) => {
+            const isMe =
+              (p.userId != null && p.userId === currentUserId) ||
+              (currentGuestSessionId !== null && p.guestSessionId === currentGuestSessionId);
+            const canKick = isCurrentUserHost && !isMe && !p.isHost;
+            return (
+              <li
+                key={p.userId ?? p.guestSessionId ?? `participant-${idx}`}
+                className="flex items-center gap-3 px-3"
+              >
+                {p.userId != null ? (
+                  <Link
+                    href={p.userId === currentUserId ? "/users/me" : `/users/${p.userId}`}
+                    className="shrink-0"
+                  >
+                    <UserAvatar username={p.username} iconUrl={p.iconUrl} size="md" />
+                  </Link>
+                ) : (
+                  <span className="shrink-0">
+                    <UserAvatar username={p.username} iconUrl={p.iconUrl} size="md" />
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    {p.isHost && (
+                      <Crown className="h-3.5 w-3.5 shrink-0" style={{ color: "#eab308" }} />
+                    )}
+                    {p.userId != null ? (
+                      <Link
+                        href={p.userId === currentUserId ? "/users/me" : `/users/${p.userId}`}
+                        className="truncate text-sm font-medium hover:underline"
+                        style={{
+                          color:
+                            p.userId === currentUserId
+                              ? "var(--accent-light)"
+                              : "var(--text-primary)",
+                        }}
+                      >
+                        {p.username}
+                        {p.userId === currentUserId && (
+                          <span className="ml-1 text-xs" style={{ color: "var(--text-muted)" }}>
+                            (あなた)
+                          </span>
+                        )}
+                      </Link>
+                    ) : (
+                      <span
+                        className="truncate text-sm font-medium"
+                        style={{
+                          color:
+                            currentGuestSessionId !== null &&
+                            p.guestSessionId === currentGuestSessionId
+                              ? "var(--accent-light)"
+                              : "var(--text-primary)",
+                        }}
+                      >
+                        {p.username}
+                      </span>
+                    )}
+                    {p.userId == null && (
+                      <span
+                        className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none"
+                        style={{
+                          backgroundColor: "rgba(34, 197, 94, 0.15)",
+                          color: "#4ade80",
+                        }}
+                      >
+                        ゲスト
+                      </span>
+                    )}
+                  </div>
+                  <RatingDisplay
+                    avgRating={p.avgRating}
+                    ratingCount={p.avgRating != null ? 10 : 3}
+                    size="sm"
+                  />
                 </div>
-                <RatingDisplay
-                  avgRating={p.avgRating}
-                  ratingCount={p.avgRating != null ? 10 : 3}
-                  size="sm"
-                />
-              </div>
-            </li>
-          ))}
+                {canKick && (
+                  <button
+                    onClick={() =>
+                      setKickTarget({
+                        userId: p.userId ?? undefined,
+                        guestSessionId: p.guestSessionId ?? undefined,
+                        name: p.username,
+                      })
+                    }
+                    className="shrink-0 rounded p-1 transition-colors hover:bg-red-500/10"
+                    title={`${p.username}をキック`}
+                  >
+                    <UserMinus className="h-4 w-4" style={{ color: "#f87171" }} />
+                  </button>
+                )}
+              </li>
+            );
+          })}
           {Array.from({ length: maxPlayers - currentPlayers }).map((_, i) => (
             <li
               key={`empty-${i}`}
@@ -147,6 +192,22 @@ export function ParticipantSidebar({
           ))}
         </ul>
       </div>
+
+      {kickTarget && (
+        <ConfirmModal
+          title="参加者をキックしますか？"
+          description={`${kickTarget.name}さんをこの部屋から退室させます。`}
+          confirmLabel="キックする"
+          isPending={kickMutation.isPending}
+          onConfirm={() => {
+            kickMutation.mutate({
+              userId: kickTarget.userId,
+              guestSessionId: kickTarget.guestSessionId,
+            });
+          }}
+          onCancel={() => setKickTarget(null)}
+        />
+      )}
     </div>
   );
 }

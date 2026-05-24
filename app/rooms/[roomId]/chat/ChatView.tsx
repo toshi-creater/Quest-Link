@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useChatStore, type ChatMessage, type Participant } from "@/lib/stores/chatStore";
 import { useSocketRoom } from "./useSocketRoom";
 import { ChatParticipantList } from "./ChatParticipantList";
@@ -32,10 +33,22 @@ export function ChatView({
   initialParticipants,
   roomInfo,
 }: Props) {
-  useSocketRoom({ roomId, initialMessages, initialParticipants });
+  const router = useRouter();
+  useSocketRoom({ roomId, initialMessages, initialParticipants, currentUserId, currentGuestSessionId });
 
   const connectionStatus = useChatStore((s) => s.connectionStatus);
   const currentPlayers = useChatStore((s) => s.participants.length);
+  const isKicked = useChatStore((s) => s.isKicked);
+  const participants = useChatStore((s) => s.participants);
+  const isCurrentUserHost = participants.some(
+    (p) => p.userId != null && p.userId === currentUserId && p.isHost
+  );
+
+  useEffect(() => {
+    if (isKicked) {
+      router.push("/rooms");
+    }
+  }, [isKicked, router]);
 
   return (
     <div
@@ -46,6 +59,7 @@ export function ChatView({
         roomId={roomId}
         currentUserId={currentUserId}
         currentGuestSessionId={currentGuestSessionId}
+        isCurrentUserHost={isCurrentUserHost}
         maxPlayers={roomInfo.maxPlayers}
         roomTitle={roomInfo.title}
         gameName={roomInfo.game.name}
@@ -69,6 +83,17 @@ export function ChatView({
             </p>
           </div>
         </div>
+
+        {/* Kicked banner */}
+        {isKicked && (
+          <div
+            className="flex items-center gap-2 px-4 py-2 text-sm animate-slide-in-bottom"
+            style={{ backgroundColor: "rgba(239, 68, 68, 0.1)", color: "#f87171" }}
+          >
+            <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" />
+            ホストによって退室させられました。部屋一覧に移動します…
+          </div>
+        )}
 
         {/* Connection error banner */}
         {(connectionStatus === "error" || connectionStatus === "failed") && (

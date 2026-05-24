@@ -1,19 +1,25 @@
 "use client";
 
-import Link from "next/link";
-import { Crown } from "@phosphor-icons/react";
+import { useState } from "react";
+import { Crown, UserMinus } from "@phosphor-icons/react";
+import { useMutation } from "@tanstack/react-query";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useChatStore } from "@/lib/stores/chatStore";
+import { kickParticipant } from "@/lib/api/rooms";
 import { BackButton } from "@/components/ui/BackButton";
 
 type Tag = { id: string; name: string; slug: string };
+
+type KickTarget = { userId?: string; guestSessionId?: string; name: string } | null;
 
 type Props = {
   roomId: string;
   currentUserId: string | null;
   currentGuestSessionId: string | null;
+  isCurrentUserHost: boolean;
   maxPlayers: number;
   roomTitle: string;
   gameName: string;
@@ -24,6 +30,7 @@ export function ChatParticipantList({
   roomId,
   currentUserId,
   currentGuestSessionId,
+  isCurrentUserHost,
   maxPlayers,
   roomTitle,
   gameName,
@@ -31,6 +38,13 @@ export function ChatParticipantList({
 }: Props) {
   const participants = useChatStore((s) => s.participants);
   const currentPlayers = participants.length;
+  const [kickTarget, setKickTarget] = useState<KickTarget>(null);
+
+  const kickMutation = useMutation({
+    mutationFn: (target: { userId?: string; guestSessionId?: string }) =>
+      kickParticipant(roomId, target as Parameters<typeof kickParticipant>[1]),
+    onSuccess: () => setKickTarget(null),
+  });
 
   return (
     <aside
@@ -72,9 +86,10 @@ export function ChatParticipantList({
               (p.userId != null && p.userId === currentUserId) ||
               (currentGuestSessionId !== null && p.guestSessionId === currentGuestSessionId);
             const isGuest = p.user === null;
+            const canKick = isCurrentUserHost && !isMe && !p.isHost;
             return (
               <li key={p.userId ?? `guest-${idx}`} className="flex items-center gap-2.5">
-                <div className="relative">
+                <div className="relative shrink-0">
                   <UserAvatar username={name} iconUrl={iconUrl} size="sm" />
                   {!isGuest && (
                     <span
@@ -83,9 +98,9 @@ export function ChatParticipantList({
                     />
                   )}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1">
-                    {p.isHost && <Crown className="h-3 w-3" style={{ color: "#eab308" }} />}
+                    {p.isHost && <Crown className="h-3 w-3 shrink-0" style={{ color: "#eab308" }} />}
                     <span
                       className="truncate text-xs font-medium"
                       style={{ color: isMe ? "var(--accent-light)" : "var(--text-primary)" }}
@@ -110,11 +125,42 @@ export function ChatParticipantList({
                     size="sm"
                   />
                 </div>
+                {canKick && (
+                  <button
+                    onClick={() =>
+                      setKickTarget({
+                        userId: p.userId ?? undefined,
+                        guestSessionId: p.guestSessionId ?? undefined,
+                        name,
+                      })
+                    }
+                    className="shrink-0 rounded p-1 transition-colors hover:bg-red-500/10"
+                    title={`${name}をキック`}
+                  >
+                    <UserMinus className="h-3.5 w-3.5" style={{ color: "#f87171" }} />
+                  </button>
+                )}
               </li>
             );
           })}
         </ul>
       </div>
+
+      {kickTarget && (
+        <ConfirmModal
+          title="参加者をキックしますか？"
+          description={`${kickTarget.name}さんをこの部屋から退室させます。`}
+          confirmLabel="キックする"
+          isPending={kickMutation.isPending}
+          onConfirm={() => {
+            kickMutation.mutate({
+              userId: kickTarget.userId,
+              guestSessionId: kickTarget.guestSessionId,
+            });
+          }}
+          onCancel={() => setKickTarget(null)}
+        />
+      )}
     </aside>
   );
 }
