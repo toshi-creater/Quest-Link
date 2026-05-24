@@ -7,6 +7,12 @@ vi.mock("@phosphor-icons/react", () => ({
   Crown: () => <span data-testid="icon-crown" />,
 }));
 
+vi.mock("@/components/rooms/KickButton", () => ({
+  KickButton: ({ targetName }: { targetName: string }) => (
+    <button data-testid="kick-button" aria-label={`${targetName}をキック`} />
+  ),
+}));
+
 vi.mock("next/link", () => ({
   default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...rest}>
@@ -36,6 +42,7 @@ const defaultProps = {
   roomId: "room-1",
   currentUserId: "u1",
   currentGuestSessionId: null,
+  isCurrentUserHost: false,
   maxPlayers: 4,
   roomTitle: "テストルーム",
   gameName: "Valorant",
@@ -43,7 +50,7 @@ const defaultProps = {
 };
 
 beforeEach(() => {
-  useChatStore.setState({ messages: [], participants: [], connectionStatus: "disconnected" });
+  useChatStore.setState({ messages: [], participants: [], connectionStatus: "disconnected", isKicked: false });
 });
 
 describe("ChatParticipantList", () => {

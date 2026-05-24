@@ -188,3 +188,20 @@ export async function generateInviteToken(roomId: string): Promise<InviteTokenRe
   return res.json() as Promise<InviteTokenResponse>;
 }
 
+export type KickTarget =
+  | { userId: string; guestSessionId?: never }
+  | { guestSessionId: string; userId?: never };
+
+export async function kickParticipant(roomId: string, target: KickTarget): Promise<void> {
+  const res = await fetch(`/api/v1/rooms/${roomId}/kick`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(target),
+  });
+  if (!res.ok) {
+    const body = (await res.json()) as { error?: { code: string; message: string } };
+    throw new Error(body.error?.message ?? "キックに失敗しました");
+  }
+}
+

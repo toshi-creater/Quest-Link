@@ -101,6 +101,17 @@ describe("ChatMessageList", () => {
       render(<ChatMessageList currentUserId="u1" currentGuestSessionId={null} />);
       expect(screen.queryByTestId("user-avatar")).not.toBeInTheDocument();
     });
+
+    it("改行を含むメッセージ本文が whitespace-pre-wrap クラスで描画される", () => {
+      useChatStore.setState({
+        messages: [makeMsg({ content: "line1\nline2" })],
+      });
+      const { container } = render(<ChatMessageList currentUserId="u2" currentGuestSessionId={null} />);
+      const msgEl = container.querySelector(".whitespace-pre-wrap");
+      expect(msgEl).not.toBeNull();
+      expect(msgEl?.textContent).toContain("line1");
+      expect(msgEl?.textContent).toContain("line2");
+    });
   });
 
   describe("ゲストメッセージ", () => {

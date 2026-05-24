@@ -103,4 +103,28 @@ describe("TagFilterPanel", () => {
     fireEvent.mouseDown(document.body);
     expect(onClickOutside).not.toHaveBeenCalled();
   });
+
+  it("ignoreRef 要素の mousedown では onClickOutside が呼ばれない", () => {
+    const onClickOutside = vi.fn();
+    const toggleBtn = document.createElement("button");
+    document.body.appendChild(toggleBtn);
+    const ignoreRef = { current: toggleBtn };
+    render(
+      <TagFilterPanel tags={tags} selectedTags={[]} onToggle={vi.fn()} open={true} onClickOutside={onClickOutside} ignoreRef={ignoreRef} />
+    );
+    fireEvent.mouseDown(toggleBtn);
+    expect(onClickOutside).not.toHaveBeenCalled();
+    toggleBtn.remove();
+  });
+
+  it("ignoreRef 以外の外部要素の mousedown では onClickOutside が呼ばれる", () => {
+    const onClickOutside = vi.fn();
+    const toggleBtn = document.createElement("button");
+    const ignoreRef = { current: toggleBtn };
+    render(
+      <TagFilterPanel tags={tags} selectedTags={[]} onToggle={vi.fn()} open={true} onClickOutside={onClickOutside} ignoreRef={ignoreRef} />
+    );
+    fireEvent.mouseDown(document.body);
+    expect(onClickOutside).toHaveBeenCalledOnce();
+  });
 });

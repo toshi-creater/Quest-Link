@@ -16,10 +16,11 @@ Google / X / Discord の3プロバイダに対応。複数プロバイダを同�
 | POST | `/auth/{provider}/callback` | 不要 | OAuth コールバック・JWT 発行 |
 | POST | `/auth/refresh` | 不要 | アクセストークンのリフレッシュ |
 | POST | `/auth/logout` | 必要 | ログアウト・トークン無効化 |
-| POST | `/auth/guest` | 不要 | ゲストセッション発行 |
 | POST | `/auth/{provider}/link` | 必要 | 追加プロバイダを現アカウントに連携 |
 | DELETE | `/auth/{provider}/unlink` | 必要 | プロバイダ連携の解除 |
 | GET | `/auth/socket-token` | 必要（ユーザーまたはゲスト） | Socket.io 接続用短命トークン発行 |
+
+> **注意**: ゲストセッション発行は独立したエンドポイントではなく、招待トークンによる参加 `POST /invite/{token}/join` の中でセッション発行・参加・Cookie付与を一括処理する。
 
 **`{provider}` の値**: `google` / `x` / `discord`
 
@@ -123,43 +124,52 @@ POST /auth/logout
 
 ---
 
-## 4. ゲストセッション発行
+## 4. ゲスト参加（招待トークン経由）
 
-募集リンク経由で部屋に参加する際にゲストセッションを発行する。発行されたセッション ID は Cookie（HttpOnly）に保存され、有効期限は24時間。
+ゲストセッション発行・部屋参加・Cookie付与は `POST /invite/{token}/join` で一括処理する。
+独立した `/auth/guest` エンドポイントは存在しない。
 
 ```
-POST /auth/guest
+POST /invite/{token}/join
 ```
 
 **認証**: 不要
+
+### パスパラメータ
+
+| パラメータ | 型 | 説明 |
+|-----------|-----|------|
+| `token` | string | 64文字のhex招待トークン（`rooms.invite_token`） |
 
 ### リクエストボディ
 
 | フィールド | 型 | 必須 | 制約 | 説明 |
 |-----------|-----|------|------|------|
-| `roomId` | string (UUID) | ○ | - | 参加対象の部屋 ID |
-| `displayName` | string | - | 1〜50文字 | 表示名（省略時はサーバーが `guest_xxxxxxxx` を自動設定） |
+| `displayName` | string | - | 50文字以内 | 表示名（省略時はランダムな `Guest{数字}` を自動設定） |
 
 ### レスポンス `200 OK`
 
 ```json
 {
   "data": {
-    "guestId": "guest_a1b2c3d4",
-    "displayName": "ゲスト参加者",
-    "expiresAt": "2026-02-21T22:00:00Z"
+    "roomId": "770e8400-...",
+    "guestSessionId": "guest_a3f8c2e1d4b7f09e2c5a8b3d6e1f4a7c",
+    "isGuest": true,
+    "joinedAt": "2026-02-20T22:05:00Z"
   }
 }
 ```
 
-セッション ID は `Set-Cookie: guest_session=<token>; HttpOnly; Secure` でも返却される。以降のリクエストでは Cookie が自動送信されるため、追加のヘッダー設定は不要。
+ゲストセッション ID は `Set-Cookie: quest_link_guest_session=<id>; HttpOnly; SameSite=Lax; Max-Age=86400` でも返却される。  
+ゲストセッション ID の形式: `guest_` + 32桁hex（`randomBytes(16).toString("hex")`）。
 
 ### エラー
 
 | HTTP | エラーコード | 説明 |
 |------|------------|------|
 | 400 | `ROOM_CLOSED` | 終了済みの部屋にはゲスト参加不可 |
-| 404 | `ROOM_NOT_FOUND` | 部屋が存在しない |
+| 404 | `INVITE_NOT_FOUND` | 招待トークンが無効（存在しない・閉鎖済み） |
+| 409 | `ALREADY_JOINED` | 同一ゲストセッションで既に参加中 |
 | 409 | `ROOM_FULL` | 定員に達している |
 
 ---

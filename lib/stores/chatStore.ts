@@ -26,10 +26,13 @@ type ChatStore = {
   messages: ChatMessage[];
   participants: Participant[];
   connectionStatus: ConnectionStatus;
+  isKicked: boolean;
   setInitial: (messages: ChatMessage[], participants: Participant[]) => void;
   addMessage: (msg: ChatMessage) => void;
   addParticipant: (p: { userId: string; username: string; iconUrl: string | null; avgRating: number }) => void;
   removeParticipant: (userId: string) => void;
+  removeParticipantByGuest: (guestSessionId: string) => void;
+  setKicked: () => void;
   setConnectionStatus: (status: ConnectionStatus) => void;
 };
 
@@ -37,6 +40,7 @@ export const useChatStore = create<ChatStore>((set) => ({
   messages: [],
   participants: [],
   connectionStatus: "disconnected",
+  isKicked: false,
   setInitial: (messages, participants) => set({ messages, participants }),
   addMessage: (msg) =>
     set((state) => {
@@ -56,5 +60,10 @@ export const useChatStore = create<ChatStore>((set) => ({
     }),
   removeParticipant: (userId) =>
     set((state) => ({ participants: state.participants.filter((p) => p.userId !== userId) })),
+  removeParticipantByGuest: (guestSessionId) =>
+    set((state) => ({
+      participants: state.participants.filter((p) => p.guestSessionId !== guestSessionId),
+    })),
+  setKicked: () => set({ isKicked: true }),
   setConnectionStatus: (status) => set({ connectionStatus: status }),
 }));

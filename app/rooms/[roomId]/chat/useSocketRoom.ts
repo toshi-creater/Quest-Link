@@ -8,10 +8,18 @@ type UseSocketRoomOptions = {
   roomId: string;
   initialMessages: ChatMessage[];
   initialParticipants: Participant[];
+  currentUserId: string | null;
+  currentGuestSessionId: string | null;
 };
 
-export function useSocketRoom({ roomId, initialMessages, initialParticipants }: UseSocketRoomOptions): void {
-  const { setInitial, addMessage, addParticipant, removeParticipant, setConnectionStatus } =
+export function useSocketRoom({
+  roomId,
+  initialMessages,
+  initialParticipants,
+  currentUserId,
+  currentGuestSessionId,
+}: UseSocketRoomOptions): void {
+  const { setInitial, addMessage, addParticipant, removeParticipant, removeParticipantByGuest, setKicked, setConnectionStatus } =
     useChatStore();
 
   // 初期データをストアへ注入
@@ -58,6 +66,31 @@ export function useSocketRoom({ roomId, initialMessages, initialParticipants }: 
       removeParticipant(userId);
     });
 
+    socket.on(
+      "room:user_kicked",
+      ({
+        kickedUserId,
+        kickedGuestSessionId,
+      }: {
+        kickedUserId: string | null;
+        kickedGuestSessionId: string | null;
+        byHostId: string;
+        kickedAt: string;
+      }) => {
+        const isMeKicked =
+          (kickedUserId != null && kickedUserId === currentUserId) ||
+          (kickedGuestSessionId != null && kickedGuestSessionId === currentGuestSessionId);
+
+        if (isMeKicked) {
+          setKicked();
+        } else if (kickedUserId != null) {
+          removeParticipant(kickedUserId);
+        } else if (kickedGuestSessionId != null) {
+          removeParticipantByGuest(kickedGuestSessionId);
+        }
+      }
+    );
+
     socket.on("room:host_changed", ({ newHostId }: { newHostId: string }) => {
       useChatStore.setState((state) => ({
         participants: state.participants.map((p) => ({
@@ -82,7 +115,8 @@ export function useSocketRoom({ roomId, initialMessages, initialParticipants }: 
       socket.off("room:user_left");
       socket.off("room:host_changed");
       socket.off("room:closed");
+      socket.off("room:user_kicked");
       disconnectSocket();
     };
-  }, [roomId, addMessage, addParticipant, removeParticipant, setConnectionStatus]);
+  }, [roomId, currentUserId, currentGuestSessionId, addMessage, addParticipant, removeParticipant, removeParticipantByGuest, setKicked, setConnectionStatus]);
 }
