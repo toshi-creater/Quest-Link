@@ -21,7 +21,6 @@ vi.mock("next/link", () => ({
 vi.mock("@phosphor-icons/react", () => ({
   Crown: () => <span data-testid="icon-crown" />,
   Users: () => <span data-testid="icon-users" />,
-  UserMinus: () => <span data-testid="icon-user-minus" />,
 }));
 
 vi.mock("@/components/ui/UserAvatar", () => ({
@@ -34,12 +33,10 @@ vi.mock("@/components/ui/StarRating", () => ({
   RatingDisplay: () => <div data-testid="rating-display" />,
 }));
 
-vi.mock("@/components/ui/ConfirmModal", () => ({
-  ConfirmModal: () => <div data-testid="confirm-modal" />,
-}));
-
-vi.mock("@/lib/api/rooms", () => ({
-  kickParticipant: vi.fn(),
+vi.mock("@/components/rooms/KickButton", () => ({
+  KickButton: ({ targetName }: { targetName: string }) => (
+    <button data-testid="kick-button" aria-label={`${targetName}をキック`} />
+  ),
 }));
 
 import { ParticipantSidebar } from "./ParticipantSidebar";

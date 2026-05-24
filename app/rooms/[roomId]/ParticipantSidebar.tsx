@@ -1,16 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { Crown, Users, UserMinus } from "@phosphor-icons/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Crown, Users } from "@phosphor-icons/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { RatingDisplay } from "@/components/ui/StarRating";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { kickParticipant } from "@/lib/api/rooms";
+import { KickButton } from "@/components/rooms/KickButton";
 import type { RoomParticipant } from "@/lib/api/rooms";
-
-type KickTarget = { userId?: string; guestSessionId?: string; name: string } | null;
 
 type ParticipantSidebarProps = {
   roomId: string;
@@ -32,16 +28,6 @@ export function ParticipantSidebar({
   isCurrentUserHost,
 }: ParticipantSidebarProps) {
   const queryClient = useQueryClient();
-  const [kickTarget, setKickTarget] = useState<KickTarget>(null);
-
-  const kickMutation = useMutation({
-    mutationFn: (target: { userId?: string; guestSessionId?: string }) =>
-      kickParticipant(roomId, target as Parameters<typeof kickParticipant>[1]),
-    onSuccess: async () => {
-      setKickTarget(null);
-      await queryClient.invalidateQueries({ queryKey: ["room", roomId] });
-    },
-  });
 
   return (
     <div className="space-y-4">
@@ -158,19 +144,18 @@ export function ParticipantSidebar({
                   />
                 </div>
                 {canKick && (
-                  <button
-                    onClick={() =>
-                      setKickTarget({
-                        userId: p.userId ?? undefined,
-                        guestSessionId: p.guestSessionId ?? undefined,
-                        name: p.username,
-                      })
+                  <KickButton
+                    roomId={roomId}
+                    target={
+                      p.userId != null
+                        ? { userId: p.userId }
+                        : { guestSessionId: p.guestSessionId! }
                     }
-                    className="shrink-0 rounded p-1 transition-colors hover:bg-red-500/10"
-                    title={`${p.username}をキック`}
-                  >
-                    <UserMinus className="h-4 w-4" style={{ color: "#f87171" }} />
-                  </button>
+                    targetName={p.username}
+                    onSuccess={() =>
+                      queryClient.invalidateQueries({ queryKey: ["room", roomId] })
+                    }
+                  />
                 )}
               </li>
             );
@@ -192,22 +177,6 @@ export function ParticipantSidebar({
           ))}
         </ul>
       </div>
-
-      {kickTarget && (
-        <ConfirmModal
-          title="参加者をキックしますか？"
-          description={`${kickTarget.name}さんをこの部屋から退室させます。`}
-          confirmLabel="キックする"
-          isPending={kickMutation.isPending}
-          onConfirm={() => {
-            kickMutation.mutate({
-              userId: kickTarget.userId,
-              guestSessionId: kickTarget.guestSessionId,
-            });
-          }}
-          onCancel={() => setKickTarget(null)}
-        />
-      )}
     </div>
   );
 }

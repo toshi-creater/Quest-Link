@@ -1,19 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Crown, UserMinus } from "@phosphor-icons/react";
-import { useMutation } from "@tanstack/react-query";
+import { Crown } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { KickButton } from "@/components/rooms/KickButton";
 import { useChatStore } from "@/lib/stores/chatStore";
-import { kickParticipant } from "@/lib/api/rooms";
 import { BackButton } from "@/components/ui/BackButton";
 
 type Tag = { id: string; name: string; slug: string };
-
-type KickTarget = { userId?: string; guestSessionId?: string; name: string } | null;
 
 type Props = {
   roomId: string;
@@ -38,13 +33,6 @@ export function ChatParticipantList({
 }: Props) {
   const participants = useChatStore((s) => s.participants);
   const currentPlayers = participants.length;
-  const [kickTarget, setKickTarget] = useState<KickTarget>(null);
-
-  const kickMutation = useMutation({
-    mutationFn: (target: { userId?: string; guestSessionId?: string }) =>
-      kickParticipant(roomId, target as Parameters<typeof kickParticipant>[1]),
-    onSuccess: () => setKickTarget(null),
-  });
 
   return (
     <aside
@@ -126,41 +114,21 @@ export function ChatParticipantList({
                   />
                 </div>
                 {canKick && (
-                  <button
-                    onClick={() =>
-                      setKickTarget({
-                        userId: p.userId ?? undefined,
-                        guestSessionId: p.guestSessionId ?? undefined,
-                        name,
-                      })
+                  <KickButton
+                    roomId={roomId}
+                    target={
+                      p.userId != null
+                        ? { userId: p.userId }
+                        : { guestSessionId: p.guestSessionId! }
                     }
-                    className="shrink-0 rounded p-1 transition-colors hover:bg-red-500/10"
-                    title={`${name}をキック`}
-                  >
-                    <UserMinus className="h-3.5 w-3.5" style={{ color: "#f87171" }} />
-                  </button>
+                    targetName={name}
+                  />
                 )}
               </li>
             );
           })}
         </ul>
       </div>
-
-      {kickTarget && (
-        <ConfirmModal
-          title="参加者をキックしますか？"
-          description={`${kickTarget.name}さんをこの部屋から退室させます。`}
-          confirmLabel="キックする"
-          isPending={kickMutation.isPending}
-          onConfirm={() => {
-            kickMutation.mutate({
-              userId: kickTarget.userId,
-              guestSessionId: kickTarget.guestSessionId,
-            });
-          }}
-          onCancel={() => setKickTarget(null)}
-        />
-      )}
     </aside>
   );
 }

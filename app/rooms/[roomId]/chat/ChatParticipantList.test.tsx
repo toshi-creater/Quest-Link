@@ -1,16 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 vi.mock("@phosphor-icons/react", () => ({
   ArrowLeft: () => <span data-testid="icon-arrow-left" />,
   CaretLeft: () => <span data-testid="icon-caret-left" />,
   Crown: () => <span data-testid="icon-crown" />,
-  UserMinus: () => <span data-testid="icon-user-minus" />,
 }));
 
-vi.mock("@/lib/api/rooms", () => ({
-  kickParticipant: vi.fn(),
+vi.mock("@/components/rooms/KickButton", () => ({
+  KickButton: ({ targetName }: { targetName: string }) => (
+    <button data-testid="kick-button" aria-label={`${targetName}をキック`} />
+  ),
 }));
 
 vi.mock("next/link", () => ({
@@ -49,11 +49,6 @@ const defaultProps = {
   tags: [],
 };
 
-function renderWithQuery(ui: React.ReactElement) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
-}
-
 beforeEach(() => {
   useChatStore.setState({ messages: [], participants: [], connectionStatus: "disconnected", isKicked: false });
 });
@@ -61,17 +56,17 @@ beforeEach(() => {
 describe("ChatParticipantList", () => {
   describe("ルーム情報", () => {
     it("ルームタイトルが表示される", () => {
-      renderWithQuery(<ChatParticipantList {...defaultProps} />);
+      render(<ChatParticipantList {...defaultProps} />);
       expect(screen.getByText("テストルーム")).toBeInTheDocument();
     });
 
     it("ゲーム名が表示される", () => {
-      renderWithQuery(<ChatParticipantList {...defaultProps} />);
+      render(<ChatParticipantList {...defaultProps} />);
       expect(screen.getByText("Valorant")).toBeInTheDocument();
     });
 
     it("戻るリンクが正しい href を持つ", () => {
-      renderWithQuery(<ChatParticipantList {...defaultProps} />);
+      render(<ChatParticipantList {...defaultProps} />);
       expect(screen.getByRole("link", { name: /戻る/ })).toHaveAttribute(
         "href",
         "/rooms/room-1"
@@ -83,13 +78,13 @@ describe("ChatParticipantList", () => {
         { id: "t1", name: "まったり", slug: "casual" },
         { id: "t2", name: "がっつり", slug: "serious" },
       ];
-      renderWithQuery(<ChatParticipantList {...defaultProps} tags={tags} />);
+      render(<ChatParticipantList {...defaultProps} tags={tags} />);
       expect(screen.getByText("まったり")).toBeInTheDocument();
       expect(screen.getByText("がっつり")).toBeInTheDocument();
     });
 
     it("tags が空の場合は PlayStyleTag が表示されない", () => {
-      renderWithQuery(<ChatParticipantList {...defaultProps} tags={[]} />);
+      render(<ChatParticipantList {...defaultProps} tags={[]} />);
       // tags セクション自体が非表示（PlayStyleTag が 0 件）
       expect(screen.queryByText("まったり")).not.toBeInTheDocument();
     });
@@ -97,7 +92,7 @@ describe("ChatParticipantList", () => {
 
   describe("参加者数", () => {
     it("参加者数が 0 の場合に「参加者 0/4」が表示される", () => {
-      renderWithQuery(<ChatParticipantList {...defaultProps} />);
+      render(<ChatParticipantList {...defaultProps} />);
       expect(screen.getByText("参加者 0/4")).toBeInTheDocument();
     });
 
@@ -108,7 +103,7 @@ describe("ChatParticipantList", () => {
           { userId: "u2", isHost: false, user: { username: "Bob", iconUrl: null, avgRating: null } },
         ],
       });
-      renderWithQuery(<ChatParticipantList {...defaultProps} />);
+      render(<ChatParticipantList {...defaultProps} />);
       expect(screen.getByText("参加者 2/4")).toBeInTheDocument();
     });
   });
@@ -120,7 +115,7 @@ describe("ChatParticipantList", () => {
           { userId: "u1", isHost: true, user: { username: "Alice", iconUrl: null, avgRating: null } },
         ],
       });
-      renderWithQuery(<ChatParticipantList {...defaultProps} />);
+      render(<ChatParticipantList {...defaultProps} />);
       expect(screen.getByTestId("icon-crown")).toBeInTheDocument();
     });
 
@@ -130,7 +125,7 @@ describe("ChatParticipantList", () => {
           { userId: "u1", isHost: false, user: { username: "Alice", iconUrl: null, avgRating: null } },
         ],
       });
-      renderWithQuery(<ChatParticipantList {...defaultProps} />);
+      render(<ChatParticipantList {...defaultProps} />);
       expect(screen.queryByTestId("icon-crown")).not.toBeInTheDocument();
     });
   });
@@ -148,7 +143,7 @@ describe("ChatParticipantList", () => {
           },
         ],
       });
-      renderWithQuery(<ChatParticipantList {...defaultProps} />);
+      render(<ChatParticipantList {...defaultProps} />);
       expect(screen.getByText("ゲスト")).toBeInTheDocument();
     });
 
@@ -158,7 +153,7 @@ describe("ChatParticipantList", () => {
           { userId: "u1", isHost: false, user: { username: "Alice", iconUrl: null, avgRating: null } },
         ],
       });
-      renderWithQuery(<ChatParticipantList {...defaultProps} />);
+      render(<ChatParticipantList {...defaultProps} />);
       expect(screen.queryByText("ゲスト")).not.toBeInTheDocument();
     });
   });
@@ -170,7 +165,7 @@ describe("ChatParticipantList", () => {
           { userId: "u1", isHost: false, user: { username: "Alice", iconUrl: null, avgRating: null } },
         ],
       });
-      renderWithQuery(<ChatParticipantList {...defaultProps} currentUserId="u1" />);
+      render(<ChatParticipantList {...defaultProps} currentUserId="u1" />);
       expect(screen.getByText("Alice")).toBeInTheDocument();
     });
 
@@ -186,7 +181,7 @@ describe("ChatParticipantList", () => {
           },
         ],
       });
-      renderWithQuery(
+      render(
         <ChatParticipantList
           {...defaultProps}
           currentUserId={null}
