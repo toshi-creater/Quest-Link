@@ -120,7 +120,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     return tx.chatMessage.create({
       data: {
         roomId,
-        content: `${targetUsername}さんはホストにキックされました`,
+        content: `${targetUsername}さんが退室しました`,
         isSystem: true,
       },
     });

@@ -29,16 +29,16 @@ export function KickButton({ roomId, target, targetName, onSuccess }: Props) {
       <button
         onClick={() => setIsOpen(true)}
         className="shrink-0 rounded p-1 transition-colors hover:bg-red-500/10"
-        title={`${targetName}をキック`}
+        title={`${targetName}さんを退室させる`}
       >
         <HandWaving size={20} style={{ color: "#f87171" }} />
       </button>
 
       {isOpen && (
         <ConfirmModal
-          title="参加者をキックしますか？"
-          description={`${targetName}さんをこの部屋から退室させます。`}
-          confirmLabel="キックする"
+          title={`${targetName} さんをこの部屋から退室させますか？`}
+          description=""
+          confirmLabel="はい"
           isPending={kickMutation.isPending}
           onConfirm={() => kickMutation.mutate()}
           onCancel={() => setIsOpen(false)}
