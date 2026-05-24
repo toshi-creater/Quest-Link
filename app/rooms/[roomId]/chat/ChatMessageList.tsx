@@ -79,7 +79,7 @@ export function ChatMessageList({ currentUserId, currentGuestSessionId }: Props)
                   </span>
                 )}
                 <div
-                  className="rounded-2xl px-3 py-2 text-sm leading-relaxed break-words"
+                  className="rounded-2xl px-3 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap"
                   style={
                     isMe
                       ? {
