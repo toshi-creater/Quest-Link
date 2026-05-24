@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import clsx from "clsx";
 
 type Tag = {
@@ -19,21 +19,23 @@ type TagFilterPanelProps = {
   onApply?: () => void;
   applyLabel?: string;
   onClickOutside?: () => void;
+  ignoreRef?: React.RefObject<HTMLElement | null>;
 };
 
-export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, applyLabel, onClickOutside }: TagFilterPanelProps) {
+export function TagFilterPanel({ tags, selectedTags, onToggle, open, onApply, applyLabel, onClickOutside, ignoreRef }: TagFilterPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const handleMouseDown = (e: MouseEvent) => {
+      if (ignoreRef?.current?.contains(e.target as Node)) return;
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
         onClickOutside?.();
       }
     };
     document.addEventListener("mousedown", handleMouseDown);
     return () => document.removeEventListener("mousedown", handleMouseDown);
-  }, [open, onClickOutside]);
+  }, [open, onClickOutside, ignoreRef]);
 
   if (!open) return null;
 

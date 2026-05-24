@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import Image from "next/image";
@@ -41,6 +41,7 @@ export default function NewRoomPage() {
   const [pendingSlugs, setPendingSlugs] = useState<string[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const toggleRef = useRef<HTMLDivElement>(null);
 
   const { data: tags = [] } = useQuery({
     queryKey: ["play-style-tags"],
@@ -286,12 +287,14 @@ export default function NewRoomPage() {
               </span>
             </label>
             <div className="flex items-center gap-2">
-              <TagFilterToggle
-                selectedCount={selectedSlugs.length}
-                panelOpen={panelOpen}
-                onPanelToggle={handlePanelToggle}
-                label="タグを選択"
-              />
+              <div ref={toggleRef}>
+                <TagFilterToggle
+                  selectedCount={selectedSlugs.length}
+                  panelOpen={panelOpen}
+                  onPanelToggle={handlePanelToggle}
+                  label="タグを選択"
+                />
+              </div>
               {selectedSlugs.length > 0 && (
                 <button
                   type="button"
@@ -311,6 +314,7 @@ export default function NewRoomPage() {
               onApply={handleApply}
               applyLabel="決定"
               onClickOutside={handleApply}
+              ignoreRef={toggleRef}
             />
             <div className="mt-2 min-w-0">
               <ActiveFilterBar
