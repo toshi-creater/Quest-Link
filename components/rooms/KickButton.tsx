@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UserMinus } from "@phosphor-icons/react";
+import { HandWaving } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { kickParticipant, type KickTarget } from "@/lib/api/rooms";
@@ -31,7 +31,7 @@ export function KickButton({ roomId, target, targetName, onSuccess }: Props) {
         className="shrink-0 rounded p-1 transition-colors hover:bg-red-500/10"
         title={`${targetName}をキック`}
       >
-        <UserMinus className="h-3.5 w-3.5" style={{ color: "#f87171" }} />
+        <HandWaving size={20} style={{ color: "#f87171" }} />
       </button>
 
       {isOpen && (
