@@ -19,6 +19,7 @@
 | POST | `/rooms/{roomId}/join` | 必要 | 部屋に参加 |
 | POST | `/rooms/{roomId}/leave` | 必要 | 部屋を退室 |
 | POST | `/rooms/{roomId}/close` | 必要（ホストのみ） | 部屋を解散 |
+| POST | `/rooms/{roomId}/kick` | 必要（ホストのみ） | 参加者をキック |
 | POST | `/rooms/{roomId}/invite` | 必要（ホストのみ） | 招待トークンを取得（冪等。部屋作成時に自動生成済み） |
 | POST | `/rooms/{roomId}/share` | 必要 | SNS シェア投稿 |
 | GET | `/rooms/{roomId}/messages` | 必要 | チャット履歴取得 |
@@ -450,6 +451,7 @@ const socket = io("wss://api.example.com");
 | `chat:message` | `{ id, roomId, user, content, isSystem, createdAt }` | チャットメッセージ受信 |
 | `room:user_joined` | `{ userId, username, iconUrl, avgRating, isGuest, joinedAt }` | ユーザーが入室 |
 | `room:user_left` | `{ userId, username, leftAt }` | ユーザーが退室 |
+| `room:user_kicked` | `{ kickedUserId, kickedGuestSessionId, byHostId, kickedAt }` | ホストがキック（キックされた本人への強制遷移トリガー） |
 | `room:host_changed` | `{ newHostId, newHostUsername }` | ホストが変更 |
 | `room:closed` | `{ roomId, closedAt }` | 部屋が解散 |
 

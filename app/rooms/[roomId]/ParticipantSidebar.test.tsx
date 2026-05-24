@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -32,8 +33,26 @@ vi.mock("@/components/ui/StarRating", () => ({
   RatingDisplay: () => <div data-testid="rating-display" />,
 }));
 
+vi.mock("@/components/rooms/KickButton", () => ({
+  KickButton: ({ targetName }: { targetName: string }) => (
+    <button data-testid="kick-button" aria-label={`${targetName}をキック`} />
+  ),
+}));
+
 import { ParticipantSidebar } from "./ParticipantSidebar";
 import type { RoomParticipant } from "@/lib/api/rooms";
+
+function renderWithQuery(ui: React.ReactElement) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
+
+const defaultProps = {
+  roomId: "room-1",
+  currentUserId: null as string | null,
+  currentGuestSessionId: null as string | null,
+  isCurrentUserHost: false,
+};
 
 const makeUser = (override: Partial<RoomParticipant> = {}): RoomParticipant => ({
   userId: "user-1",
@@ -59,13 +78,12 @@ const makeGuest = (override: Partial<RoomParticipant> = {}): RoomParticipant => 
 
 describe("ParticipantSidebar", () => {
   it("参加者数と最大人数が表示される", () => {
-    render(
+    renderWithQuery(
       <ParticipantSidebar
+        {...defaultProps}
         participants={[makeUser()]}
         maxPlayers={4}
         currentPlayers={1}
-        currentUserId={null}
-        currentGuestSessionId={null}
       />
     );
     expect(screen.getByText("1")).toBeInTheDocument();
@@ -73,104 +91,98 @@ describe("ParticipantSidebar", () => {
   });
 
   it("空枠が (maxPlayers - currentPlayers) 個表示される", () => {
-    render(
+    renderWithQuery(
       <ParticipantSidebar
+        {...defaultProps}
         participants={[makeUser()]}
         maxPlayers={4}
         currentPlayers={1}
-        currentUserId={null}
-        currentGuestSessionId={null}
       />
     );
     expect(screen.getAllByText("募集中...")).toHaveLength(3);
   });
 
   it("ホストには Crown アイコンが表示される", () => {
-    render(
+    renderWithQuery(
       <ParticipantSidebar
+        {...defaultProps}
         participants={[makeUser({ isHost: true })]}
         maxPlayers={2}
         currentPlayers={1}
-        currentUserId={null}
-        currentGuestSessionId={null}
       />
     );
     expect(screen.getByTestId("icon-crown")).toBeInTheDocument();
   });
 
   it("非ホストには Crown アイコンが表示されない", () => {
-    render(
+    renderWithQuery(
       <ParticipantSidebar
+        {...defaultProps}
         participants={[makeUser({ isHost: false })]}
         maxPlayers={2}
         currentPlayers={1}
-        currentUserId={null}
-        currentGuestSessionId={null}
       />
     );
     expect(screen.queryByTestId("icon-crown")).toBeNull();
   });
 
   it("ゲスト参加者には「ゲスト」バッジが表示される", () => {
-    render(
+    renderWithQuery(
       <ParticipantSidebar
+        {...defaultProps}
         participants={[makeGuest()]}
         maxPlayers={2}
         currentPlayers={1}
-        currentUserId={null}
-        currentGuestSessionId={null}
       />
     );
     expect(screen.getByText("ゲスト")).toBeInTheDocument();
   });
 
   it("ユーザー参加者には「ゲスト」バッジが表示されない", () => {
-    render(
+    renderWithQuery(
       <ParticipantSidebar
+        {...defaultProps}
         participants={[makeUser()]}
         maxPlayers={2}
         currentPlayers={1}
-        currentUserId={null}
-        currentGuestSessionId={null}
       />
     );
     expect(screen.queryByText("ゲスト")).toBeNull();
   });
 
   it("自分のユーザーには「あなた」ラベルが表示される", () => {
-    render(
+    renderWithQuery(
       <ParticipantSidebar
+        {...defaultProps}
         participants={[makeUser({ userId: "me" })]}
         maxPlayers={2}
         currentPlayers={1}
         currentUserId="me"
-        currentGuestSessionId={null}
       />
     );
     expect(screen.getByText("(あなた)")).toBeInTheDocument();
   });
 
   it("自分以外のユーザーには「あなた」ラベルが表示されない", () => {
-    render(
+    renderWithQuery(
       <ParticipantSidebar
+        {...defaultProps}
         participants={[makeUser({ userId: "other" })]}
         maxPlayers={2}
         currentPlayers={1}
         currentUserId="me"
-        currentGuestSessionId={null}
       />
     );
     expect(screen.queryByText("(あなた)")).toBeNull();
   });
 
   it("ユーザー参加者のアバターにプロフィールページへのリンクが付く", () => {
-    render(
+    renderWithQuery(
       <ParticipantSidebar
+        {...defaultProps}
         participants={[makeUser({ userId: "user-99" })]}
         maxPlayers={2}
         currentPlayers={1}
-        currentUserId={null}
-        currentGuestSessionId={null}
       />
     );
     const links = screen.getAllByRole("link");
@@ -178,13 +190,13 @@ describe("ParticipantSidebar", () => {
   });
 
   it("自分のアバターのリンク先は /users/me", () => {
-    render(
+    renderWithQuery(
       <ParticipantSidebar
+        {...defaultProps}
         participants={[makeUser({ userId: "me" })]}
         maxPlayers={2}
         currentPlayers={1}
         currentUserId="me"
-        currentGuestSessionId={null}
       />
     );
     const links = screen.getAllByRole("link");
@@ -192,13 +204,12 @@ describe("ParticipantSidebar", () => {
   });
 
   it("参加者がいない場合は空枠のみ表示される", () => {
-    render(
+    renderWithQuery(
       <ParticipantSidebar
+        {...defaultProps}
         participants={[]}
         maxPlayers={3}
         currentPlayers={0}
-        currentUserId={null}
-        currentGuestSessionId={null}
       />
     );
     expect(screen.getAllByText("募集中...")).toHaveLength(3);

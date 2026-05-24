@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { Crown } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
+import { KickButton } from "@/components/rooms/KickButton";
 import { useChatStore } from "@/lib/stores/chatStore";
 import { BackButton } from "@/components/ui/BackButton";
 
@@ -14,6 +14,7 @@ type Props = {
   roomId: string;
   currentUserId: string | null;
   currentGuestSessionId: string | null;
+  isCurrentUserHost: boolean;
   maxPlayers: number;
   roomTitle: string;
   gameName: string;
@@ -24,6 +25,7 @@ export function ChatParticipantList({
   roomId,
   currentUserId,
   currentGuestSessionId,
+  isCurrentUserHost,
   maxPlayers,
   roomTitle,
   gameName,
@@ -72,9 +74,10 @@ export function ChatParticipantList({
               (p.userId != null && p.userId === currentUserId) ||
               (currentGuestSessionId !== null && p.guestSessionId === currentGuestSessionId);
             const isGuest = p.user === null;
+            const canKick = isCurrentUserHost && !isMe && !p.isHost;
             return (
               <li key={p.userId ?? `guest-${idx}`} className="flex items-center gap-2.5">
-                <div className="relative">
+                <div className="relative shrink-0">
                   <UserAvatar username={name} iconUrl={iconUrl} size="sm" />
                   {!isGuest && (
                     <span
@@ -83,9 +86,9 @@ export function ChatParticipantList({
                     />
                   )}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1">
-                    {p.isHost && <Crown className="h-3 w-3" style={{ color: "#eab308" }} />}
+                    {p.isHost && <Crown className="h-3 w-3 shrink-0" style={{ color: "#eab308" }} />}
                     <span
                       className="truncate text-xs font-medium"
                       style={{ color: isMe ? "var(--accent-light)" : "var(--text-primary)" }}
@@ -110,6 +113,17 @@ export function ChatParticipantList({
                     size="sm"
                   />
                 </div>
+                {canKick && (
+                  <KickButton
+                    roomId={roomId}
+                    target={
+                      p.userId != null
+                        ? { userId: p.userId }
+                        : { guestSessionId: p.guestSessionId! }
+                    }
+                    targetName={name}
+                  />
+                )}
               </li>
             );
           })}

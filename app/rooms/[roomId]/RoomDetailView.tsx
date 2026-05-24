@@ -173,11 +173,13 @@ export function RoomDetailView({ roomId }: Props) {
 
         {/* Sidebar: Participants */}
         <ParticipantSidebar
+          roomId={room.id}
           participants={room.participants}
           maxPlayers={room.maxPlayers}
           currentPlayers={room.currentPlayers}
           currentUserId={currentUserId}
           currentGuestSessionId={currentGuestSessionId}
+          isCurrentUserHost={isHost}
         />
       </div>
 
