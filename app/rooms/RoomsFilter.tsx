@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { fetchRooms, type RoomSummary } from "@/lib/api/rooms";
@@ -30,6 +30,7 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
   const [appliedTags, setAppliedTags] = useState<string[]>([]);
   const [pendingTags, setPendingTags] = useState<string[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
+  const toggleRef = useRef<HTMLDivElement>(null);
 
   const { data: tagsData = [] } = useQuery({
     queryKey: ["play-style-tags"],
@@ -96,11 +97,13 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
       {/* Tag filters */}
       <div className="mb-6">
         <div className="flex items-center gap-2">
-          <TagFilterToggle
-            selectedCount={appliedTags.length}
-            panelOpen={panelOpen}
-            onPanelToggle={handlePanelToggle}
-          />
+          <div ref={toggleRef}>
+            <TagFilterToggle
+              selectedCount={appliedTags.length}
+              panelOpen={panelOpen}
+              onPanelToggle={handlePanelToggle}
+            />
+          </div>
           {appliedTags.length > 0 && (
             <button
               onClick={() => setAppliedTags([])}
@@ -118,6 +121,7 @@ export function RoomsFilter({ gameId }: { gameId?: string }) {
           open={panelOpen}
           onApply={handleApply}
           onClickOutside={handleApply}
+          ignoreRef={toggleRef}
         />
         <div className="mt-2 min-w-0">
           <ActiveFilterBar
