@@ -45,7 +45,7 @@ export function Footer() {
         </Link>
       </nav>
       <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-        © 2024 QuestLink
+        © 2026 QuestLink
       </p>
     </footer>
   );
