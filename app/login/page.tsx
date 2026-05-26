@@ -1,6 +1,7 @@
 import { signIn } from "@/auth";
 import { Logo } from "@/components/ui/Logo";
 import { OAuthButton } from "@/components/ui/OAuthButton";
+import Link from "next/link";
 
 type Props = {
   searchParams: Promise<{ callbackUrl?: string }>;
@@ -54,7 +55,7 @@ export default async function LoginPage({ searchParams }: Props) {
             ソーシャルアカウントでかんたんにはじめられます
           </p>
 
-          <div className="space-y-3">
+          <div className="mb-6 space-y-4">
             <form
               action={async () => {
                 "use server";
@@ -131,9 +132,17 @@ export default async function LoginPage({ searchParams }: Props) {
 
           <p className="mt-4 text-center text-xs" style={{ color: "var(--text-muted)" }}>
             ログインすることで
-            <span style={{ color: "var(--accent-light)" }}>利用規約</span>・
-            <span style={{ color: "var(--accent-light)" }}>プライバシーポリシー</span>
+            <Link href="/terms" className="underline" style={{ color: "var(--accent-light)" }}>
+              利用規約
+            </Link>
+            ・
+            <Link href="/privacy" className="underline" style={{ color: "var(--accent-light)" }}>
+              プライバシーポリシー
+            </Link>
             に同意したものとみなされます
+          </p>
+          <p className="mt-2 text-center text-xs" style={{ color: "var(--text-muted)" }}>
+            未成年者の方は保護者の同意を得てからご利用ください
           </p>
         </div>
       </div>
