@@ -1,11 +1,11 @@
 /**
  * Phase 5 — WebSocket チャット同時送信スモークテスト
- * 目的: 100 VU が 10 秒間隔でチャットを送信し続けても
- *       socket-server / Redis / DB が崩れないかを検証する
+ * 目的: 100 VU が 25 部屋（4 VU/部屋）に分散して 10 秒間隔でチャットを
+ *       送信し続けても socket-server / Redis / DB が崩れないかを検証する
  * AC:
  *   - ws_connect_success > 99%
  *   - http_req_failed < 1%（socket-token 取得エラー）
- *   - recv/sent 比が 20 前後（fan-out ロストがないこと）
+ *   - recv/sent 比が 4 前後（fan-out ロストがないこと）
  */
 import http from "k6/http";
 import { check } from "k6";
@@ -47,12 +47,13 @@ export function setup() {
     headers: authHeaders(token),
   });
   const rooms = res.json("data");
-  if (!rooms || rooms.length < 5) {
+  if (!rooms || rooms.length < 25) {
     throw new Error(
-      "テスト用部屋が不足しています（5件以上必要）。pnpm db:seed:load を実行してください。"
+      "テスト用部屋が不足しています（25件以上必要）。pnpm db:seed:load を実行してください。"
     );
   }
-  const roomIds = rooms.slice(0, 5).map((r) => r.id);
+  // 25 部屋に分散（100 VU ÷ 25 部屋 = 4 VU/部屋）
+  const roomIds = rooms.slice(0, 25).map((r) => r.id);
   return { roomIds };
 }
 
