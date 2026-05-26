@@ -9,6 +9,8 @@ const prisma = new PrismaClient({ adapter });
 const LOAD_TEST_USER_COUNT = 500;
 const LOAD_TEST_ROOM_COUNT = 200;
 const MAX_PLAYERS_OPTIONS = [2, 3, 4, 5] as const;
+// phase6 用: 先頭 5 件は maxPlayers=16 の waiting 部屋として固定投入する
+const MAX_CAPACITY_ROOM_COUNT = 5;
 
 async function main() {
   const games = await prisma.game.findMany({
@@ -55,8 +57,11 @@ async function main() {
   for (let i = 0; i < LOAD_TEST_ROOM_COUNT; i++) {
     const game = games[i % games.length]!;
     const host = users[i % users.length]!;
-    const status = statusCycle[i % statusCycle.length]!;
-    const maxPlayers = MAX_PLAYERS_OPTIONS[i % MAX_PLAYERS_OPTIONS.length]!;
+    // 末尾 MAX_CAPACITY_ROOM_COUNT 件は phase6 用に maxPlayers=16 の waiting 部屋として固定
+    // （API が新着順で返すため末尾 = 最新 = limit=100 の先頭に出現する）
+    const isMaxCapacityRoom = i >= LOAD_TEST_ROOM_COUNT - MAX_CAPACITY_ROOM_COUNT;
+    const status: RoomStatus = isMaxCapacityRoom ? "waiting" : statusCycle[i % statusCycle.length]!;
+    const maxPlayers = isMaxCapacityRoom ? 16 : MAX_PLAYERS_OPTIONS[i % MAX_PLAYERS_OPTIONS.length]!;
 
     // 1〜3個のタグをインデックスのオフセットで選択
     const tagCount = (i % 3) + 1;
@@ -88,7 +93,7 @@ async function main() {
 
   console.log("✅ 負荷テスト用シードデータの投入が完了しました");
   console.log(`  ユーザー: ${LOAD_TEST_USER_COUNT} 件`);
-  console.log(`  部屋: ${LOAD_TEST_ROOM_COUNT} 件`);
+  console.log(`  部屋: ${LOAD_TEST_ROOM_COUNT} 件（うち maxPlayers=16 の waiting 部屋: ${MAX_CAPACITY_ROOM_COUNT} 件）`);
   console.log(
     `  ゲーム分散: ${games.map((g) => g.name).join(", ")} (${games.length} 種類)`
   );
