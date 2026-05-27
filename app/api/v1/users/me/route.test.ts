@@ -12,6 +12,10 @@ vi.mock("@/lib/prisma", () => ({
       delete: vi.fn(),
     },
     room: {
+      findMany: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    roomParticipant: {
       updateMany: vi.fn(),
     },
     rating: { findMany: vi.fn() },
@@ -232,7 +236,8 @@ describe("DELETE /api/v1/users/me", () => {
       async (fn: (tx: typeof prisma) => Promise<unknown>) =>
         fn({
           ...prisma,
-          room: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
+          room: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+          roomParticipant: { updateMany: vi.fn() },
           user: { delete: vi.fn().mockResolvedValue(undefined) },
         } as never)
     );
@@ -242,15 +247,18 @@ describe("DELETE /api/v1/users/me", () => {
     expect(res.status).toBe(204);
   });
 
-  it("ホスト中のアクティブルームがある場合、クローズしてから退会する", async () => {
+  it("ホスト中のアクティブルームがある場合、参加者を退室させクローズしてから退会する", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
-    const mockUpdateMany = vi.fn().mockResolvedValue({ count: 2 });
+    const mockRoomFindMany = vi.fn().mockResolvedValue([{ id: "room-1" }, { id: "room-2" }]);
+    const mockRoomUpdateMany = vi.fn().mockResolvedValue({ count: 2 });
+    const mockParticipantUpdateMany = vi.fn().mockResolvedValue({ count: 5 });
     const mockDelete = vi.fn().mockResolvedValue(undefined);
     mockTransaction.mockImplementation(
       async (fn: (tx: typeof prisma) => Promise<unknown>) =>
         fn({
           ...prisma,
-          room: { updateMany: mockUpdateMany },
+          room: { findMany: mockRoomFindMany, updateMany: mockRoomUpdateMany },
+          roomParticipant: { updateMany: mockParticipantUpdateMany },
           user: { delete: mockDelete },
         } as never)
     );
@@ -258,8 +266,12 @@ describe("DELETE /api/v1/users/me", () => {
     const res = await DELETE();
 
     expect(res.status).toBe(204);
-    expect(mockUpdateMany).toHaveBeenCalledWith({
-      where: { hostId: "user-1", status: { not: "closed" } },
+    expect(mockParticipantUpdateMany).toHaveBeenCalledWith({
+      where: { roomId: { in: ["room-1", "room-2"] }, leftAt: null },
+      data: expect.objectContaining({ leftAt: expect.any(Date) }),
+    });
+    expect(mockRoomUpdateMany).toHaveBeenCalledWith({
+      where: { id: { in: ["room-1", "room-2"] } },
       data: expect.objectContaining({ status: "closed" }),
     });
     expect(mockDelete).toHaveBeenCalledWith({ where: { id: "user-1" } });

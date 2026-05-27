@@ -185,10 +185,25 @@ export async function DELETE() {
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.room.updateMany({
+    const closedAt = new Date();
+
+    const activeRooms = await tx.room.findMany({
       where: { hostId: session.user.id, status: { not: "closed" } },
-      data: { status: "closed", closedAt: new Date() },
+      select: { id: true },
     });
+
+    if (activeRooms.length > 0) {
+      const roomIds = activeRooms.map((r) => r.id);
+      await tx.roomParticipant.updateMany({
+        where: { roomId: { in: roomIds }, leftAt: null },
+        data: { leftAt: closedAt },
+      });
+      await tx.room.updateMany({
+        where: { id: { in: roomIds } },
+        data: { status: "closed", closedAt },
+      });
+    }
+
     await tx.user.delete({ where: { id: session.user.id } });
   });
 
