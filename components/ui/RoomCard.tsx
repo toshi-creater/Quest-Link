@@ -109,15 +109,17 @@ export const RoomCard = memo(function RoomCard({ room }: Props) {
         </div>
 
         {/* Host */}
-        <div className="mt-3 flex items-center gap-2 pt-3">
-          <UserAvatar username={room.host.username} iconUrl={room.host.iconUrl} size="sm" />
-          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
-            {room.host.username}
-          </span>
-          <div className="ml-auto">
-            <RatingDisplay avgRating={room.host.avgRating} ratingCount={room.host.avgRating != null ? 10 : 3} size="sm" />
+        {room.host && (
+          <div className="mt-3 flex items-center gap-2 pt-3">
+            <UserAvatar username={room.host.username} iconUrl={room.host.iconUrl} size="sm" />
+            <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+              {room.host.username}
+            </span>
+            <div className="ml-auto">
+              <RatingDisplay avgRating={room.host.avgRating} ratingCount={room.host.avgRating != null ? 10 : 3} size="sm" />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Link>
   );

@@ -39,7 +39,7 @@ export type RoomSummary = {
   currentPlayers: number;
   status: "waiting" | "playing" | "closed";
   playStyleTags: RoomTag[];
-  host: RoomHost;
+  host: RoomHost | null;
   createdAt: string;
 };
 

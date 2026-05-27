@@ -11,6 +11,9 @@ vi.mock("@/lib/prisma", () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    room: {
+      updateMany: vi.fn(),
+    },
     rating: { findMany: vi.fn() },
     playStyleTag: { findMany: vi.fn() },
     game: { findMany: vi.fn() },
@@ -23,7 +26,7 @@ vi.mock("@/lib/prisma", () => ({
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { GET, PATCH } from "./route";
+import { GET, PATCH, DELETE } from "./route";
 
 const mockAuth = vi.mocked(auth);
 const mockFindUnique = vi.mocked(prisma.user.findUnique);
@@ -209,5 +212,56 @@ describe("PATCH /api/v1/users/me", () => {
 
     expect(res.status).toBe(409);
     expect(body.error).toBe("USERNAME_TAKEN");
+  });
+});
+
+describe("DELETE /api/v1/users/me", () => {
+  it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
+    mockAuth.mockResolvedValue(null);
+
+    const res = await DELETE();
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.error).toBe("UNAUTHORIZED");
+  });
+
+  it("ホスト中ルームなしで正常退会できる場合 204 を返す", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
+    mockTransaction.mockImplementation(
+      async (fn: (tx: typeof prisma) => Promise<unknown>) =>
+        fn({
+          ...prisma,
+          room: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
+          user: { delete: vi.fn().mockResolvedValue(undefined) },
+        } as never)
+    );
+
+    const res = await DELETE();
+
+    expect(res.status).toBe(204);
+  });
+
+  it("ホスト中のアクティブルームがある場合、クローズしてから退会する", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
+    const mockUpdateMany = vi.fn().mockResolvedValue({ count: 2 });
+    const mockDelete = vi.fn().mockResolvedValue(undefined);
+    mockTransaction.mockImplementation(
+      async (fn: (tx: typeof prisma) => Promise<unknown>) =>
+        fn({
+          ...prisma,
+          room: { updateMany: mockUpdateMany },
+          user: { delete: mockDelete },
+        } as never)
+    );
+
+    const res = await DELETE();
+
+    expect(res.status).toBe(204);
+    expect(mockUpdateMany).toHaveBeenCalledWith({
+      where: { hostId: "user-1", status: { not: "closed" } },
+      data: expect.objectContaining({ status: "closed" }),
+    });
+    expect(mockDelete).toHaveBeenCalledWith({ where: { id: "user-1" } });
   });
 });

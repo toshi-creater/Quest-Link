@@ -184,7 +184,13 @@ export async function DELETE() {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
 
-  await prisma.user.delete({ where: { id: session.user.id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.room.updateMany({
+      where: { hostId: session.user.id, status: { not: "closed" } },
+      data: { status: "closed", closedAt: new Date() },
+    });
+    await tx.user.delete({ where: { id: session.user.id } });
+  });
 
   return new NextResponse(null, { status: 204 });
 }
