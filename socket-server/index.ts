@@ -13,7 +13,7 @@ import { decode } from "next-auth/jwt";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
-import { validateLength } from "../lib/moderation";
+import { validateLength, checkRateLimit, pruneRateLimitMap } from "../lib/moderation";
 
 type AuthenticatedSocketData =
   | { kind: "user"; userId: string; username: string; iconUrl: string | null; avgRating: number }
@@ -44,29 +44,7 @@ if (process.env.NODE_ENV === "production" && NEXT_APP_URL === "http://localhost:
 }
 const INTERNAL_SECRET = process.env.SOCKET_INTERNAL_SECRET;
 
-const RATE_LIMIT_WINDOW_MS = 10_000;
-const RATE_LIMIT_MAX = 10;
-const rateLimitMap = new Map<string, number[]>();
-
-function checkRateLimit(key: string): boolean {
-  const now = Date.now();
-  const timestamps = (rateLimitMap.get(key) ?? []).filter(
-    (t) => now - t < RATE_LIMIT_WINDOW_MS
-  );
-  if (timestamps.length >= RATE_LIMIT_MAX) return false;
-  timestamps.push(now);
-  rateLimitMap.set(key, timestamps);
-  return true;
-}
-
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, timestamps] of rateLimitMap) {
-    const valid = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
-    if (valid.length === 0) rateLimitMap.delete(key);
-    else rateLimitMap.set(key, valid);
-  }
-}, 5 * 60 * 1000);
+setInterval(pruneRateLimitMap, 5 * 60 * 1000);
 
 function parseCookies(cookieHeader: string): Record<string, string> {
   const result: Record<string, string> = {};
