@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { leaveRoomInTx, emitLeaveRoomEvents } from "@/lib/leave-room";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 
@@ -184,28 +185,40 @@ export async function DELETE() {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
 
-  await prisma.$transaction(async (tx) => {
-    const closedAt = new Date();
+  const userId = session.user.id;
 
-    const activeRooms = await tx.room.findMany({
-      where: { hostId: session.user.id, status: { not: "closed" } },
-      select: { id: true },
+  const leavingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { username: true },
+  });
+  const username = leavingUser?.username ?? "ユーザー";
+
+  const now = new Date();
+  const leaveResults: Array<{ roomId: string; result: Awaited<ReturnType<typeof leaveRoomInTx>> }> = [];
+
+  await prisma.$transaction(async (tx) => {
+    const activeParticipants = await tx.roomParticipant.findMany({
+      where: { userId, leftAt: null },
+      select: { id: true, roomId: true, isHost: true },
     });
 
-    if (activeRooms.length > 0) {
-      const roomIds = activeRooms.map((r) => r.id);
-      await tx.roomParticipant.updateMany({
-        where: { roomId: { in: roomIds }, leftAt: null },
-        data: { leftAt: closedAt },
+    for (const p of activeParticipants) {
+      const result = await leaveRoomInTx(tx, {
+        roomId: p.roomId,
+        participantId: p.id,
+        isHost: p.isHost,
+        userId,
+        username,
+        now,
       });
-      await tx.room.updateMany({
-        where: { id: { in: roomIds } },
-        data: { status: "closed", closedAt },
-      });
+      leaveResults.push({ roomId: p.roomId, result });
     }
-
-    await tx.user.delete({ where: { id: session.user.id } });
+    await tx.user.delete({ where: { id: userId } });
   });
+
+  for (const { roomId, result } of leaveResults) {
+    await emitLeaveRoomEvents(roomId, userId, username, result);
+  }
 
   return new NextResponse(null, { status: 204 });
 }
