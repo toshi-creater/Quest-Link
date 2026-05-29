@@ -49,12 +49,14 @@ function formatRoom(room: RawRoom): RoomSummary {
     status: room.status as "waiting" | "playing" | "closed",
     createdAt: room.createdAt.toISOString(),
     game: room.game,
-    host: {
-      id: room.host.id,
-      username: room.host.username,
-      iconUrl: room.host.iconUrl,
-      avgRating: Number(room.host.avgRating),
-    },
+    host: room.host
+      ? {
+          id: room.host.id,
+          username: room.host.username,
+          iconUrl: room.host.iconUrl,
+          avgRating: Number(room.host.avgRating),
+        }
+      : null,
     playStyleTags: room.playStyleTags.map((t) => t.tag),
   };
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { leaveRoomInTx, emitLeaveRoomEvents } from "@/lib/leave-room";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 
@@ -184,7 +185,40 @@ export async function DELETE() {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
 
-  await prisma.user.delete({ where: { id: session.user.id } });
+  const userId = session.user.id;
+
+  const leavingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { username: true },
+  });
+  const username = leavingUser?.username ?? "ユーザー";
+
+  const now = new Date();
+  const leaveResults: Array<{ roomId: string; result: Awaited<ReturnType<typeof leaveRoomInTx>> }> = [];
+
+  await prisma.$transaction(async (tx) => {
+    const activeParticipants = await tx.roomParticipant.findMany({
+      where: { userId, leftAt: null },
+      select: { id: true, roomId: true, isHost: true },
+    });
+
+    for (const p of activeParticipants) {
+      const result = await leaveRoomInTx(tx, {
+        roomId: p.roomId,
+        participantId: p.id,
+        isHost: p.isHost,
+        userId,
+        username,
+        now,
+      });
+      leaveResults.push({ roomId: p.roomId, result });
+    }
+    await tx.user.delete({ where: { id: userId } });
+  });
+
+  for (const { roomId, result } of leaveResults) {
+    await emitLeaveRoomEvents(roomId, userId, username, result);
+  }
 
   return new NextResponse(null, { status: 204 });
 }

@@ -66,12 +66,14 @@ function formatRoomList(room: RawRoomList) {
     createdAt: room.createdAt,
     closedAt: room.closedAt,
     game: room.game,
-    host: {
-      id: room.host.id,
-      username: room.host.username,
-      iconUrl: room.host.iconUrl,
-      avgRating: Number(room.host.avgRating),
-    },
+    host: room.host
+      ? {
+          id: room.host.id,
+          username: room.host.username,
+          iconUrl: room.host.iconUrl,
+          avgRating: Number(room.host.avgRating),
+        }
+      : null,
     playStyleTags: room.playStyleTags.map((t) => t.tag),
   };
 }
@@ -88,12 +90,14 @@ function formatRoom(room: RawRoom) {
     createdAt: room.createdAt,
     closedAt: room.closedAt,
     game: room.game,
-    host: {
-      id: room.host.id,
-      username: room.host.username,
-      iconUrl: room.host.iconUrl,
-      avgRating: Number(room.host.avgRating),
-    },
+    host: room.host
+      ? {
+          id: room.host.id,
+          username: room.host.username,
+          iconUrl: room.host.iconUrl,
+          avgRating: Number(room.host.avgRating),
+        }
+      : null,
     playStyleTags: room.playStyleTags.map((t) => t.tag),
     participants: room.participants.map((p) => ({
       userId: p.userId,

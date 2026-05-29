@@ -36,6 +36,7 @@ type MockTx = {
   roomParticipant: {
     update: ReturnType<typeof vi.fn>;
     findFirst: ReturnType<typeof vi.fn>;
+    updateMany: ReturnType<typeof vi.fn>;
   };
   room: { update: ReturnType<typeof vi.fn> };
   chatMessage: { create: ReturnType<typeof vi.fn> };
@@ -57,6 +58,7 @@ beforeEach(() => {
     roomParticipant: {
       update: vi.fn(),
       findFirst: vi.fn(),
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
     room: { update: vi.fn() },
     chatMessage: { create: vi.fn().mockResolvedValue({ id: "leave-msg-1", content: "leaving", createdAt: new Date() }) },

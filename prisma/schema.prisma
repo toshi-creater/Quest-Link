@@ -65,7 +65,7 @@ model OauthProviderAccount {
 
 model Room {
   id          String     @id @default(uuid()) @db.Uuid
-  hostId      String     @map("host_id") @db.Uuid
+  hostId      String?    @map("host_id") @db.Uuid
   title       String     @db.VarChar(100)
   gameId      String     @map("game_id") @db.Uuid
   maxPlayers  Int        @map("max_players") @db.SmallInt
@@ -76,7 +76,7 @@ model Room {
   closedAt    DateTime?  @map("closed_at") @db.Timestamptz
   inviteToken String?    @unique @map("invite_token") @db.VarChar(64)
 
-  host          User               @relation("RoomHost", fields: [hostId], references: [id], onDelete: Restrict)
+  host          User?              @relation("RoomHost", fields: [hostId], references: [id], onDelete: SetNull)
   game          Game               @relation(fields: [gameId], references: [id])
   participants  RoomParticipant[]
   chatMessages  ChatMessage[]
