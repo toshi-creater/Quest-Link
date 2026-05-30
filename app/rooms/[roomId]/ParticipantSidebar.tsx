@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { RatingDisplay } from "@/components/ui/StarRating";
 import { KickButton } from "@/components/rooms/KickButton";
+import { useMyBlocks } from "@/lib/hooks/useMyBlocks";
 import type { RoomParticipant } from "@/lib/api/rooms";
 
 type ParticipantSidebarProps = {
@@ -28,6 +29,10 @@ export function ParticipantSidebar({
   isCurrentUserHost,
 }: ParticipantSidebarProps) {
   const queryClient = useQueryClient();
+  const blockedIds = useMyBlocks();
+  const visibleParticipants = participants.filter(
+    (p) => !p.userId || !blockedIds.has(p.userId)
+  );
 
   return (
     <div className="space-y-4">
@@ -66,7 +71,7 @@ export function ParticipantSidebar({
           </div>
         </div>
         <ul className="space-y-3">
-          {participants.map((p, idx) => {
+          {visibleParticipants.map((p, idx) => {
             const isMe =
               (p.userId != null && p.userId === currentUserId) ||
               (currentGuestSessionId !== null && p.guestSessionId === currentGuestSessionId);

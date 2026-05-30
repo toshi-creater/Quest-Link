@@ -9,6 +9,9 @@ vi.mock("@/lib/prisma", () => ({
     user: {
       findUnique: vi.fn(),
     },
+    block: {
+      findUnique: vi.fn(),
+    },
   },
 }));
 
@@ -18,6 +21,7 @@ import { GET } from "./route";
 
 const mockAuth = vi.mocked(auth);
 const mockFindUnique = vi.mocked(prisma.user.findUnique);
+const mockBlockFindUnique = vi.mocked(prisma.block.findUnique);
 
 const makeParams = (userId = "user-2") => ({
   params: Promise.resolve({ userId }),
@@ -37,6 +41,7 @@ const makeUser = () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockBlockFindUnique.mockResolvedValue(null);
 });
 
 describe("GET /api/v1/users/[userId]", () => {
@@ -71,6 +76,8 @@ describe("GET /api/v1/users/[userId]", () => {
     expect(res.status).toBe(200);
     expect(body.data.id).toBe("user-2");
     expect(body.data.username).toBe("otheruser");
+    expect(body.data.isBlocked).toBe(false);
+    expect(body.data.isMe).toBe(false);
   });
 
   it("レスポンスに receivedRatings が含まれない", async () => {
@@ -82,5 +89,28 @@ describe("GET /api/v1/users/[userId]", () => {
 
     expect(res.status).toBe(200);
     expect(body.data.receivedRatings).toBeUndefined();
+  });
+
+  it("ブロック済みユーザーの場合 isBlocked が true になる", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } } as never);
+    mockFindUnique.mockResolvedValue(makeUser() as never);
+    mockBlockFindUnique.mockResolvedValue({ blockerId: "user-1" } as never);
+
+    const res = await GET(new Request("http://localhost"), makeParams());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.isBlocked).toBe(true);
+  });
+
+  it("自分自身のプロフィールの場合 isMe が true になる", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-2" } } as never);
+    mockFindUnique.mockResolvedValue(makeUser() as never);
+
+    const res = await GET(new Request("http://localhost"), makeParams("user-2"));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.isMe).toBe(true);
   });
 });
