@@ -18,7 +18,7 @@
 | ファイル | 内容 |
 |---------|------|
 | `01_auth.md` | 認証 API |
-| `02_users.md` | ユーザー API |
+| `02_users.md` | ユーザー API・通報 API・ブロック API |
 | `03_rooms-chat.md` | 部屋 API・チャット API・WebSocket イベント |
 | `04_ratings-tags.md` | 評価 API・プレイスタイルタグ API |
 | `05_games.md` | ゲーム API（IGDB連携） |
@@ -135,6 +135,10 @@ https://api.example.com/v1
 |------------|--------------|------|
 | `USER_NOT_FOUND` | 404 | ユーザーが存在しない |
 | `USERNAME_TAKEN` | 409 | ユーザー名が既に使用中 |
+| `CANNOT_REPORT_SELF` | 400 | 自分自身を通報できない |
+| `CANNOT_BLOCK_SELF` | 400 | 自分自身をブロックできない |
+| `ALREADY_BLOCKED` | 409 | 既にブロック済み |
+| `NOT_BLOCKED` | 404 | ブロックしていない |
 
 ### 3.4 部屋エラー
 
@@ -170,3 +174,10 @@ https://api.example.com/v1
 | `INVALID_GAME` | 400 | 存在しないゲーム ID が指定された |
 | `TOO_MANY_GAMES` | 400 | ゲームの登録数が上限（20件）を超えている |
 | `IGDB_ERROR` | 500 | IGDB API との通信エラー |
+
+### 3.8 通報エラー
+
+| エラーコード | HTTP ステータス | 説明 |
+|------------|--------------|------|
+| `INVALID_REASON` | 400 | 通報理由が無効 |
+| `MESSAGE_NOT_FOUND` | 404 | 通報対象メッセージが存在しない |

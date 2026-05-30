@@ -19,6 +19,8 @@
 | `games` | ゲーム情報マスタ |
 | `user_games` | ユーザー × ゲーム |
 | `sns_share_logs` | SNSシェア投稿ログ（レート制限用） |
+| `reports` | ユーザー・メッセージ通報 |
+| `blocks` | ユーザーブロック |
 
 ---
 
@@ -286,6 +288,66 @@ SNSシェア投稿のログ。1部屋・1時間あたり3回の投稿制限を�
 
 ---
 
+### 2.13 `reports`
+
+ユーザーまたはメッセージに対する通報。`target_user_id` と `target_message_id` のいずれか一方のみを持つ。
+
+| カラム名 | 型 | NULL | デフォルト | 説明 |
+|---------|-----|------|-----------|------|
+| `id` | `UUID` | NOT NULL | `gen_random_uuid()` | PK |
+| `reporter_id` | `UUID` | NOT NULL | - | FK: users.id（通報した側） |
+| `target_user_id` | `UUID` | NULL | - | FK: users.id（通報対象ユーザー） |
+| `target_message_id` | `UUID` | NULL | - | FK: chat_messages.id（通報対象メッセージ） |
+| `reason` | `report_reason` | NOT NULL | - | 通報理由（ENUM） |
+| `detail` | `VARCHAR(500)` | NULL | - | 詳細コメント（`other` の場合は必須） |
+| `status` | `report_status` | NOT NULL | `'pending'` | 対応状況（ENUM） |
+| `created_at` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | - |
+
+**ENUM: `report_reason`**
+
+| 値 | 説明 |
+|----|------|
+| `harassment` | 嫌がらせ |
+| `spam` | スパム |
+| `hate_speech` | ヘイトスピーチ |
+| `inappropriate_content` | 不適切なコンテンツ |
+| `other` | その他 |
+
+**ENUM: `report_status`**
+
+| 値 | 説明 |
+|----|------|
+| `pending` | 未対応（デフォルト） |
+| `reviewed` | 確認済み |
+| `resolved` | 対応済み |
+| `dismissed` | 却下 |
+
+**制約**
+- `FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE`
+- `FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE CASCADE`
+- `FOREIGN KEY (target_message_id) REFERENCES chat_messages(id) ON DELETE CASCADE`
+- `CHECK (target_user_id IS NOT NULL OR target_message_id IS NOT NULL)` — どちらか必須
+
+---
+
+### 2.14 `blocks`
+
+ユーザー間のブロック関係。`(blocker_id, blocked_id)` を複合主キーとして管理する。
+
+| カラム名 | 型 | NULL | デフォルト | 説明 |
+|---------|-----|------|-----------|------|
+| `blocker_id` | `UUID` | NOT NULL | - | PK / FK: users.id（ブロックした側） |
+| `blocked_id` | `UUID` | NOT NULL | - | PK / FK: users.id（ブロックされた側） |
+| `created_at` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | - |
+
+**制約**
+- `PRIMARY KEY (blocker_id, blocked_id)`
+- `FOREIGN KEY (blocker_id) REFERENCES users(id) ON DELETE CASCADE`
+- `FOREIGN KEY (blocked_id) REFERENCES users(id) ON DELETE CASCADE`
+- `CHECK (blocker_id <> blocked_id)` — 自己ブロック禁止
+
+---
+
 ## 3. インデックス設計
 
 | テーブル | カラム | 種別 | 目的 |
@@ -310,6 +372,10 @@ SNSシェア投稿のログ。1部屋・1時間あたり3回の投稿制限を�
 | `games` | `(is_active, display_order)` | INDEX | ゲーム選択画面の表示順取得 |
 | `user_games` | `game_id` | INDEX | ゲーム別ユーザー検索 |
 | `sns_share_logs` | `(room_id, created_at DESC)` | INDEX | レート制限判定（直近1時間の投稿数集計） |
+| `reports` | `reporter_id` | INDEX | 通報者別一覧取得 |
+| `reports` | `target_user_id` | INDEX | 通報対象ユーザー別一覧取得 |
+| `reports` | `(status, created_at DESC)` | INDEX | 運営管理画面での未対応通報一覧 |
+| `blocks` | `blocked_id` | INDEX | 自分をブロックしているユーザーの逆引き |
 
 ```sql
 CREATE INDEX idx_rp_active ON room_participants (room_id)
