@@ -79,7 +79,7 @@ export function ReportModal({ targetUserId, targetMessageId, targetName, onClose
           <textarea
             value={detail}
             onChange={(e) => setDetail(e.target.value)}
-            placeholder="詳細を入力（任意）"
+            placeholder="詳細を入力（必須）"
             maxLength={500}
             rows={3}
             className="w-full resize-none rounded-xl border px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-purple-500"
@@ -106,7 +106,7 @@ export function ReportModal({ targetUserId, targetMessageId, targetName, onClose
           </button>
           <button
             onClick={() => mutation.mutate()}
-            disabled={!reason || mutation.isPending}
+            disabled={!reason || (reason === "other" && !detail.trim()) || mutation.isPending}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: "rgba(239,68,68,0.05)" }}
           >

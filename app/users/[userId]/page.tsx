@@ -52,7 +52,7 @@ export default function UserProfilePage() {
 
   const actions = !user.isMe ? (
     <div className="mt-4 flex flex-col gap-2">
-      <BlockButton userId={user.id} isBlocked={user.isBlocked} />
+      <BlockButton userId={user.id} isBlocked={user.isBlocked} username={user.username} />
       <button
         onClick={() => setShowReport(true)}
         className="flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 active:scale-[0.97]"
