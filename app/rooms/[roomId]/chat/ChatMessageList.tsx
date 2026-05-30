@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Flag } from "@phosphor-icons/react";
+import { useEffect, useRef } from "react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
-import { ReportModal } from "@/components/users/ReportModal";
 import { useChatStore } from "@/lib/stores/chatStore";
 
 type Props = {
@@ -11,12 +9,9 @@ type Props = {
   currentGuestSessionId: string | null;
 };
 
-type ReportTarget = { messageId: string; senderName: string };
-
 export function ChatMessageList({ currentUserId, currentGuestSessionId }: Props) {
   const messages = useChatStore((s) => s.messages);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
 
   // メッセージ追加時に自動スクロール
   useEffect(() => {
@@ -54,7 +49,7 @@ export function ChatMessageList({ currentUserId, currentGuestSessionId }: Props)
           return (
             <div
               key={msg.id}
-              className={`group flex flex-col gap-1 ${isMe ? "items-end" : "items-start"} ${msg.isNew ? "animate-slide-in-bottom" : ""}`}
+              className={`flex flex-col gap-1 ${isMe ? "items-end" : "items-start"} ${msg.isNew ? "animate-slide-in-bottom" : ""}`}
             >
               <div className={`flex items-end gap-2 max-w-[70%] ${isMe ? "flex-row-reverse" : "flex-row"}`}>
                 {!isMe && !isGuest && msg.user && (
@@ -104,16 +99,6 @@ export function ChatMessageList({ currentUserId, currentGuestSessionId }: Props)
                     {msg.content}
                   </div>
                 </div>
-                {!isMe && (
-                  <button
-                    onClick={() => setReportTarget({ messageId: msg.id, senderName })}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/10"
-                    title="このメッセージを通報"
-                    aria-label="このメッセージを通報"
-                  >
-                    <Flag size={14} style={{ color: "var(--text-muted)" }} />
-                  </button>
-                )}
               </div>
               <span
                 className="text-xs"
@@ -132,14 +117,6 @@ export function ChatMessageList({ currentUserId, currentGuestSessionId }: Props)
         })}
         <div ref={bottomRef} />
       </div>
-
-      {reportTarget && (
-        <ReportModal
-          targetMessageId={reportTarget.messageId}
-          targetName={reportTarget.senderName}
-          onClose={() => setReportTarget(null)}
-        />
-      )}
     </>
   );
 }
