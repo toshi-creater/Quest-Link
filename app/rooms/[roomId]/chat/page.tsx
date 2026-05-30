@@ -68,20 +68,18 @@ export default async function ChatPage({ params }: Props) {
     },
   });
 
-  const initialMessages: ChatMessage[] = rawMessages
-    .map((m) => ({
-      id: m.id,
-      roomId,
-      user: m.user ?? null,
-      displayName: m.guest?.displayName ?? undefined,
-      guestSessionId: m.guest?.guestSessionId ?? undefined,
-      content: m.content,
-      isSystem: m.isSystem,
-      createdAt: m.createdAt,
-    }));
+  const initialMessages: ChatMessage[] = rawMessages.map((m) => ({
+    id: m.id,
+    roomId,
+    user: m.user ?? null,
+    displayName: m.guest?.displayName ?? undefined,
+    guestSessionId: m.guest?.guestSessionId ?? undefined,
+    content: m.content,
+    isSystem: m.isSystem,
+    createdAt: m.createdAt,
+  }));
 
-  const initialParticipants: Participant[] = room.participants
-    .map((p) => ({
+  const initialParticipants: Participant[] = room.participants.map((p) => ({
     userId: p.userId,
     isHost: p.isHost,
     displayName: p.guestSessionId ? (guestMap.get(p.guestSessionId) ?? undefined) : undefined,
