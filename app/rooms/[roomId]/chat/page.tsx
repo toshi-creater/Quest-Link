@@ -54,6 +54,18 @@ export default async function ChatPage({ params }: Props) {
 
   const tags = room.playStyleTags.map((t) => t.tag);
 
+  // ブロックしたユーザーIDを取得（認証済みユーザーのみ）
+  const blockedUserIds =
+    currentUserId !== null
+      ? (
+          await prisma.block.findMany({
+            where: { blockerId: currentUserId },
+            select: { blockedId: true },
+          })
+        ).map((b) => b.blockedId)
+      : [];
+  const blockedSet = new Set(blockedUserIds);
+
   const rawMessages = await prisma.chatMessage.findMany({
     where: { roomId },
     orderBy: { createdAt: "asc" },
@@ -68,18 +80,22 @@ export default async function ChatPage({ params }: Props) {
     },
   });
 
-  const initialMessages: ChatMessage[] = rawMessages.map((m) => ({
-    id: m.id,
-    roomId,
-    user: m.user ?? null,
-    displayName: m.guest?.displayName ?? undefined,
-    guestSessionId: m.guest?.guestSessionId ?? undefined,
-    content: m.content,
-    isSystem: m.isSystem,
-    createdAt: m.createdAt,
-  }));
+  const initialMessages: ChatMessage[] = rawMessages
+    .filter((m) => m.isSystem || !m.user?.id || !blockedSet.has(m.user.id))
+    .map((m) => ({
+      id: m.id,
+      roomId,
+      user: m.user ?? null,
+      displayName: m.guest?.displayName ?? undefined,
+      guestSessionId: m.guest?.guestSessionId ?? undefined,
+      content: m.content,
+      isSystem: m.isSystem,
+      createdAt: m.createdAt,
+    }));
 
-  const initialParticipants: Participant[] = room.participants.map((p) => ({
+  const initialParticipants: Participant[] = room.participants
+    .filter((p) => !p.userId || !blockedSet.has(p.userId))
+    .map((p) => ({
     userId: p.userId,
     isHost: p.isHost,
     displayName: p.guestSessionId ? (guestMap.get(p.guestSessionId) ?? undefined) : undefined,

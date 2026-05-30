@@ -6,7 +6,6 @@ import { PlayStyleTag } from "@/components/ui/PlayStyleTag";
 import { RatingDisplay } from "@/components/ui/StarRating";
 import { KickButton } from "@/components/rooms/KickButton";
 import { useChatStore } from "@/lib/stores/chatStore";
-import { useMyBlocks } from "@/lib/hooks/useMyBlocks";
 import { BackButton } from "@/components/ui/BackButton";
 
 type Tag = { id: string; name: string; slug: string };
@@ -32,11 +31,7 @@ export function ChatParticipantList({
   gameName,
   tags,
 }: Props) {
-  const allParticipants = useChatStore((s) => s.participants);
-  const blockedIds = useMyBlocks();
-  const participants = allParticipants.filter(
-    (p) => !p.userId || !blockedIds.has(p.userId)
-  );
+  const participants = useChatStore((s) => s.participants);
   const currentPlayers = participants.length;
 
   return (

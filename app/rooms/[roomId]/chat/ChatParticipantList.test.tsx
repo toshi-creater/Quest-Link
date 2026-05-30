@@ -13,10 +13,6 @@ vi.mock("@/components/rooms/KickButton", () => ({
   ),
 }));
 
-vi.mock("@/lib/hooks/useMyBlocks", () => ({
-  useMyBlocks: () => new Set<string>(),
-}));
-
 vi.mock("next/link", () => ({
   default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...rest}>

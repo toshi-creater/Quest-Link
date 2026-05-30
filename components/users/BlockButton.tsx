@@ -15,7 +15,6 @@ export function BlockButton({ userId, isBlocked }: Props) {
   const mutation = useMutation({
     mutationFn: () => (isBlocked ? unblockUser(userId) : blockUser(userId)),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["my-blocks"] });
       void queryClient.invalidateQueries({ queryKey: ["users", userId] });
     },
   });

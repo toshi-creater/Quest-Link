@@ -16,10 +16,6 @@ vi.mock("@/components/users/ReportModal", () => ({
   ReportModal: () => <div data-testid="report-modal" />,
 }));
 
-vi.mock("@/lib/hooks/useMyBlocks", () => ({
-  useMyBlocks: () => new Set<string>(),
-}));
-
 // jsdom は scrollIntoView を実装していないためモックする
 Element.prototype.scrollIntoView = vi.fn();
 
