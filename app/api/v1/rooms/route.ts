@@ -142,15 +142,15 @@ export async function GET(request: Request) {
 
   const tagSlugList = tagSlugs ? tagSlugs.split(",").filter(Boolean) : [];
 
-  const [blockedByMe, blockedByHost] = await Promise.all([
-    prisma.block.findMany({ where: { blockerId: userId }, select: { blockedId: true } }),
-    prisma.block.findMany({ where: { blockedId: userId }, select: { blockerId: true } }),
-  ]);
+  const blocks = await prisma.block.findMany({
+    where: { OR: [{ blockerId: userId }, { blockedId: userId }] },
+    select: { blockerId: true, blockedId: true },
+  });
 
   const excludedHostIds = [
     ...new Set([
-      ...blockedByMe.map((b) => b.blockedId),
-      ...blockedByHost.map((b) => b.blockerId),
+      ...blocks.filter((b) => b.blockerId === userId).map((b) => b.blockedId),
+      ...blocks.filter((b) => b.blockedId === userId).map((b) => b.blockerId),
     ]),
   ];
 
