@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { Header } from "@/components/ui/Header";
 import { BottomNav } from "@/components/ui/BottomNav";
+import { Footer } from "@/components/ui/Footer";
 import { WebVitalsReporter } from "@/components/ui/WebVitalsReporter";
 import { Providers } from "./providers";
 import { auth } from "@/auth";
@@ -29,6 +30,7 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
       <Header />
       <main className="min-h-screen md:min-h-[calc(100vh_-_64px)] pb-[calc(60px_+_env(safe-area-inset-bottom))] md:pb-0">{children}</main>
       <BottomNav />
+      <Footer />
     </Providers>
   );
 }

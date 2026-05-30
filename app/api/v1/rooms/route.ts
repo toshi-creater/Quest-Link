@@ -66,12 +66,14 @@ function formatRoomList(room: RawRoomList) {
     createdAt: room.createdAt,
     closedAt: room.closedAt,
     game: room.game,
-    host: {
-      id: room.host.id,
-      username: room.host.username,
-      iconUrl: room.host.iconUrl,
-      avgRating: Number(room.host.avgRating),
-    },
+    host: room.host
+      ? {
+          id: room.host.id,
+          username: room.host.username,
+          iconUrl: room.host.iconUrl,
+          avgRating: Number(room.host.avgRating),
+        }
+      : null,
     playStyleTags: room.playStyleTags.map((t) => t.tag),
   };
 }
@@ -88,12 +90,14 @@ function formatRoom(room: RawRoom) {
     createdAt: room.createdAt,
     closedAt: room.closedAt,
     game: room.game,
-    host: {
-      id: room.host.id,
-      username: room.host.username,
-      iconUrl: room.host.iconUrl,
-      avgRating: Number(room.host.avgRating),
-    },
+    host: room.host
+      ? {
+          id: room.host.id,
+          username: room.host.username,
+          iconUrl: room.host.iconUrl,
+          avgRating: Number(room.host.avgRating),
+        }
+      : null,
     playStyleTags: room.playStyleTags.map((t) => t.tag),
     participants: room.participants.map((p) => ({
       userId: p.userId,
@@ -122,6 +126,7 @@ export async function GET(request: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "認証が必要です" } }, { status: 401 });
   }
+  const userId = session.user.id;
 
   const { searchParams } = new URL(request.url);
   const parsed = listQuerySchema.safeParse(Object.fromEntries(searchParams));
@@ -137,8 +142,21 @@ export async function GET(request: Request) {
 
   const tagSlugList = tagSlugs ? tagSlugs.split(",").filter(Boolean) : [];
 
+  const [blockedByMe, blockedByHost] = await Promise.all([
+    prisma.block.findMany({ where: { blockerId: userId }, select: { blockedId: true } }),
+    prisma.block.findMany({ where: { blockedId: userId }, select: { blockerId: true } }),
+  ]);
+
+  const excludedHostIds = [
+    ...new Set([
+      ...blockedByMe.map((b) => b.blockedId),
+      ...blockedByHost.map((b) => b.blockerId),
+    ]),
+  ];
+
   const where: Prisma.RoomWhereInput = {
     status,
+    ...(excludedHostIds.length > 0 && { hostId: { notIn: excludedHostIds } }),
     ...(gameId && { gameId }),
     ...(tagSlugList.length > 0 && {
       AND: tagSlugList.map(slug => ({

@@ -25,6 +25,21 @@ enum SnsPlatform {
   discord
 }
 
+enum ReportReason {
+  harassment
+  spam
+  hate_speech
+  inappropriate_content
+  other
+}
+
+enum ReportStatus {
+  pending
+  reviewed
+  resolved
+  dismissed
+}
+
 model User {
   id                String   @id @default(uuid()) @db.Uuid
   username          String   @unique @db.VarChar(50)
@@ -45,6 +60,10 @@ model User {
   playStyleTags   UserPlayStyleTag[]
   games           UserGame[]
   snsShareLogs    SnsShareLog[]
+  sentReports     Report[]           @relation("Reporter")
+  receivedReports Report[]           @relation("ReportedUser")
+  blocksGiven     Block[]            @relation("Blocker")
+  blocksReceived  Block[]            @relation("Blocked")
 
   @@map("users")
 }
@@ -65,7 +84,7 @@ model OauthProviderAccount {
 
 model Room {
   id          String     @id @default(uuid()) @db.Uuid
-  hostId      String     @map("host_id") @db.Uuid
+  hostId      String?    @map("host_id") @db.Uuid
   title       String     @db.VarChar(100)
   gameId      String     @map("game_id") @db.Uuid
   maxPlayers  Int        @map("max_players") @db.SmallInt
@@ -76,7 +95,7 @@ model Room {
   closedAt    DateTime?  @map("closed_at") @db.Timestamptz
   inviteToken String?    @unique @map("invite_token") @db.VarChar(64)
 
-  host          User               @relation("RoomHost", fields: [hostId], references: [id], onDelete: Restrict)
+  host          User?              @relation("RoomHost", fields: [hostId], references: [id], onDelete: SetNull)
   game          Game               @relation(fields: [gameId], references: [id])
   participants  RoomParticipant[]
   chatMessages  ChatMessage[]
@@ -129,9 +148,10 @@ model ChatMessage {
   isSystem  Boolean  @default(false) @map("is_system")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  room  Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
-  guest Guest? @relation(fields: [guestId], references: [id], onDelete: SetNull)
+  room    Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guest   Guest?   @relation(fields: [guestId], references: [id], onDelete: SetNull)
+  reports Report[]
 
   @@index([roomId, createdAt(sort: Desc)])
   @@map("chat_messages")
@@ -255,4 +275,37 @@ model SnsShareLog {
 
   @@index([roomId, createdAt(sort: Desc)])
   @@map("sns_share_logs")
+}
+
+model Report {
+  id              String       @id @default(uuid()) @db.Uuid
+  reporterId      String       @map("reporter_id") @db.Uuid
+  targetUserId    String?      @map("target_user_id") @db.Uuid
+  targetMessageId String?      @map("target_message_id") @db.Uuid
+  reason          ReportReason
+  detail          String?      @db.VarChar(500)
+  status          ReportStatus @default(pending)
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  reporter      User         @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetUser    User?        @relation("ReportedUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetMessage ChatMessage? @relation(fields: [targetMessageId], references: [id], onDelete: SetNull)
+
+  @@index([reporterId])
+  @@index([targetUserId])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("reports")
+}
+
+model Block {
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("blocks")
 }

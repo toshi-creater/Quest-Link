@@ -92,6 +92,9 @@ export const authConfig = {
       const pathname = nextUrl.pathname;
       const isLoginPage = pathname === "/login";
       const isOnboardingPage = pathname === "/onboarding";
+      const isPublicPage = pathname === "/privacy" || pathname === "/terms";
+
+      if (isPublicPage) return true;
 
       if (isLoginPage) {
         if (isLoggedIn) return Response.redirect(new URL("/", nextUrl));

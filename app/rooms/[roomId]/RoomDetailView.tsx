@@ -113,7 +113,7 @@ export function RoomDetailView({ roomId }: Props) {
   const isParticipant =
     (currentUserId != null && room.participants.some((p) => p.userId === currentUserId)) ||
     room.isCurrentGuestParticipant;
-  const isHost = currentUserId != null && room.host.id === currentUserId;
+  const isHost = currentUserId != null && room.host?.id === currentUserId;
   const isGuest = currentUserId === null && isParticipant;
 
   // 招待URL + 未ログイン + 未参加 → 参加ボタン押下でダイアログを表示
