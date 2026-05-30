@@ -9,6 +9,7 @@ vi.mock("@/lib/prisma", () => ({
     game: { findUnique: vi.fn() },
     playStyleTag: { findMany: vi.fn() },
     roomParticipant: { findFirst: vi.fn() },
+    block: { findMany: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -103,8 +104,11 @@ function makePostRequest(body: unknown): Request {
 
 // ─── テスト ────────────────────────────────────────────────────────────────────
 
+const mockBlockFindMany = vi.mocked(prisma.block.findMany);
+
 beforeEach(() => {
   vi.clearAllMocks();
+  mockBlockFindMany.mockResolvedValue([]);
 });
 
 describe("GET /api/v1/rooms", () => {

@@ -126,6 +126,7 @@ export async function GET(request: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "認証が必要です" } }, { status: 401 });
   }
+  const userId = session.user.id;
 
   const { searchParams } = new URL(request.url);
   const parsed = listQuerySchema.safeParse(Object.fromEntries(searchParams));
@@ -141,8 +142,16 @@ export async function GET(request: Request) {
 
   const tagSlugList = tagSlugs ? tagSlugs.split(",").filter(Boolean) : [];
 
+  const blockedHostIds = (
+    await prisma.block.findMany({
+      where: { blockerId: userId },
+      select: { blockedId: true },
+    })
+  ).map((b) => b.blockedId);
+
   const where: Prisma.RoomWhereInput = {
     status,
+    ...(blockedHostIds.length > 0 && { hostId: { notIn: blockedHostIds } }),
     ...(gameId && { gameId }),
     ...(tagSlugList.length > 0 && {
       AND: tagSlugList.map(slug => ({
