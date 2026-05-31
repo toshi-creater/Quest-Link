@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { emitToRoom } from "@/lib/socket-emitter";
+import { Prisma } from "@prisma/client";
 
 type RouteParams = { params: Promise<{ roomId: string }> };
 
