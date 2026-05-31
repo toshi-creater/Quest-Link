@@ -6,11 +6,16 @@ const pool = new Pool({ connectionString: process.env["DATABASE_URL"] });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-const LOAD_TEST_USER_COUNT = 500;
-const LOAD_TEST_ROOM_COUNT = 200;
+// ジョイナー: 入退室を繰り返すVU用（cookieが必要）
+const JOINER_COUNT = 100;
+// ホスト: 部屋を保有し続けるユーザー
+const HOST_COUNT = 200;
+// 部屋数（ホスト1人につき1部屋）
+const ROOM_COUNT = HOST_COUNT;
 const MAX_PLAYERS_OPTIONS = [2, 3, 4, 5] as const;
-// phase6 用: 先頭 5 件は maxPlayers=16 の waiting 部屋として固定投入する
+// phase6 用: 末尾5部屋は maxPlayers=16 の waiting 部屋として固定
 const MAX_CAPACITY_ROOM_COUNT = 5;
+const MAX_CAPACITY_PLAYERS = 16;
 
 async function main() {
   const games = await prisma.game.findMany({
@@ -29,9 +34,9 @@ async function main() {
     orderBy: { displayOrder: "asc" },
   });
 
-  // 50ユーザーを upsert（username は auth.ts の Credentials provider と一致させる）
-  const users = await Promise.all(
-    Array.from({ length: LOAD_TEST_USER_COUNT }, (_, i) => {
+  // ジョイナー (loadtest+1 〜 loadtest+100): 部屋なし
+  const joiners = await Promise.all(
+    Array.from({ length: JOINER_COUNT }, (_, i) => {
       const n = i + 1;
       const username = `loadtest+${n}`;
       return prisma.user.upsert({
@@ -39,7 +44,7 @@ async function main() {
         update: {},
         create: {
           username,
-          bio: `負荷テスト用ユーザー #${n}`,
+          bio: `負荷テスト ジョイナー #${n}`,
           avgRating: 0,
           ratingCount: 0,
         },
@@ -47,23 +52,39 @@ async function main() {
     })
   );
 
-  // 冪等性確保：loadtest ユーザーがホストの部屋を削除してから再作成
-  const userIds = users.map((u) => u.id);
-  await prisma.room.deleteMany({ where: { hostId: { in: userIds } } });
+  // ホスト (loadtest+101 〜 loadtest+300): 各自が1部屋を保有
+  const hosts = await Promise.all(
+    Array.from({ length: HOST_COUNT }, (_, i) => {
+      const n = JOINER_COUNT + i + 1;
+      const username = `loadtest+${n}`;
+      return prisma.user.upsert({
+        where: { username },
+        update: {},
+        create: {
+          username,
+          bio: `負荷テスト ホスト #${n}`,
+          avgRating: 0,
+          ratingCount: 0,
+        },
+      });
+    })
+  );
 
-  // 100部屋を作成（game / status / tags をバランスよく分散）
-  const statusCycle: RoomStatus[] = ["waiting", "waiting", "full", "closed"];
+  // 冪等性確保: ホスト・ジョイナーが関係する部屋を削除してから再作成
+  const allUserIds = [...joiners, ...hosts].map((u) => u.id);
+  await prisma.room.deleteMany({ where: { hostId: { in: allUserIds } } });
 
-  for (let i = 0; i < LOAD_TEST_ROOM_COUNT; i++) {
+  // 200部屋を作成（ホスト1人につき1部屋、全て status=waiting）
+  for (let i = 0; i < ROOM_COUNT; i++) {
     const game = games[i % games.length]!;
-    const host = users[i % users.length]!;
-    // 末尾 MAX_CAPACITY_ROOM_COUNT 件は phase6 用に maxPlayers=16 の waiting 部屋として固定
-    // （API が新着順で返すため末尾 = 最新 = limit=100 の先頭に出現する）
-    const isMaxCapacityRoom = i >= LOAD_TEST_ROOM_COUNT - MAX_CAPACITY_ROOM_COUNT;
-    const status: RoomStatus = isMaxCapacityRoom ? "waiting" : statusCycle[i % statusCycle.length]!;
-    const maxPlayers = isMaxCapacityRoom ? 16 : MAX_PLAYERS_OPTIONS[i % MAX_PLAYERS_OPTIONS.length]!;
+    const host = hosts[i]!;
 
-    // 1〜3個のタグをインデックスのオフセットで選択
+    // 末尾 MAX_CAPACITY_ROOM_COUNT 件は phase6 用に maxPlayers=16 で固定
+    const isMaxCapacity = i >= ROOM_COUNT - MAX_CAPACITY_ROOM_COUNT;
+    const maxPlayers = isMaxCapacity
+      ? MAX_CAPACITY_PLAYERS
+      : MAX_PLAYERS_OPTIONS[i % MAX_PLAYERS_OPTIONS.length]!;
+
     const tagCount = (i % 3) + 1;
     const tagOffset = i % Math.max(tags.length - tagCount + 1, 1);
     const roomTags = tags.slice(tagOffset, tagOffset + tagCount);
@@ -75,8 +96,7 @@ async function main() {
         gameId: game.id,
         maxPlayers,
         description: `k6 負荷テスト用部屋 #${i + 1}`,
-        status,
-        closedAt: status === "closed" ? new Date() : null,
+        status: "waiting" as RoomStatus,
         participants: {
           create: { userId: host.id, isHost: true },
         },
@@ -92,14 +112,11 @@ async function main() {
   }
 
   console.log("✅ 負荷テスト用シードデータの投入が完了しました");
-  console.log(`  ユーザー: ${LOAD_TEST_USER_COUNT} 件`);
-  console.log(`  部屋: ${LOAD_TEST_ROOM_COUNT} 件（うち maxPlayers=16 の waiting 部屋: ${MAX_CAPACITY_ROOM_COUNT} 件）`);
-  console.log(
-    `  ゲーム分散: ${games.map((g) => g.name).join(", ")} (${games.length} 種類)`
-  );
-  console.log(
-    `  ステータス分散: waiting×100, full×50, closed×50 (概算)`
-  );
+  console.log(`  ジョイナー (VU用): ${JOINER_COUNT} 件 (loadtest+1 〜 loadtest+${JOINER_COUNT})`);
+  console.log(`  ホスト: ${HOST_COUNT} 件 (loadtest+${JOINER_COUNT + 1} 〜 loadtest+${JOINER_COUNT + HOST_COUNT})`);
+  console.log(`  部屋: ${ROOM_COUNT} 件 (全て status=waiting)`);
+  console.log(`    通常部屋: maxPlayers=${MAX_PLAYERS_OPTIONS.join("/")} (${ROOM_COUNT - MAX_CAPACITY_ROOM_COUNT} 件)`);
+  console.log(`    phase6用: maxPlayers=${MAX_CAPACITY_PLAYERS} (${MAX_CAPACITY_ROOM_COUNT} 件)`);
 }
 
 main()

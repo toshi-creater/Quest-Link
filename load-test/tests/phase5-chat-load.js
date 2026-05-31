@@ -52,8 +52,8 @@ export function setup() {
       "テスト用部屋が不足しています（25件以上必要）。pnpm db:seed:load を実行してください。"
     );
   }
-  // 25 部屋に分散（100 VU ÷ 25 部屋 = 4 VU/部屋）
-  const roomIds = rooms.slice(0, 25).map((r) => r.id);
+  // maxPlayers=16 の phase6 用部屋を除外し、25 部屋に分散（100 VU ÷ 25 部屋 = 4 VU/部屋）
+  const roomIds = rooms.filter((r) => r.maxPlayers < 16).slice(0, 25).map((r) => r.id);
   return { roomIds };
 }
 
