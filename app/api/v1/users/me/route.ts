@@ -128,7 +128,7 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const user = await prisma.$transaction(async (tx) => {
+    const user = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       if (playStyleTagIds !== undefined) {
         await tx.userPlayStyleTag.deleteMany({
           where: { userId: session.user.id },
@@ -196,7 +196,7 @@ export async function DELETE() {
   const now = new Date();
   const leaveResults: Array<{ roomId: string; result: Awaited<ReturnType<typeof leaveRoomInTx>> }> = [];
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const activeParticipants = await tx.roomParticipant.findMany({
       where: { userId, leftAt: null },
       select: { id: true, roomId: true, isHost: true },

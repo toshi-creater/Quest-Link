@@ -123,7 +123,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     );
   }
 
-  const rating = await prisma.$transaction(async (tx) => {
+  const rating = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const newRating = await tx.rating.create({
       data: {
         roomId,

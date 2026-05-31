@@ -104,7 +104,7 @@ export async function POST(request: Request, { params }: RouteParams) {
   });
   const shouldUpdateToWaiting = room.status === "full" && currentCount - 1 < room.maxPlayers;
 
-  const kickMsg = await prisma.$transaction(async (tx) => {
+  const kickMsg = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.roomParticipant.update({
       where: { id: targetParticipant.id },
       data: { leftAt: kickedAt },
