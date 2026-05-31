@@ -1,0 +1,145 @@
+"use client";
+
+import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { MagnifyingGlass } from "@phosphor-icons/react";
+import type { GameResult } from "@/lib/games";
+import { GameCoverImage } from "@/components/ui/GameCoverImage";
+import { useGamesQuery } from "./GamesQueryContext";
+
+type Props = {
+  games?: GameResult[];
+  roomCounts?: Record<string, number>;
+  onSelect?: (game: GameResult) => void;
+};
+
+export function GamesGrid({ games: gamesProp, roomCounts = {}, onSelect }: Props) {
+  const router = useRouter();
+  const { query: contextQuery, setQuery: setContextQuery } = useGamesQuery();
+  const [localQuery, setLocalQuery] = useState("");
+  const [fetchedGames, setFetchedGames] = useState<GameResult[]>([]);
+  const [loading, setLoading] = useState(!gamesProp);
+
+  // gamesProp がある場合はコンテキストのクエリを使用（検索バーは親が担当）
+  const isControlled = gamesProp !== undefined;
+  const query = isControlled ? contextQuery : localQuery;
+  const setQuery = isControlled ? setContextQuery : setLocalQuery;
+
+  useEffect(() => {
+    if (gamesProp) return;
+    fetch("/api/v1/games")
+      .then((r) => r.json())
+      .then((json: { data: GameResult[] }) => setFetchedGames(json.data))
+      .catch(() => setFetchedGames([]))
+      .finally(() => setLoading(false));
+  }, [gamesProp]);
+
+  const games = gamesProp ?? fetchedGames;
+
+  const filteredGames = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return games;
+    return games.filter((g) => g.name.toLowerCase().includes(q));
+  }, [query, games]);
+
+  const handleClick = (game: GameResult) => {
+    if (onSelect) {
+      onSelect(game);
+    } else {
+      router.push(`/games/${game.id}/rooms`);
+    }
+  };
+
+  return (
+    <>
+      {/* Search bar — standalone モード（/rooms/new など）のみ自前でレンダリング */}
+      {!isControlled && (
+        <div className="mb-6 flex items-center gap-3">
+          <div className="relative flex-1">
+            <MagnifyingGlass
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+              style={{ color: "var(--text-secondary)" }}
+            />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="ゲームを検索..."
+              className="w-full rounded-xl py-2.5 pl-9 pr-4 text-sm outline-none"
+              style={{
+                background: "var(--bg-card)",
+                color: "var(--text-primary)",
+              }}
+            />
+          </div>
+          {!loading && (
+            <span className="shrink-0 text-sm" style={{ color: "var(--text-secondary)" }}>
+              全{games.length}件
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Game grid */}
+      {loading ? (
+        <div className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {Array.from({ length: 24 }).map((_, i) => (
+            <div key={i}>
+              <div className="aspect-[3/4] w-full rounded-xl animate-shimmer" />
+              <div className="mt-2 h-3 w-3/4 rounded-md animate-shimmer" />
+            </div>
+          ))}
+        </div>
+      ) : filteredGames.length > 0 ? (
+        <div className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {filteredGames.map((game, index) => {
+            const roomCount = roomCounts[game.id] ?? 0;
+
+            return (
+              <button
+                key={game.id}
+                onClick={() => handleClick(game)}
+                className="group text-left"
+              >
+                {/* Cover image */}
+                <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl">
+                  <GameCoverImage
+                    coverImageUrl={game.coverImageUrl}
+                    name={game.name}
+                    priority={index === 0}
+                    className="transition-transform duration-300 group-hover:scale-105"
+                  />
+
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                    <span className="text-xs font-semibold text-white">
+                      {onSelect ? "選択する →" : "部屋を探す →"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Card text */}
+                <div className="mt-2 space-y-0.5">
+                  <p className="truncate text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                    {game.name}
+                  </p>
+                  {!onSelect && (
+                    <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                      {roomCount > 0 ? `${roomCount} 部屋募集中` : "募集なし"}
+                    </p>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="py-16 text-center">
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            &ldquo;{query}&rdquo; に一致するゲームが見つかりません
+          </p>
+        </div>
+      )}
+    </>
+  );
+}

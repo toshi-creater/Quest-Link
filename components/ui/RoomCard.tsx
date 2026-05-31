@@ -1,6 +1,11 @@
+"use client";
+
+import { memo } from "react";
 import Link from "next/link";
-import { Users } from "lucide-react";
+import Image from "next/image";
+import { Users } from "@phosphor-icons/react";
 import type { RoomSummary } from "@/lib/api/rooms";
+import { roomStatusConfig, fallbackStatusConfig } from "@/lib/room-status";
 import { UserAvatar } from "./UserAvatar";
 import { PlayStyleTag } from "./PlayStyleTag";
 import { RatingDisplay } from "./StarRating";
@@ -10,29 +15,15 @@ type Props = {
   room: RoomSummary;
 };
 
-const statusConfig = {
-  waiting: { label: "募集中", bg: "rgba(34,197,94,0.15)", color: "#22c55e", border: "rgba(34,197,94,0.3)" },
-  playing: { label: "プレイ中", bg: "rgba(234,179,8,0.15)", color: "#eab308", border: "rgba(234,179,8,0.3)" },
-  closed: { label: "終了", bg: "rgba(100,100,120,0.15)", color: "#8888aa", border: "rgba(100,100,120,0.3)" },
-};
-
-export function RoomCard({ room }: Props) {
-  const status = statusConfig[room.status];
+export const RoomCard = memo(function RoomCard({ room }: Props) {
+  const status = roomStatusConfig[room.status as keyof typeof roomStatusConfig] ?? fallbackStatusConfig;
   const fillRatio = room.currentPlayers / room.maxPlayers;
 
   return (
     <Link
       href={`/rooms/${room.id}`}
-      className="group block rounded-xl border transition-all duration-200 hover:-translate-y-0.5 overflow-hidden"
-      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(124,58,237,0.5)";
-        (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 8px 24px rgba(124,58,237,0.12)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)";
-        (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none";
-      }}
+      className="group block rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(124,58,237,0.12)] overflow-hidden"
+      style={{ backgroundColor: "var(--bg-card)" }}
     >
       {/* Game cover banner */}
       <div
@@ -40,13 +31,14 @@ export function RoomCard({ room }: Props) {
         style={{ backgroundColor: "rgba(124,58,237,0.08)" }}
       >
         {/* Blurred cover as background */}
-        {room.game.coverUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={room.game.coverUrl}
+        {room.game.coverImageUrl && (
+          <Image
+            src={room.game.coverImageUrl}
             alt=""
             aria-hidden
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20 blur-sm scale-110"
+            fill
+            className="pointer-events-none object-cover opacity-20 blur-sm scale-110"
+            sizes="400px"
           />
         )}
         {/* Gradient overlay */}
@@ -64,7 +56,7 @@ export function RoomCard({ room }: Props) {
               </p>
               <span
                 className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                style={{ backgroundColor: status.bg, color: status.color, border: `1px solid ${status.border}` }}
+                style={{ backgroundColor: status.bg, color: status.color }}
               >
                 {status.label}
               </span>
@@ -79,7 +71,7 @@ export function RoomCard({ room }: Props) {
                 <span className="font-normal" style={{ color: "var(--text-muted)" }}>/{room.maxPlayers}</span>
               </span>
             </div>
-            <div className="h-1.5 w-14 rounded-full overflow-hidden" style={{ backgroundColor: "var(--border)" }}>
+            <div className="h-1.5 w-14 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
               <div
                 className="h-full rounded-full"
                 style={{
@@ -100,32 +92,35 @@ export function RoomCard({ room }: Props) {
         >
           {room.title}
         </h3>
-        {room.description && (
-          <p className="mt-1 text-xs line-clamp-1" style={{ color: "var(--text-secondary)" }}>
-            {room.description}
-          </p>
-        )}
-
-        {/* Tags */}
-        {room.playStyleTags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {room.playStyleTags.map((tag) => (
-              <PlayStyleTag key={tag.id} tag={tag} size="sm" />
-            ))}
-          </div>
-        )}
+        {/* Description + Tags: min-h でタグ・説明なしでもカード高さを統一 */}
+        <div className="min-h-[52px]" data-testid="card-body">
+          {room.description && (
+            <p className="mt-1 text-sm line-clamp-1 leading-snug" style={{ color: "var(--text-secondary)" }}>
+              {room.description}
+            </p>
+          )}
+          {room.playStyleTags.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {room.playStyleTags.map((tag) => (
+                <PlayStyleTag key={tag.id} tag={tag} size="sm" />
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Host */}
-        <div className="mt-3 flex items-center gap-2 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-          <UserAvatar username={room.host.username} iconUrl={room.host.iconUrl} size="sm" />
-          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
-            {room.host.username}
-          </span>
-          <div className="ml-auto">
-            <RatingDisplay avgRating={room.host.avgRating} ratingCount={room.host.avgRating != null ? 10 : 3} size="sm" />
+        {room.host && (
+          <div className="mt-3 flex items-center gap-2 pt-3">
+            <UserAvatar username={room.host.username} iconUrl={room.host.iconUrl} size="sm" />
+            <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+              {room.host.username}
+            </span>
+            <div className="ml-auto">
+              <RatingDisplay avgRating={room.host.avgRating} ratingCount={room.host.avgRating != null ? 10 : 3} size="sm" />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Link>
   );
-}
+});

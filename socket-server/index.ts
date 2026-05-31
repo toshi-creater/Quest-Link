@@ -7,25 +7,44 @@ dotenv.config();
 import { createServer } from "http";
 import type { IncomingMessage, ServerResponse } from "http";
 import { Server as SocketIOServer } from "socket.io";
+import { createAdapter } from "@socket.io/redis-adapter";
+import Redis from "ioredis";
 import { decode } from "next-auth/jwt";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import { validateLength, checkRateLimit, pruneRateLimitMap } from "../lib/moderation";
 
-interface AuthenticatedSocketData {
-  userId: string;
-  username: string;
-  iconUrl: string | null;
-  avgRating: number;
+type AuthenticatedSocketData =
+  | { kind: "user"; userId: string; username: string; iconUrl: string | null; avgRating: number }
+  | { kind: "guest"; guestSessionId: string; displayName: string };
+
+const GUEST_ID_RE = /^guest_[0-9a-f]{32}$/;
+
+const REDIS_URL = process.env.REDIS_URL;
+if (!REDIS_URL) {
+  console.error("REDIS_URL is not set. Exiting.");
+  process.exit(1);
 }
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pubClient = new Redis(REDIS_URL);
+const subClient = pubClient.duplicate();
+
+pubClient.on("error", (err) => console.error("Redis pubClient error:", err));
+subClient.on("error", (err) => console.error("Redis subClient error:", err));
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3 });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 const PORT = parseInt(process.env.SOCKET_PORT ?? "3001", 10);
 const NEXT_APP_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+if (process.env.NODE_ENV === "production" && NEXT_APP_URL === "http://localhost:3000") {
+  console.warn("[socket-server] NEXTAUTH_URL is not set. CORS will reject production origins.");
+}
 const INTERNAL_SECRET = process.env.SOCKET_INTERNAL_SECRET;
+
+setInterval(pruneRateLimitMap, 5 * 60 * 1000);
 
 function parseCookies(cookieHeader: string): Record<string, string> {
   const result: Record<string, string> = {};
@@ -59,6 +78,8 @@ const io = new SocketIOServer(httpServer, {
     credentials: true,
   },
 });
+
+io.adapter(createAdapter(pubClient, subClient));
 
 // Next.js APIルートからSocket.IOイベントを emit するための内部エンドポイント
 httpServer.on("request", async (req: IncomingMessage, res: ServerResponse) => {
@@ -101,9 +122,58 @@ httpServer.on("request", async (req: IncomingMessage, res: ServerResponse) => {
   res.end("Not Found");
 });
 
-// 認証ミドルウェア: セッションCookieを検証し未認証接続を拒否する
+// 認証ミドルウェア: トークン認証（クロスドメイン対応）→ Cookieフォールバックの順で検証
+// トークン認証: socket.handshake.auth.token（socket-auth salt の短命JWT）
+// Cookie認証: authjs.session-token / ゲスト: quest_link_guest_session
 io.use(async (socket, next) => {
   try {
+    // 1. トークンベース認証（本番クロスドメイン環境向け）
+    const authToken = socket.handshake.auth?.token as string | undefined;
+    if (authToken) {
+      const decoded = await decode({
+        token: authToken,
+        secret: process.env.AUTH_SECRET ?? "",
+        salt: "socket-auth",
+      });
+
+      if (decoded?.userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: decoded.userId as string },
+          select: { id: true, username: true, iconUrl: true, avgRating: true },
+        });
+
+        if (user) {
+          socket.data = {
+            kind: "user",
+            userId: user.id,
+            username: user.username,
+            iconUrl: user.iconUrl,
+            avgRating: user.avgRating.toNumber(),
+          } satisfies AuthenticatedSocketData;
+          return next();
+        }
+      }
+
+      if (decoded?.guestSessionId) {
+        const tokenGuestId = decoded.guestSessionId as string;
+        if (GUEST_ID_RE.test(tokenGuestId)) {
+          const guest = await prisma.guest.findUnique({
+            where: { guestSessionId: tokenGuestId },
+            select: { displayName: true },
+          });
+          if (guest) {
+            socket.data = {
+              kind: "guest",
+              guestSessionId: tokenGuestId,
+              displayName: guest.displayName,
+            } satisfies AuthenticatedSocketData;
+            return next();
+          }
+        }
+      }
+    }
+
+    // 2. Cookieベース認証（ローカル開発フォールバック）
     const cookieHeader = socket.request.headers.cookie ?? "";
     const cookies = parseCookies(cookieHeader);
     const cookieName =
@@ -112,25 +182,52 @@ io.use(async (socket, next) => {
         : "authjs.session-token";
     const sessionToken = cookies[cookieName];
 
-    if (!sessionToken) {
+    if (sessionToken) {
+      const decoded = await decode({
+        token: sessionToken,
+        secret: process.env.AUTH_SECRET ?? "",
+        salt: cookieName,
+      });
+
+      if (decoded?.userId) {
+        socket.data = {
+          kind: "user",
+          userId: decoded.userId as string,
+          username: (decoded.username as string | undefined) ?? "",
+          iconUrl: (decoded.iconUrl as string | null | undefined) ?? null,
+          avgRating: (decoded.avgRating as number | undefined) ?? 0,
+        } satisfies AuthenticatedSocketData;
+        return next();
+      }
+    }
+
+    // ゲストセッション Cookie によるフォールバック認証
+    const guestSessionId = cookies["quest_link_guest_session"] ?? "";
+    if (!GUEST_ID_RE.test(guestSessionId)) {
       return next(new Error("UNAUTHORIZED"));
     }
 
-    const decoded = await decode({
-      token: sessionToken,
-      secret: process.env.AUTH_SECRET ?? "",
-      salt: cookieName,
+    const participant = await prisma.roomParticipant.findFirst({
+      where: { guestSessionId, leftAt: null },
+      select: { id: true },
     });
-
-    if (!decoded?.userId) {
+    if (!participant) {
       return next(new Error("UNAUTHORIZED"));
     }
 
-    socket.data.userId = decoded.userId as string;
-    socket.data.username = (decoded.username as string | undefined) ?? "";
-    socket.data.iconUrl = (decoded.iconUrl as string | null | undefined) ?? null;
-    socket.data.avgRating = (decoded.avgRating as number | undefined) ?? 0;
+    const guest = await prisma.guest.findUnique({
+      where: { guestSessionId },
+      select: { displayName: true },
+    });
+    if (!guest) {
+      return next(new Error("UNAUTHORIZED"));
+    }
 
+    socket.data = {
+      kind: "guest",
+      guestSessionId,
+      displayName: guest.displayName,
+    } satisfies AuthenticatedSocketData;
     next();
   } catch {
     next(new Error("UNAUTHORIZED"));
@@ -138,86 +235,20 @@ io.use(async (socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  const { userId, username } = socket.data as AuthenticatedSocketData;
+  const socketData = socket.data as AuthenticatedSocketData;
 
   // クライアント → サーバー: 部屋チャンネルに参加（REST /join 後に送信）
-  socket.on("room:join", async ({ roomId }: { roomId: string }) => {
+  // 通知・システムメッセージは REST /join ハンドラが担う
+  socket.on("room:join", ({ roomId }: { roomId: string }) => {
     if (typeof roomId !== "string" || !roomId) return;
-
-    try {
-      socket.join(roomId);
-
-      // 入室システムメッセージを保存してブロードキャスト
-      const systemMsg = await prisma.chatMessage.create({
-        data: {
-          roomId,
-          content: `${username}さんが入室しました`,
-          isSystem: true,
-        },
-      });
-
-      io.to(roomId).emit("chat:message", {
-        id: systemMsg.id,
-        roomId,
-        user: null,
-        content: systemMsg.content,
-        isSystem: true,
-        createdAt: systemMsg.createdAt,
-      });
-
-      // 同室の他クライアントへ入室通知を送信
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, username: true, iconUrl: true, avgRating: true },
-      });
-
-      if (user) {
-        socket.to(roomId).emit("room:user_joined", {
-          userId: user.id,
-          username: user.username,
-          iconUrl: user.iconUrl,
-          avgRating: Number(user.avgRating),
-          joinedAt: new Date(),
-        });
-      }
-    } catch (err) {
-      console.error("Error in room:join handler:", err);
-    }
+    socket.join(roomId);
   });
 
   // クライアント → サーバー: 部屋チャンネルから退出（REST /leave 後に送信）
-  socket.on("room:leave", async ({ roomId }: { roomId: string }) => {
+  // 通知・システムメッセージは REST /leave ハンドラが担う
+  socket.on("room:leave", ({ roomId }: { roomId: string }) => {
     if (typeof roomId !== "string" || !roomId) return;
-
-    try {
-      // 退室システムメッセージを保存してブロードキャスト（退出前に全員へ送信）
-      const systemMsg = await prisma.chatMessage.create({
-        data: {
-          roomId,
-          content: `${username}さんが退室しました`,
-          isSystem: true,
-        },
-      });
-
-      io.to(roomId).emit("chat:message", {
-        id: systemMsg.id,
-        roomId,
-        user: null,
-        content: systemMsg.content,
-        isSystem: true,
-        createdAt: systemMsg.createdAt,
-      });
-
-      socket.to(roomId).emit("room:user_left", {
-        userId,
-        username,
-        leftAt: new Date(),
-      });
-
-      socket.leave(roomId);
-    } catch (err) {
-      console.error("Error in room:leave handler:", err);
-    }
+    socket.leave(roomId);
   });
 
   // クライアント → サーバー: チャットメッセージを送信
@@ -232,35 +263,89 @@ io.on("connection", (socket) => {
       )
         return;
 
-      try {
-        const message = await prisma.chatMessage.create({
-          data: {
-            roomId,
-            userId,
-            content: content.trim(),
-            isSystem: false,
-          },
-          include: {
-            user: {
-              select: { id: true, username: true, iconUrl: true },
-            },
-          },
+      if (!validateLength(content.trim())) {
+        socket.emit("chat:error", {
+          code: "MESSAGE_TOO_LONG",
+          message: "メッセージは1000文字以内で入力してください。",
         });
+        return;
+      }
 
-        io.to(roomId).emit("chat:message", {
-          id: message.id,
-          roomId: message.roomId,
-          user: message.user
-            ? {
-                id: message.user.id,
-                username: message.user.username,
-                iconUrl: message.user.iconUrl,
-              }
-            : null,
-          content: message.content,
-          isSystem: false,
-          createdAt: message.createdAt,
+      const rateLimitKey =
+        socketData.kind === "user" ? socketData.userId : socketData.guestSessionId;
+      if (!checkRateLimit(rateLimitKey)) {
+        socket.emit("chat:error", {
+          code: "RATE_LIMITED",
+          message: "送信が速すぎます。しばらく待ってから再試行してください。",
         });
+        return;
+      }
+
+      try {
+        if (socketData.kind === "user") {
+          const message = await prisma.chatMessage.create({
+            data: {
+              roomId,
+              userId: socketData.userId,
+              content: content.trim(),
+              isSystem: false,
+            },
+            include: {
+              user: {
+                select: { id: true, username: true, iconUrl: true },
+              },
+            },
+          });
+
+          io.to(roomId).emit("chat:message", {
+            id: message.id,
+            roomId: message.roomId,
+            user: message.user
+              ? {
+                  id: message.user.id,
+                  username: message.user.username,
+                  iconUrl: message.user.iconUrl,
+                }
+              : null,
+            content: message.content,
+            isSystem: false,
+            createdAt: message.createdAt,
+          });
+        } else {
+          // ゲスト: 送信対象ルームへの参加を確認してから保存
+          const participant = await prisma.roomParticipant.findFirst({
+            where: { guestSessionId: socketData.guestSessionId, roomId, leftAt: null },
+            select: { id: true },
+          });
+          if (!participant) return;
+
+          const guest = await prisma.guest.findUnique({
+            where: { guestSessionId: socketData.guestSessionId },
+            select: { id: true },
+          });
+          if (!guest) return;
+
+          const message = await prisma.chatMessage.create({
+            data: {
+              roomId,
+              userId: null,
+              guestId: guest.id,
+              content: content.trim(),
+              isSystem: false,
+            },
+          });
+
+          io.to(roomId).emit("chat:message", {
+            id: message.id,
+            roomId: message.roomId,
+            user: null,
+            displayName: socketData.displayName,
+            guestSessionId: socketData.guestSessionId,
+            content: message.content,
+            isSystem: false,
+            createdAt: message.createdAt,
+          });
+        }
       } catch (err) {
         console.error("Error in chat:send handler:", err);
       }

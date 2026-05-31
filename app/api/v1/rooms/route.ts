@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -14,7 +15,7 @@ const roomSelect = {
   status: true,
   createdAt: true,
   closedAt: true,
-  game: { select: { id: true, igdbId: true, name: true, coverUrl: true } },
+  game: { select: { id: true, name: true, coverImageUrl: true } },
   host: { select: { id: true, username: true, iconUrl: true, avgRating: true } },
   playStyleTags: {
     select: { tag: { select: { id: true, name: true, slug: true } } },
@@ -32,6 +33,51 @@ const roomSelect = {
 
 type RawRoom = Prisma.RoomGetPayload<{ select: typeof roomSelect }>;
 
+// ─── list 用軽量セレクト（participants を _count に置き換え）─────────────────
+
+const roomListSelect = {
+  id: true,
+  title: true,
+  description: true,
+  maxPlayers: true,
+  status: true,
+  createdAt: true,
+  closedAt: true,
+  game: { select: { id: true, name: true, coverImageUrl: true } },
+  host: { select: { id: true, username: true, iconUrl: true, avgRating: true } },
+  playStyleTags: {
+    select: { tag: { select: { id: true, name: true, slug: true } } },
+  },
+  _count: {
+    select: { participants: { where: { leftAt: null } } },
+  },
+} satisfies Prisma.RoomSelect;
+
+type RawRoomList = Prisma.RoomGetPayload<{ select: typeof roomListSelect }>;
+
+function formatRoomList(room: RawRoomList) {
+  return {
+    id: room.id,
+    title: room.title,
+    description: room.description,
+    maxPlayers: room.maxPlayers,
+    currentPlayers: room._count.participants,
+    status: room.status,
+    createdAt: room.createdAt,
+    closedAt: room.closedAt,
+    game: room.game,
+    host: room.host
+      ? {
+          id: room.host.id,
+          username: room.host.username,
+          iconUrl: room.host.iconUrl,
+          avgRating: Number(room.host.avgRating),
+        }
+      : null,
+    playStyleTags: room.playStyleTags.map((t) => t.tag),
+  };
+}
+
 function formatRoom(room: RawRoom) {
   const currentPlayers = room.participants.length;
   return {
@@ -44,18 +90,20 @@ function formatRoom(room: RawRoom) {
     createdAt: room.createdAt,
     closedAt: room.closedAt,
     game: room.game,
-    host: {
-      id: room.host.id,
-      username: room.host.username,
-      iconUrl: room.host.iconUrl,
-      avgRating: Number(room.host.avgRating),
-    },
+    host: room.host
+      ? {
+          id: room.host.id,
+          username: room.host.username,
+          iconUrl: room.host.iconUrl,
+          avgRating: Number(room.host.avgRating),
+        }
+      : null,
     playStyleTags: room.playStyleTags.map((t) => t.tag),
     participants: room.participants.map((p) => ({
       userId: p.userId,
-      username: p.user.username,
-      iconUrl: p.user.iconUrl,
-      avgRating: p.user.avgRating !== null ? Number(p.user.avgRating) : null,
+      username: p.user?.username ?? "",
+      iconUrl: p.user?.iconUrl ?? null,
+      avgRating: p.user?.avgRating !== null && p.user?.avgRating !== undefined ? Number(p.user.avgRating) : null,
       isHost: p.isHost,
       joinedAt: p.joinedAt,
     })),
@@ -65,9 +113,10 @@ function formatRoom(room: RawRoom) {
 // ─── GET /api/v1/rooms ─────────────────────────────────────────────────────────
 
 const listQuerySchema = z.object({
-  status: z.enum(["waiting", "playing", "closed"]).default("waiting"),
+  status: z.enum(["waiting", "full", "closed"]).default("waiting"),
   gameId: z.string().uuid().optional(),
   tagSlugs: z.string().optional(),
+  q: z.string().trim().max(100).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
@@ -77,6 +126,7 @@ export async function GET(request: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "認証が必要です" } }, { status: 401 });
   }
+  const userId = session.user.id;
 
   const { searchParams } = new URL(request.url);
   const parsed = listQuerySchema.safeParse(Object.fromEntries(searchParams));
@@ -87,18 +137,30 @@ export async function GET(request: Request) {
     );
   }
 
-  const { status, gameId, tagSlugs, page, limit } = parsed.data;
+  const { status, gameId, tagSlugs, q, page, limit } = parsed.data;
   const skip = (page - 1) * limit;
 
   const tagSlugList = tagSlugs ? tagSlugs.split(",").filter(Boolean) : [];
 
   const where: Prisma.RoomWhereInput = {
     status,
+    NOT: {
+      OR: [
+        { host: { blocksReceived: { some: { blockerId: userId } } } },
+        { host: { blocksGiven: { some: { blockedId: userId } } } },
+      ],
+    },
     ...(gameId && { gameId }),
     ...(tagSlugList.length > 0 && {
-      playStyleTags: {
-        some: { tag: { slug: { in: tagSlugList } } },
-      },
+      AND: tagSlugList.map(slug => ({
+        playStyleTags: { some: { tag: { slug } } },
+      })),
+    }),
+    ...(q && {
+      OR: [
+        { title: { contains: q, mode: "insensitive" } },
+        { description: { contains: q, mode: "insensitive" } },
+      ],
     }),
   };
 
@@ -108,13 +170,13 @@ export async function GET(request: Request) {
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
-      select: roomSelect,
+      select: roomListSelect,
     }),
     prisma.room.count({ where }),
   ]);
 
   return NextResponse.json({
-    data: rooms.map(formatRoom),
+    data: rooms.map(formatRoomList),
     meta: { total, page, limit },
   });
 }
@@ -146,6 +208,26 @@ export async function POST(request: Request) {
 
   const { title, gameId, maxPlayers, description, playStyleTagIds } = parsed.data;
 
+  const userId = session.user.id;
+
+  const existingRoom = await prisma.room.findFirst({ where: { hostId: userId, status: { not: "closed" } } });
+  if (existingRoom) {
+    return NextResponse.json(
+      { error: { code: "ROOM_ALREADY_EXISTS", message: "すでに部屋を作成しています" } },
+      { status: 409 }
+    );
+  }
+
+  const activeParticipation = await prisma.roomParticipant.findFirst({
+    where: { userId, leftAt: null },
+  });
+  if (activeParticipation) {
+    return NextResponse.json(
+      { error: { code: "ALREADY_IN_ROOM", message: "既に他の部屋に参加しています" } },
+      { status: 409 }
+    );
+  }
+
   // ゲーム存在確認
   const game = await prisma.game.findUnique({ where: { id: gameId } });
   if (!game) {
@@ -163,35 +245,44 @@ export async function POST(request: Request) {
     }
   }
 
-  const userId = session.user.id;
+  try {
+    const room = await prisma.$transaction(async (tx) => {
+      const newRoom = await tx.room.create({
+        data: {
+          title,
+          gameId,
+          maxPlayers,
+          description,
+          hostId: userId,
+          inviteToken: randomBytes(32).toString("hex"),
+          ...(playStyleTagIds && playStyleTagIds.length > 0 && {
+            playStyleTags: {
+              createMany: { data: playStyleTagIds.map((tagId) => ({ tagId })) },
+            },
+          }),
+        },
+        select: { id: true },
+      });
 
-  const room = await prisma.$transaction(async (tx) => {
-    const newRoom = await tx.room.create({
-      data: {
-        title,
-        gameId,
-        maxPlayers,
-        description,
-        hostId: userId,
-        ...(playStyleTagIds && playStyleTagIds.length > 0 && {
-          playStyleTags: {
-            createMany: { data: playStyleTagIds.map((tagId) => ({ tagId })) },
-          },
-        }),
-      },
-      select: { id: true },
+      // ホストを参加者として追加
+      await tx.roomParticipant.create({
+        data: { roomId: newRoom.id, userId, isHost: true },
+      });
+
+      return tx.room.findUniqueOrThrow({
+        where: { id: newRoom.id },
+        select: roomSelect,
+      });
     });
 
-    // ホストを参加者として追加
-    await tx.roomParticipant.create({
-      data: { roomId: newRoom.id, userId, isHost: true },
-    });
-
-    return tx.room.findUniqueOrThrow({
-      where: { id: newRoom.id },
-      select: roomSelect,
-    });
-  });
-
-  return NextResponse.json({ data: formatRoom(room) }, { status: 201 });
+    return NextResponse.json({ data: formatRoom(room) }, { status: 201 });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json(
+        { error: { code: "ROOM_ALREADY_EXISTS", message: "すでに部屋を作成しています" } },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
 }

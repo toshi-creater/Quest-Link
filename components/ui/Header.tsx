@@ -2,124 +2,111 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Gamepad2, Users, Menu, X, Zap, DoorOpen } from "lucide-react";
+import { useSession } from "next-auth/react";
 import clsx from "clsx";
-import { SignOutButton } from "@/components/ui/SignOutButton";
+import { Chat, ChatDots, ChatText } from "@phosphor-icons/react";
+import { Logo } from "@/components/ui/Logo";
+import { HeaderSearchBar } from "@/components/ui/HeaderSearchBar";
+import { UserAvatarMenu } from "@/components/ui/UserAvatarMenu";
+import { DESKTOP_NAV_ITEMS } from "@/components/ui/nav-items";
 
 export function Header() {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const { status } = useSession();
 
-  const isLoginPage = pathname === "/login";
-  if (isLoginPage) return null;
+  if (pathname === "/login" || pathname === "/onboarding") return null;
 
-  const navLinks = [
-    {
-      href: "/rooms",
-      label: "部屋一覧",
-      icon: Gamepad2,
-      isActive: (p: string) => p.startsWith("/rooms") && p !== "/rooms/current",
-    },
-    {
-      href: "/rooms/current",
-      label: "参加中の部屋",
-      icon: DoorOpen,
-      isActive: (p: string) => p === "/rooms/current",
-    },
-    {
-      href: "/users/me",
-      label: "プロフィール",
-      icon: Users,
-      isActive: (p: string) => p.startsWith("/users/me"),
-    },
-  ];
+  const isAuthenticated = status === "authenticated";
+  const isChatActive =
+    pathname.startsWith("/rooms/") && !pathname.startsWith("/rooms/new");
 
   return (
     <header
-      className="sticky top-0 z-50 h-16 border-b"
+      className="sticky top-0 z-50 hidden h-16 md:block"
       style={{
-        backgroundColor: "rgba(10,10,15,0.92)",
-        borderColor: "var(--border)",
-        backdropFilter: "blur(12px)",
+        backgroundColor: "var(--bg-base)",
       }}
     >
-      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-full max-w-7xl items-center gap-6 px-4 sm:px-6">
         {/* Logo */}
-        <Link href="/rooms" className="flex items-center gap-2 group">
-          <div
-            className="flex h-8 w-8 items-center justify-center rounded-lg transition-all group-hover:scale-110"
-            style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-light))" }}
-          >
-            <Zap className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-lg font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
-            Quest<span style={{ color: "var(--accent-light)" }}>Link</span>
-          </span>
+        <Link href="/" className="shrink-0">
+          <Logo height={40} />
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden items-center gap-1 sm:flex">
-          {navLinks.map(({ href, label, icon: Icon, isActive }) => (
+        {/* Search Bar (center) */}
+        <div className="flex flex-1 justify-end">
+          <HeaderSearchBar />
+        </div>
+
+        {/* Right Actions */}
+        <nav className="flex shrink-0 items-center gap-3">
+          {DESKTOP_NAV_ITEMS.map(
+            ({ href, label, icon: Icon, isActive: checkActive }) => {
+              const isActive = checkActive(pathname);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  prefetch={true}
+                  className={clsx(
+                    "flex items-center gap-1 rounded-lg px-3 py-2 font-medium transition-all",
+                    isActive
+                      ? "text-white"
+                      : "hover:text-white hover:bg-[rgba(124,58,237,0.1)]"
+                  )}
+                  style={
+                    isActive
+                      ? {
+                          backgroundColor: "rgba(124,58,237,0.2)",
+                          color: "var(--accent-light)",
+                        }
+                      : { color: "var(--text-secondary)" }
+                  }
+                >
+                  <Icon size={24} />
+                  {label}
+                </Link>
+              );
+            }
+          )}
+
+          {isAuthenticated && (
             <Link
-              key={href}
-              href={href}
+              href="/rooms/current/chat"
+              prefetch={true}
+              aria-label="参加中の部屋"
               className={clsx(
-                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all",
-                isActive(pathname) ? "text-white" : "hover:text-white"
+                "flex items-center rounded-lg p-2 transition-all",
+                isChatActive
+                  ? "text-white"
+                  : "hover:text-white hover:bg-[rgba(124,58,237,0.1)]"
               )}
               style={
-                isActive(pathname)
-                  ? { backgroundColor: "rgba(124,58,237,0.2)", color: "var(--accent-light)" }
+                isChatActive
+                  ? {
+                      backgroundColor: "rgba(124,58,237,0.2)",
+                      color: "var(--accent-light)",
+                    }
                   : { color: "var(--text-secondary)" }
               }
             >
-              <Icon className="h-4 w-4" />
-              {label}
+              <ChatText size={28}/>
             </Link>
-          ))}
-          <div className="mx-2 h-6 w-px" style={{ backgroundColor: "var(--border)" }} />
-          <SignOutButton />
+          )}
+
+          {isAuthenticated ? (
+            <UserAvatarMenu />
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-lg px-3 py-2 text-sm font-medium transition-all hover:text-white hover:bg-[rgba(124,58,237,0.1)]"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              ログイン
+            </Link>
+          )}
         </nav>
-
-        {/* Mobile Menu Button */}
-        <button
-          className="flex items-center justify-center rounded-lg p-2 sm:hidden"
-          style={{ color: "var(--text-secondary)" }}
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="メニュー"
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
       </div>
-
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div
-          className="border-t sm:hidden"
-          style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
-        >
-          <nav className="flex flex-col gap-1 p-3">
-            {navLinks.map(({ href, label, icon: Icon, isActive }) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium"
-                style={
-                  isActive(pathname)
-                    ? { backgroundColor: "rgba(124,58,237,0.15)", color: "var(--accent-light)" }
-                    : { color: "var(--text-secondary)" }
-                }
-                onClick={() => setMobileOpen(false)}
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </Link>
-            ))}
-            <SignOutButton />
-          </nav>
-        </div>
-      )}
     </header>
   );
 }

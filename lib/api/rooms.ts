@@ -2,9 +2,8 @@
 
 export type RoomGame = {
   id: string;
-  igdbId: number;
   name: string;
-  coverUrl: string | null;
+  coverImageUrl: string | null;
 };
 
 export type RoomHost = {
@@ -18,10 +17,12 @@ export type RoomTag = {
   id: string;
   name: string;
   slug: string;
+  category: { id: string; name: string; slug: string } | null;
 };
 
 export type RoomParticipant = {
-  userId: string;
+  userId: string | null;
+  guestSessionId: string | null;
   username: string;
   iconUrl: string | null;
   avgRating: number | null;
@@ -38,7 +39,7 @@ export type RoomSummary = {
   currentPlayers: number;
   status: "waiting" | "playing" | "closed";
   playStyleTags: RoomTag[];
-  host: RoomHost;
+  host: RoomHost | null;
   createdAt: string;
 };
 
@@ -46,6 +47,8 @@ export type RoomDetail = RoomSummary & {
   description: string | null;
   participants: RoomParticipant[];
   closedAt: string | null;
+  isCurrentGuestParticipant: boolean;
+  currentGuestSessionId: string | null;
 };
 
 export type RoomsListResponse = {
@@ -71,6 +74,7 @@ export async function fetchRooms(params?: {
   status?: string;
   gameId?: string;
   tagSlugs?: string;
+  q?: string;
   page?: number;
   limit?: number;
 }): Promise<RoomsListResponse> {
@@ -78,6 +82,7 @@ export async function fetchRooms(params?: {
   if (params?.status) searchParams.set("status", params.status);
   if (params?.gameId) searchParams.set("gameId", params.gameId);
   if (params?.tagSlugs) searchParams.set("tagSlugs", params.tagSlugs);
+  if (params?.q) searchParams.set("q", params.q);
   if (params?.page) searchParams.set("page", String(params.page));
   if (params?.limit) searchParams.set("limit", String(params.limit));
 
@@ -154,11 +159,49 @@ export async function leaveRoom(roomId: string): Promise<void> {
   }
 }
 
-export async function fetchCurrentRoom(): Promise<RoomDetailResponse | null> {
+export type CurrentRoomResponse = {
+  data: RoomDetail | null;
+};
+
+export async function fetchCurrentRoom(): Promise<CurrentRoomResponse> {
   const res = await fetch("/api/v1/rooms/current", {
     credentials: "include",
   });
-  if (res.status === 404) return null;
+  if (res.status === 401) return { data: null };
   if (!res.ok) throw new Error("参加中の部屋の取得に失敗しました");
-  return res.json() as Promise<RoomDetailResponse>;
+  return res.json() as Promise<CurrentRoomResponse>;
 }
+
+export type InviteTokenResponse = {
+  data: { inviteToken: string };
+};
+
+export async function generateInviteToken(roomId: string): Promise<InviteTokenResponse> {
+  const res = await fetch(`/api/v1/rooms/${roomId}/invite`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = (await res.json()) as { error?: { code: string; message: string } };
+    throw new Error(body.error?.message ?? "招待リンクの生成に失敗しました");
+  }
+  return res.json() as Promise<InviteTokenResponse>;
+}
+
+export type KickTarget =
+  | { userId: string; guestSessionId?: never }
+  | { guestSessionId: string; userId?: never };
+
+export async function kickParticipant(roomId: string, target: KickTarget): Promise<void> {
+  const res = await fetch(`/api/v1/rooms/${roomId}/kick`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(target),
+  });
+  if (!res.ok) {
+    const body = (await res.json()) as { error?: { code: string; message: string } };
+    throw new Error(body.error?.message ?? "キックに失敗しました");
+  }
+}
+

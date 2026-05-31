@@ -1,12 +1,39 @@
 import type { Metadata } from "next";
+import { Noto_Sans_JP } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { Header } from "@/components/ui/Header";
+import { BottomNav } from "@/components/ui/BottomNav";
+import { Footer } from "@/components/ui/Footer";
+import { WebVitalsReporter } from "@/components/ui/WebVitalsReporter";
 import { Providers } from "./providers";
+import { auth } from "@/auth";
+
+const notoSansJP = Noto_Sans_JP({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-sans",
+  display: "swap",
+  preload: false,
+});
 
 export const metadata: Metadata = {
-  title: "QuestLink - ゲーム仲間を見つけよう",
+  title: "QuestLink",
   description: "オンラインゲームで一緒にプレイする相手をリアルタイムで見つけるマッチングプラットフォーム",
 };
+
+async function LayoutProviders({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  return (
+    <Providers session={session}>
+      <WebVitalsReporter />
+      <Header />
+      <main className="min-h-screen md:min-h-[calc(100vh_-_64px)] pb-[calc(60px_+_env(safe-area-inset-bottom))] md:pb-0">{children}</main>
+      <BottomNav />
+      <Footer />
+    </Providers>
+  );
+}
 
 export default function RootLayout({
   children,
@@ -14,12 +41,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" className={notoSansJP.variable}>
       <body className="antialiased min-h-screen" style={{ backgroundColor: "var(--bg-base)", color: "var(--text-primary)" }}>
-        <Providers>
-          <Header />
-          <main className="min-h-[calc(100vh-64px)]">{children}</main>
-        </Providers>
+        <Suspense fallback={null}>
+          <LayoutProviders>{children}</LayoutProviders>
+        </Suspense>
       </body>
     </html>
   );

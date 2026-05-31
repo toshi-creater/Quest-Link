@@ -18,7 +18,7 @@ const profileSelect = {
   },
   games: {
     select: {
-      game: { select: { id: true, igdbId: true, name: true, coverUrl: true } },
+      game: { select: { id: true, name: true, coverImageUrl: true } },
     },
   },
 } satisfies Prisma.UserSelect;
@@ -47,17 +47,25 @@ export async function GET(
   if (!session?.user?.id) {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
+  const sessionUserId = session.user.id;
 
   const { userId } = await params;
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: profileSelect,
-  });
+  const [user, block] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: profileSelect }),
+    sessionUserId !== userId
+      ? prisma.block.findUnique({
+          where: { blockerId_blockedId: { blockerId: sessionUserId, blockedId: userId } },
+          select: { blockerId: true },
+        })
+      : null,
+  ]);
 
   if (!user) {
     return NextResponse.json({ error: "USER_NOT_FOUND" }, { status: 404 });
   }
 
-  return NextResponse.json({ data: formatUser(user) });
+  return NextResponse.json({
+    data: { ...formatUser(user), isBlocked: block !== null, isMe: sessionUserId === userId },
+  });
 }

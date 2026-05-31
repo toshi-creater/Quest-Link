@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, X, Gamepad2, Check, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect, memo } from "react";
+import Image from "next/image";
+import { MagnifyingGlass, X, GameController, Check, CaretDown } from "@phosphor-icons/react";
 import { type Game } from "@/lib/mock-data";
 import clsx from "clsx";
+import { GameCoverImage } from "@/components/ui/GameCoverImage";
+import { useGameSearch } from "@/lib/hooks/useGameSearch";
 
 // ─── ゲームカバー画像 ─────────────────────────────────────────────────────────
 
@@ -13,86 +16,16 @@ type GameCoverProps = {
   className?: string;
 };
 
-const coverSizes = {
-  sm: "h-10 w-8",
-  md: "h-14 w-11",
-  lg: "h-24 w-18",
-};
-
-export function GameCover({ game, size = "md", className }: GameCoverProps) {
-  const [error, setError] = useState(false);
-  const sizeClass = coverSizes[size];
-
-  if (!game.coverUrl || error) {
-    return (
-      <div
-        className={clsx(
-          "flex shrink-0 items-center justify-center rounded-md",
-          sizeClass,
-          className
-        )}
-        style={{ backgroundColor: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.2)" }}
-        title={game.name}
-      >
-        <Gamepad2 className="h-4 w-4" style={{ color: "var(--accent-light)" }} />
-      </div>
-    );
-  }
-
+export const GameCover = memo(function GameCover({ game, size = "md", className }: GameCoverProps) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={game.coverUrl}
-      alt={game.name}
-      onError={() => setError(true)}
-      className={clsx("shrink-0 rounded-md object-cover", sizeClass, className)}
+    <GameCoverImage
+      coverImageUrl={game.coverImageUrl}
+      name={game.name}
+      size={size}
+      className={className}
     />
   );
-}
-
-// ─── ゲーム検索フック ─────────────────────────────────────────────────────────
-
-function useGameSearch(query: string) {
-  const [results, setResults] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [isPopular, setIsPopular] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
-
-  const search = useCallback(async (q: string) => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    setLoading(true);
-    try {
-      const url =
-        q.trim().length === 0
-          ? `/api/v1/games/search?limit=10`
-          : `/api/v1/games/search?q=${encodeURIComponent(q)}&limit=10`;
-      const res = await fetch(url, { signal: controller.signal });
-      if (!res.ok) {
-        setResults([]);
-        return;
-      }
-      const json = (await res.json()) as { data: Game[] };
-      setIsPopular(q.trim().length === 0);
-      setResults(json.data);
-    } catch {
-      // AbortError は無視
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const delay = query.trim().length === 0 ? 0 : 300;
-    const timer = setTimeout(() => search(query), delay);
-    return () => clearTimeout(timer);
-  }, [query, search]);
-
-  return { results, loading, isPopular };
-}
+});
 
 // ─── ゲーム選択（単体） ────────────────────────────────────────────────────────
 
@@ -129,11 +62,11 @@ export function SingleGamePicker({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-all text-left"
+        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all text-left"
         style={
           open
-            ? { backgroundColor: "var(--bg-input)", borderColor: "var(--accent)", color: "var(--text-primary)" }
-            : { backgroundColor: "var(--bg-input)", borderColor: "var(--border)", color: value ? "var(--text-primary)" : "var(--text-muted)" }
+            ? { backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }
+            : { backgroundColor: "var(--bg-input)", color: value ? "var(--text-primary)" : "var(--text-muted)" }
         }
       >
         {value ? (
@@ -152,9 +85,9 @@ export function SingleGamePicker({
           </>
         ) : (
           <>
-            <Gamepad2 className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
+            <GameController className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
             <span className="flex-1">{placeholder}</span>
-            <ChevronDown
+            <CaretDown
               className={clsx("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")}
               style={{ color: "var(--text-muted)" }}
             />
@@ -165,22 +98,21 @@ export function SingleGamePicker({
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute z-50 mt-1.5 w-full rounded-xl border shadow-2xl overflow-hidden"
-          style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)" }}
+          className="absolute z-50 mt-1.5 w-full rounded-xl shadow-2xl overflow-hidden animate-fade-in-up"
+          style={{ backgroundColor: "var(--bg-card)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)", animationDuration: "150ms" }}
         >
           {/* Search */}
           <div
-            className="flex items-center gap-2 border-b px-3 py-2.5"
-            style={{ borderColor: "var(--border)" }}
+            className="flex items-center gap-2 px-3 py-2.5"
           >
-            <Search className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
+            <MagnifyingGlass className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
             <input
               type="text"
               autoFocus
               placeholder="ゲーム名で検索..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-600"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--text-muted)]"
               style={{ color: "var(--text-primary)" }}
             />
           </div>
@@ -207,14 +139,12 @@ export function SingleGamePicker({
                     <button
                       type="button"
                       onClick={() => { onChange(game); setOpen(false); setQuery(""); }}
-                      className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left"
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left hover:bg-white/[0.04]"
                       style={
                         value?.id === game.id
                           ? { backgroundColor: "rgba(124,58,237,0.15)", color: "var(--accent-light)" }
                           : { color: "var(--text-primary)" }
                       }
-                      onMouseEnter={(e) => { if (value?.id !== game.id) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
-                      onMouseLeave={(e) => { if (value?.id !== game.id) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                     >
                       <GameCover game={game} size="sm" />
                       <span className="flex-1 truncate">{game.name}</span>
@@ -273,8 +203,8 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
           {value.map((game) => (
             <div
               key={game.id}
-              className="flex items-center gap-2 rounded-xl border pr-2 overflow-hidden"
-              style={{ backgroundColor: "rgba(124,58,237,0.1)", borderColor: "rgba(124,58,237,0.3)" }}
+              className="flex items-center gap-2 rounded-xl pr-2 overflow-hidden"
+              style={{ backgroundColor: "rgba(124,58,237,0.15)" }}
             >
               <GameCover game={game} size="sm" className="rounded-l-xl rounded-r-none" />
               <span className="text-xs font-medium" style={{ color: "var(--accent-light)" }}>
@@ -300,14 +230,14 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
           <button
             type="button"
             onClick={() => setOpen(!open)}
-            className="flex w-full items-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition-all"
+            className="flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-sm transition-all"
             style={
               open
-                ? { backgroundColor: "var(--bg-input)", borderColor: "var(--accent)", color: "var(--text-primary)" }
-                : { backgroundColor: "var(--bg-input)", borderColor: "var(--border)", color: "var(--text-muted)" }
+                ? { backgroundColor: "var(--bg-input)", color: "var(--text-primary)" }
+                : { backgroundColor: "var(--bg-input)", color: "var(--text-muted)" }
             }
           >
-            <Search className="h-4 w-4 shrink-0" />
+            <MagnifyingGlass className="h-4 w-4 shrink-0" />
             <span>ゲームを追加...</span>
             <span className="ml-auto text-xs" style={{ color: "var(--text-muted)" }}>
               {value.length}/{max}
@@ -316,21 +246,20 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
 
           {open && (
             <div
-              className="absolute z-50 mt-1.5 w-full rounded-xl border shadow-2xl overflow-hidden"
-              style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)" }}
+              className="absolute z-50 mt-1.5 w-full rounded-xl shadow-2xl overflow-hidden animate-fade-in-up"
+              style={{ backgroundColor: "var(--bg-card)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)", animationDuration: "150ms" }}
             >
               <div
-                className="flex items-center gap-2 border-b px-3 py-2.5"
-                style={{ borderColor: "var(--border)" }}
+                className="flex items-center gap-2 px-3 py-2.5"
               >
-                <Search className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
+                <MagnifyingGlass className="h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} />
                 <input
                   type="text"
                   autoFocus
                   placeholder="ゲーム名で検索..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-600"
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--text-muted)]"
                   style={{ color: "var(--text-primary)" }}
                 />
               </div>
@@ -358,14 +287,12 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
                           <button
                             type="button"
                             onClick={() => toggle(game)}
-                            className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left"
+                            className="flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left hover:bg-white/[0.04]"
                             style={
                               isSelected
                                 ? { backgroundColor: "rgba(124,58,237,0.15)", color: "var(--accent-light)" }
                                 : { color: "var(--text-primary)" }
                             }
-                            onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.04)"; }}
-                            onMouseLeave={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                           >
                             <GameCover game={game} size="sm" />
                             <span className="flex-1 truncate">{game.name}</span>
@@ -381,6 +308,151 @@ export function MultiGamePicker({ value, onChange, max = 20 }: MultiGamePickerPr
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── ゲーム複数選択（グリッド型・オンボーディング用）─────────────────────────
+
+type GridGamePickerProps = {
+  value: Game[];
+  onChange: (games: Game[]) => void;
+  max?: number;
+};
+
+export function GridGamePicker({ value, onChange, max = 20 }: GridGamePickerProps) {
+  const [query, setQuery] = useState("");
+  const [allGames, setAllGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    fetch("/api/v1/games")
+      .then((r) => r.json())
+      .then((json: { data: Game[] }) => setAllGames(json.data))
+      .catch(() => setAllGames([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = query.trim()
+    ? allGames.filter((g) => g.name.toLowerCase().includes(query.trim().toLowerCase()))
+    : allGames;
+
+  const toggle = (game: Game) => {
+    const selected = value.some((g) => g.id === game.id);
+    if (selected) {
+      onChange(value.filter((g) => g.id !== game.id));
+    } else if (value.length < max) {
+      onChange([...value, game]);
+    }
+  };
+
+  const handleImgError = (gameId: string) => {
+    setImgErrors((prev) => new Set(prev).add(gameId));
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* 検索バー + カウンタ */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <MagnifyingGlass
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+            style={{ color: "var(--text-secondary)" }}
+          />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="ゲームを検索..."
+            className="w-full rounded-xl py-2.5 pl-9 pr-4 text-sm outline-none"
+            style={{
+              backgroundColor: "var(--bg-input)",
+              color: "var(--text-primary)",
+            }}
+          />
+        </div>
+        <span className="shrink-0 text-sm" style={{ color: "var(--text-secondary)" }}>
+          {value.length}/{max}
+        </span>
+      </div>
+
+      {/* グリッド（スクロール可能） */}
+      <div className="overflow-y-auto rounded-xl" style={{ maxHeight: "320px" }}>
+        {loading ? (
+          <p className="py-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+            読み込み中...
+          </p>
+        ) : filtered.length === 0 ? (
+          <p className="py-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+            見つかりませんでした
+          </p>
+        ) : (
+          <div className="grid grid-cols-3 gap-3 p-0.5">
+            {filtered.map((game) => {
+              const isSelected = value.some((g) => g.id === game.id);
+              const hasError = imgErrors.has(game.id);
+              return (
+                <button
+                  key={game.id}
+                  type="button"
+                  onClick={() => toggle(game)}
+                  className="group text-left"
+                >
+                  {/* カバー画像（選択枠はここのみ） */}
+                  <div
+                    className={clsx(
+                      "relative aspect-[3/4] w-full overflow-hidden rounded-xl transition-all",
+                      isSelected && "ring-2 ring-[var(--accent)]"
+                    )}
+                  >
+                    {!hasError && game.coverImageUrl ? (
+                      <Image
+                        src={game.coverImageUrl}
+                        alt={game.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 33vw, 20vw"
+                        onError={() => handleImgError(game.id)}
+                      />
+                    ) : (
+                      <div
+                        className="flex h-full w-full items-center justify-center"
+                        style={{ backgroundColor: "rgba(124,58,237,0.15)" }}
+                      >
+                        <GameController className="h-8 w-8 opacity-40" style={{ color: "var(--accent)" }} />
+                      </div>
+                    )}
+
+                    {/* 選択オーバーレイ */}
+                    {isSelected && (
+                      <div
+                        className="absolute inset-0 flex items-center justify-center"
+                        style={{ backgroundColor: "rgba(124,58,237,0.5)" }}
+                      >
+                        <Check className="h-8 w-8 text-white" />
+                      </div>
+                    )}
+
+                    {/* ホバーオーバーレイ（未選択時） */}
+                    {!isSelected && (
+                      <div className="absolute inset-0 bg-black/30 opacity-0 transition-opacity group-hover:opacity-100" />
+                    )}
+                  </div>
+
+                  {/* ゲーム名 */}
+                  <p
+                    className="mt-1.5 truncate text-xs"
+                    style={{ color: isSelected ? "var(--accent-light)" : "var(--text-secondary)" }}
+                  >
+                    {game.name}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

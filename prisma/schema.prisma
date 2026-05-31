@@ -10,21 +10,48 @@ datasource db {
 
 enum RoomStatus {
   waiting
-  playing
+  full
   closed
 }
 
-model User {
-  id          String   @id @default(uuid()) @db.Uuid
-  googleId    String   @unique @map("google_id") @db.VarChar(255)
-  username    String   @unique @db.VarChar(50)
-  iconUrl     String?  @map("icon_url")
-  bio         String?
-  avgRating   Decimal  @default(0.00) @map("avg_rating") @db.Decimal(3, 2)
-  ratingCount Int      @default(0) @map("rating_count")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+enum OauthProvider {
+  google
+  x
+  discord
+}
 
+enum SnsPlatform {
+  x
+  discord
+}
+
+enum ReportReason {
+  harassment
+  spam
+  hate_speech
+  inappropriate_content
+  other
+}
+
+enum ReportStatus {
+  pending
+  reviewed
+  resolved
+  dismissed
+}
+
+model User {
+  id                String   @id @default(uuid()) @db.Uuid
+  username          String   @unique @db.VarChar(50)
+  iconUrl           String?  @map("icon_url")
+  bio               String?
+  discordWebhookUrl String?  @map("discord_webhook_url")
+  avgRating         Decimal  @default(0.00) @map("avg_rating") @db.Decimal(3, 2)
+  ratingCount       Int      @default(0) @map("rating_count")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  oauthProviders  OauthProviderAccount[]
   hostedRooms     Room[]             @relation("RoomHost")
   participations  RoomParticipant[]
   sentRatings     Rating[]           @relation("Reviewer")
@@ -32,13 +59,32 @@ model User {
   chatMessages    ChatMessage[]
   playStyleTags   UserPlayStyleTag[]
   games           UserGame[]
+  snsShareLogs    SnsShareLog[]
+  sentReports     Report[]           @relation("Reporter")
+  receivedReports Report[]           @relation("ReportedUser")
+  blocksGiven     Block[]            @relation("Blocker")
+  blocksReceived  Block[]            @relation("Blocked")
 
   @@map("users")
 }
 
+model OauthProviderAccount {
+  id             String        @id @default(uuid()) @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  provider       OauthProvider
+  providerUserId String        @map("provider_user_id") @db.VarChar(255)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("oauth_providers")
+}
+
 model Room {
   id          String     @id @default(uuid()) @db.Uuid
-  hostId      String     @map("host_id") @db.Uuid
+  hostId      String?    @map("host_id") @db.Uuid
   title       String     @db.VarChar(100)
   gameId      String     @map("game_id") @db.Uuid
   maxPlayers  Int        @map("max_players") @db.SmallInt
@@ -47,35 +93,49 @@ model Room {
   createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz
   closedAt    DateTime?  @map("closed_at") @db.Timestamptz
+  inviteToken String?    @unique @map("invite_token") @db.VarChar(64)
 
-  host          User               @relation("RoomHost", fields: [hostId], references: [id], onDelete: Restrict)
+  host          User?              @relation("RoomHost", fields: [hostId], references: [id], onDelete: SetNull)
   game          Game               @relation(fields: [gameId], references: [id])
   participants  RoomParticipant[]
   chatMessages  ChatMessage[]
   ratings       Rating[]
   playStyleTags RoomPlayStyleTag[]
+  snsShareLogs  SnsShareLog[]
 
-  @@index([status])
   @@index([hostId])
+  @@index([status])
   @@index([gameId])
   @@index([createdAt(sort: Desc)])
+  @@index([gameId, status, createdAt(sort: Desc)])
   @@map("rooms")
 }
 
+model Guest {
+  id             String        @id @default(uuid()) @db.Uuid
+  guestSessionId String        @unique @map("guest_session_id") @db.VarChar(50)
+  displayName    String        @map("display_name") @db.VarChar(50)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  chatMessages   ChatMessage[]
+
+  @@map("guests")
+}
+
 model RoomParticipant {
-  id       String    @id @default(uuid()) @db.Uuid
-  roomId   String    @map("room_id") @db.Uuid
-  userId   String    @map("user_id") @db.Uuid
-  isHost   Boolean   @default(false) @map("is_host")
-  joinedAt DateTime  @default(now()) @map("joined_at") @db.Timestamptz
-  leftAt   DateTime? @map("left_at") @db.Timestamptz
+  id             String    @id @default(uuid()) @db.Uuid
+  roomId         String    @map("room_id") @db.Uuid
+  userId         String?   @map("user_id") @db.Uuid
+  guestSessionId String?   @map("guest_session_id") @db.VarChar(50)
+  isHost         Boolean   @default(false) @map("is_host")
+  joinedAt       DateTime  @default(now()) @map("joined_at") @db.Timestamptz
+  leftAt         DateTime? @map("left_at") @db.Timestamptz
 
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([roomId, userId, joinedAt])
   @@index([roomId])
   @@index([userId])
+  @@index([guestSessionId])
   @@map("room_participants")
 }
 
@@ -83,12 +143,15 @@ model ChatMessage {
   id        String   @id @default(uuid()) @db.Uuid
   roomId    String   @map("room_id") @db.Uuid
   userId    String?  @map("user_id") @db.Uuid
+  guestId   String?  @map("guest_id") @db.Uuid
   content   String
   isSystem  Boolean  @default(false) @map("is_system")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  room Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  room    Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guest   Guest?   @relation(fields: [guestId], references: [id], onDelete: SetNull)
+  reports Report[]
 
   @@index([roomId, createdAt(sort: Desc)])
   @@map("chat_messages")
@@ -114,14 +177,28 @@ model Rating {
   @@map("ratings")
 }
 
+model TagCategory {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String        @db.VarChar(50)
+  slug         String        @unique @db.VarChar(50)
+  displayOrder Int           @default(0) @map("display_order") @db.SmallInt
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  tags PlayStyleTag[]
+
+  @@map("tag_categories")
+}
+
 model PlayStyleTag {
   id           String   @id @default(uuid()) @db.Uuid
   name         String   @unique @db.VarChar(50)
   slug         String   @unique @db.VarChar(50)
   displayOrder Int      @default(0) @map("display_order") @db.SmallInt
   isActive     Boolean  @default(true) @map("is_active")
+  categoryId   String?  @map("category_id") @db.Uuid
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
 
+  category TagCategory?       @relation(fields: [categoryId], references: [id])
   userTags UserPlayStyleTag[]
   roomTags RoomPlayStyleTag[]
 
@@ -156,16 +233,20 @@ model RoomPlayStyleTag {
 }
 
 model Game {
-  id       String   @id @default(uuid()) @db.Uuid
-  igdbId   Int      @unique @map("igdb_id")
-  name     String   @db.VarChar(255)
-  coverUrl String?  @map("cover_url")
-  cachedAt DateTime @default(now()) @map("cached_at") @db.Timestamptz
+  id           String   @id @default(uuid()) @db.Uuid
+  igdbId       Int?     @unique @map("igdb_id")
+  name         String   @db.VarChar(255)
+  coverImageUrl String?  @map("cover_image_url")
+  genre         String[]
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order") @db.SmallInt
+  cachedAt     DateTime @default(now()) @map("cached_at") @db.Timestamptz
 
   rooms     Room[]
   userGames UserGame[]
 
   @@index([name])
+  @@index([isActive, displayOrder])
   @@map("games")
 }
 
@@ -175,9 +256,56 @@ model UserGame {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  game Game @relation(fields: [gameId], references: [id])
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@id([userId, gameId])
   @@index([gameId])
   @@map("user_games")
+}
+
+model SnsShareLog {
+  id        String      @id @default(uuid()) @db.Uuid
+  roomId    String      @map("room_id") @db.Uuid
+  userId    String      @map("user_id") @db.Uuid
+  platform  SnsPlatform
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt(sort: Desc)])
+  @@map("sns_share_logs")
+}
+
+model Report {
+  id              String       @id @default(uuid()) @db.Uuid
+  reporterId      String       @map("reporter_id") @db.Uuid
+  targetUserId    String?      @map("target_user_id") @db.Uuid
+  targetMessageId String?      @map("target_message_id") @db.Uuid
+  reason          ReportReason
+  detail          String?      @db.VarChar(500)
+  status          ReportStatus @default(pending)
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  reporter      User         @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetUser    User?        @relation("ReportedUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetMessage ChatMessage? @relation(fields: [targetMessageId], references: [id], onDelete: SetNull)
+
+  @@index([reporterId])
+  @@index([targetUserId])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("reports")
+}
+
+model Block {
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("blocks")
 }

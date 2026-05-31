@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { CheckCircle } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StarRating, RatingDisplay } from "@/components/ui/StarRating";
 import clsx from "clsx";
@@ -19,39 +20,66 @@ type Props = {
   roomId: string;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function RatingForm({ user, roomId: _roomId }: Props) {
+type RatingPayload = {
+  revieweeId: string;
+  score: number;
+  comment?: string;
+};
+
+async function postRating(roomId: string, payload: RatingPayload) {
+  const res = await fetch(`/api/v1/rooms/${roomId}/ratings`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(
+      (body as { error?: { message?: string } }).error?.message ?? "評価の送信に失敗しました"
+    );
+  }
+  return res.json();
+}
+
+export function RatingForm({ user, roomId }: Props) {
   const [score, setScore] = useState<number | null>(null);
   const [comment, setComment] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: (payload: RatingPayload) => postRating(roomId, payload),
+  });
 
   const handleSubmit = () => {
     if (!score) return;
-    setSubmitted(true);
+    mutation.mutate({
+      revieweeId: user.userId,
+      score,
+      comment: comment || undefined,
+    });
   };
 
-  if (submitted) {
+  if (mutation.isSuccess) {
     return (
       <div
-        className="flex items-center gap-4 rounded-2xl border p-5 opacity-60"
-        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+        className="flex items-center gap-4 rounded-2xl p-5 opacity-60 animate-scale-in"
+        style={{ backgroundColor: "var(--bg-card)" }}
       >
         <UserAvatar username={user.username} iconUrl={user.iconUrl} size="md" />
         <div className="flex-1">
           <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
             {user.username}
           </p>
-          <p className="text-xs text-green-400">評価を送信しました</p>
+          <p className="text-xs" style={{ color: "#22c55e" }}>評価を送信しました</p>
         </div>
-        <CheckCircle2 className="h-5 w-5 text-green-400" />
+        <CheckCircle className="h-5 w-5 animate-scale-in" style={{ color: "#22c55e", animationDelay: "150ms" }} />
       </div>
     );
   }
 
   return (
     <div
-      className="rounded-2xl border p-5"
-      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border)" }}
+      className="rounded-2xl p-5"
+      style={{ backgroundColor: "var(--bg-card)" }}
     >
       <div className="flex items-center gap-3 mb-4">
         <UserAvatar username={user.username} iconUrl={user.iconUrl} size="md" />
@@ -86,29 +114,36 @@ export function RatingForm({ user, roomId: _roomId }: Props) {
           placeholder="一言コメントを残しましょう..."
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          className="w-full resize-none rounded-xl border px-3 py-2 text-sm outline-none focus:border-purple-500 transition-colors"
+          maxLength={500}
+          className="w-full resize-none rounded-xl px-3 py-2 text-sm outline-none"
           style={{
             backgroundColor: "var(--bg-input)",
-            borderColor: "var(--border)",
             color: "var(--text-primary)",
           }}
         />
       </div>
 
+      {mutation.isError && (
+        <p className="mb-3 text-xs text-red-400 animate-slide-in-bottom">
+          {mutation.error instanceof Error ? mutation.error.message : "評価の送信に失敗しました"}
+        </p>
+      )}
+
       <button
         onClick={handleSubmit}
-        disabled={!score}
+        disabled={!score || mutation.isPending}
         className={clsx(
           "w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-all",
-          score ? "hover:opacity-90" : "opacity-40 cursor-not-allowed"
+          score && !mutation.isPending ? "hover:opacity-90 active:scale-[0.97]" : "opacity-40 cursor-not-allowed"
         )}
         style={{
-          background: score
-            ? "linear-gradient(135deg, var(--accent), #6d28d9)"
-            : "var(--border)",
+          background:
+            score && !mutation.isPending
+              ? "linear-gradient(135deg, var(--accent), #6d28d9)"
+              : "var(--border)",
         }}
       >
-        評価を送信
+        {mutation.isPending ? "送信中..." : "評価を送信"}
       </button>
     </div>
   );

@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/test-results
 
 # next.js
 /.next/
@@ -41,5 +42,17 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# pnpm
+.pnpm-store/
+
 # claude code
 .claude/
+.worktrees/
+
+# lighthouse ci
+.lighthouseci/
+
+# k6 load test outputs
+load-test/results/
+load-test/cookies.csv
+load-test/test-accounts.txt

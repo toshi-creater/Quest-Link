@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Star } from "@phosphor-icons/react";
 import clsx from "clsx";
 
 type Props = {
@@ -59,11 +59,17 @@ type DisplayProps = {
 };
 
 export function RatingDisplay({ avgRating, ratingCount, size = "md" }: DisplayProps) {
-  if (ratingCount < 5 || avgRating === null) {
+  if (ratingCount === 0 || avgRating === null) {
     return (
-      <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-        評価なし
-      </span>
+      <div className="flex items-center gap-1.5">
+        <Star
+          className={size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"}
+          style={{ fill: "transparent", color: "var(--text-muted)" }}
+        />
+        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+          評価なし
+        </span>
+      </div>
     );
   }
 
