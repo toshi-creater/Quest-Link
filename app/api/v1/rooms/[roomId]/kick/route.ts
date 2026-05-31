@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { emitToRoom } from "@/lib/socket-emitter";
+import { Prisma } from "@prisma/client";
 
 type RouteParams = { params: Promise<{ roomId: string }> };
 
@@ -104,7 +105,7 @@ export async function POST(request: Request, { params }: RouteParams) {
   });
   const shouldUpdateToWaiting = room.status === "full" && currentCount - 1 < room.maxPlayers;
 
-  const kickMsg = await prisma.$transaction(async (tx) => {
+  const kickMsg = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.roomParticipant.update({
       where: { id: targetParticipant.id },
       data: { leftAt: kickedAt },

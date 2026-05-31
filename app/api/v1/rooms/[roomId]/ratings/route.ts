@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 type RouteParams = { params: Promise<{ roomId: string }> };
 
@@ -123,7 +124,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     );
   }
 
-  const rating = await prisma.$transaction(async (tx) => {
+  const rating = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const newRating = await tx.rating.create({
       data: {
         roomId,

@@ -246,7 +246,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const room = await prisma.$transaction(async (tx) => {
+    const room = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const newRoom = await tx.room.create({
         data: {
           title,
