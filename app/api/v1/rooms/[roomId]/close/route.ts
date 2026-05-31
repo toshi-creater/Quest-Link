@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { emitToRoom } from "@/lib/socket-emitter";
+import { Prisma } from "@prisma/client";
 
 type RouteParams = { params: Promise<{ roomId: string }> };
 
@@ -32,7 +33,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
 
   const closedAt = new Date();
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // 全参加者を退室状態に
     await tx.roomParticipant.updateMany({
       where: { roomId, leftAt: null },

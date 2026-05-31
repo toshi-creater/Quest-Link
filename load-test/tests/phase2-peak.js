@@ -6,7 +6,7 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 import { Trend } from "k6/metrics";
-import { BASE_URL, THRESHOLDS, getCookieForVU, authHeaders } from "./config.js";
+import { BASE_URL, THRESHOLDS, COOKIES, authHeaders } from "./config.js";
 
 const roomJoinDuration = new Trend("room_join_duration");
 const roomLeaveDuration = new Trend("room_leave_duration");
@@ -26,9 +26,31 @@ export const options = {
   },
 };
 
-export default function scenario() {
-  const { token } = getCookieForVU();
+export function setup() {
+  const headers = authHeaders(COOKIES[0].token);
+  const roomIds = [];
+
+  for (let page = 1; page <= 10; page++) {
+    const res = http.get(
+      `${BASE_URL}/api/v1/rooms?status=waiting&limit=100&page=${page}`,
+      { headers }
+    );
+    if (res.status !== 200) break;
+    const data = res.json("data");
+    if (!data || data.length === 0) break;
+    const filtered = data.filter((r) => r.maxPlayers < 16).map((r) => r.id);
+    roomIds.push(...filtered);
+    if (data.length < 100) break;
+  }
+
+  console.log(`Setup: ${roomIds.length} 部屋を取得`);
+  return { roomIds };
+}
+
+export default function scenario(data) {
+  const { token } = COOKIES[(__VU - 1) % COOKIES.length];
   const headers = authHeaders(token);
+  const roomIds = data.roomIds;
 
   // 1. ヘルスチェック
   const healthRes = http.get(`${BASE_URL}/api/v1/health`);
@@ -39,22 +61,21 @@ export default function scenario() {
   // 2. 部屋一覧取得（複数クエリパラメータでリアルな負荷を再現）
   const style = ["casual", "ranked", "practice"][__VU % 3];
   const roomsRes = http.get(
-    `${BASE_URL}/api/v1/rooms?vacant=true&tagSlugs=${style}`,
+    `${BASE_URL}/api/v1/rooms?status=waiting&tagSlugs=${style}`,
     { headers }
   );
   check(roomsRes, { "rooms 200": (r) => r.status === 200 });
 
-  const rooms = roomsRes.json("data");
-  if (!rooms || rooms.length === 0) {
+  if (!roomIds || roomIds.length === 0) {
     sleep(0.5);
     return;
   }
 
-  // 3. 参加
-  const room = rooms[__VU % rooms.length];
+  // 3. VU番号で部屋を分散割当して参加
+  const roomId = roomIds[(__VU - 1) % roomIds.length];
   const joinStart = Date.now();
   const joinRes = http.post(
-    `${BASE_URL}/api/v1/rooms/${room.id}/join`,
+    `${BASE_URL}/api/v1/rooms/${roomId}/join`,
     null,
     { headers }
   );
@@ -69,7 +90,7 @@ export default function scenario() {
   if (joinRes.status === 200) {
     const leaveStart = Date.now();
     const leaveRes = http.post(
-      `${BASE_URL}/api/v1/rooms/${room.id}/leave`,
+      `${BASE_URL}/api/v1/rooms/${roomId}/leave`,
       null,
       { headers }
     );

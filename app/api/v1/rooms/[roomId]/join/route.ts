@@ -11,6 +11,7 @@ type CteRow = {
   cnt: bigint;
   ins_id: string | null;
   ins_joined_at: Date | null;
+  already_joined: boolean;
 };
 
 export async function POST(_request: Request, { params }: RouteParams) {
@@ -92,15 +93,25 @@ export async function POST(_request: Request, { params }: RouteParams) {
         (SELECT joined_at FROM ins)     AS ins_joined_at
     `;
   } catch (error: unknown) {
-    // 一意部分インデックス違反 (#226) → 既に参加中
+    // 一意部分インデックス違反 → 既に参加中
+    // Prisma 7.x + PrismaPg adapter では pg エラーコードが
+    // meta.driverAdapterError.cause.originalCode に格納される
     if (
       typeof error === "object" &&
       error !== null &&
       "code" in error &&
       (error as { code: string }).code === "P2010"
     ) {
-      const meta = (error as { meta?: { code?: string; message?: string } }).meta;
-      if (meta?.code === "23505" || meta?.message?.includes("23505")) {
+      const meta = (error as {
+        meta?: {
+          code?: string;
+          message?: string;
+          driverAdapterError?: { cause?: { originalCode?: string } };
+        };
+      }).meta;
+      const pgCode =
+        meta?.code ?? meta?.driverAdapterError?.cause?.originalCode ?? "";
+      if (pgCode === "23505") {
         return NextResponse.json(
           { error: { code: "ALREADY_JOINED", message: "既にこの部屋に参加しています" } },
           { status: 409 }
