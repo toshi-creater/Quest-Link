@@ -9,7 +9,6 @@ vi.mock("@/lib/prisma", () => ({
     game: { findUnique: vi.fn() },
     playStyleTag: { findMany: vi.fn() },
     roomParticipant: { findFirst: vi.fn() },
-    block: { findMany: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -104,11 +103,8 @@ function makePostRequest(body: unknown): Request {
 
 // ─── テスト ────────────────────────────────────────────────────────────────────
 
-const mockBlockFindMany = vi.mocked(prisma.block.findMany);
-
 beforeEach(() => {
   vi.clearAllMocks();
-  mockBlockFindMany.mockResolvedValue([]);
 });
 
 describe("GET /api/v1/rooms", () => {
@@ -265,6 +261,27 @@ describe("GET /api/v1/rooms", () => {
     expect(mockRoomFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.not.objectContaining({ AND: expect.anything() }),
+      })
+    );
+  });
+
+  it("ブロックフィルター: NOT サブクエリが where 句に常に含まれる", async () => {
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockRoomFindMany.mockResolvedValueOnce([]);
+    mockRoomCount.mockResolvedValueOnce(0);
+
+    await GET(makeGetRequest());
+
+    expect(mockRoomFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          NOT: {
+            OR: [
+              { host: { blocksReceived: { some: { blockerId: "user-1" } } } },
+              { host: { blocksGiven: { some: { blockedId: "user-1" } } } },
+            ],
+          },
+        }),
       })
     );
   });
