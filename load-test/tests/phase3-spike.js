@@ -6,7 +6,7 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 import { Trend } from "k6/metrics";
-import { BASE_URL, getCookieForVU, authHeaders } from "./config.js";
+import { BASE_URL, COOKIES, authHeaders } from "./config.js";
 
 const recoveryDuration = new Trend("spike_recovery_p95");
 
@@ -22,15 +22,37 @@ export const options = {
   thresholds: {
     http_req_failed: [{ threshold: "rate<0.05", abortOnFail: false }], // スパイク中は 5% まで許容
     http_req_duration: [
-      { threshold: "p(95)<1000", abortOnFail: false }, // スパイク中の P95 上限
+      { threshold: "p(95)<1000", abortOnFail: false },
     ],
     spike_recovery_p95: [{ threshold: "p(95)<1000" }],
   },
 };
 
-export default function scenario() {
-  const { token } = getCookieForVU();
+export function setup() {
+  const headers = authHeaders(COOKIES[0].token);
+  const roomIds = [];
+
+  for (let page = 1; page <= 10; page++) {
+    const res = http.get(
+      `${BASE_URL}/api/v1/rooms?status=waiting&limit=100&page=${page}`,
+      { headers }
+    );
+    if (res.status !== 200) break;
+    const data = res.json("data");
+    if (!data || data.length === 0) break;
+    const filtered = data.filter((r) => r.maxPlayers < 16).map((r) => r.id);
+    roomIds.push(...filtered);
+    if (data.length < 100) break;
+  }
+
+  console.log(`Setup: ${roomIds.length} 部屋を取得`);
+  return { roomIds };
+}
+
+export default function scenario(data) {
+  const { token } = COOKIES[(__VU - 1) % COOKIES.length];
   const headers = authHeaders(token);
+  const roomIds = data.roomIds;
 
   // 1. ヘルスチェック（スパイク中の応答確認）
   const healthRes = http.get(`${BASE_URL}/api/v1/health`);
@@ -39,21 +61,20 @@ export default function scenario() {
   sleep(0.1);
 
   // 2. 部屋一覧
-  const roomsRes = http.get(`${BASE_URL}/api/v1/rooms?vacant=true`, { headers });
+  const roomsRes = http.get(`${BASE_URL}/api/v1/rooms?status=waiting`, { headers });
   check(roomsRes, { "rooms ok": (r) => r.status === 200 });
 
-  const rooms = roomsRes.json("data");
-  if (!rooms || rooms.length === 0) {
+  if (!roomIds || roomIds.length === 0) {
     sleep(0.5);
     return;
   }
 
-  // 3. 参加・即退室（高速サイクルでスパイク負荷を再現）
-  const room = rooms[__VU % rooms.length];
+  // 3. VU番号で部屋を分散割当して参加・即退室（高速サイクルでスパイク負荷を再現）
+  const roomId = roomIds[(__VU - 1) % roomIds.length];
 
   const joinStart = Date.now();
   const joinRes = http.post(
-    `${BASE_URL}/api/v1/rooms/${room.id}/join`,
+    `${BASE_URL}/api/v1/rooms/${roomId}/join`,
     null,
     { headers }
   );
@@ -63,7 +84,7 @@ export default function scenario() {
   });
 
   if (joinRes.status === 200) {
-    http.post(`${BASE_URL}/api/v1/rooms/${room.id}/leave`, null, { headers });
+    http.post(`${BASE_URL}/api/v1/rooms/${roomId}/leave`, null, { headers });
   }
 
   sleep(0.3);
