@@ -1,10 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("next/server", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("next/server")>();
-  return { ...actual, after: vi.fn((fn: () => Promise<void>) => fn()) };
-});
-
 vi.mock("@/auth", () => ({
   auth: vi.fn(),
 }));
