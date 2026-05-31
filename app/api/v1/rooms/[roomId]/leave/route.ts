@@ -1,4 +1,4 @@
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { emitToRoom } from "@/lib/socket-emitter";
@@ -22,11 +22,9 @@ export async function POST(request: Request, { params }: RouteParams) {
       );
     }
 
-    const [guestParticipant, guest] = await Promise.all([
-      prisma.roomParticipant.findFirst({ where: { roomId, guestSessionId, leftAt: null } }),
-      prisma.guest.findUnique({ where: { guestSessionId }, select: { displayName: true } }),
-    ]);
-
+    const guestParticipant = await prisma.roomParticipant.findFirst({
+      where: { roomId, guestSessionId, leftAt: null },
+    });
     if (!guestParticipant) {
       return NextResponse.json(
         { error: { code: "NOT_IN_ROOM", message: "この部屋に参加していません" } },
@@ -34,6 +32,10 @@ export async function POST(request: Request, { params }: RouteParams) {
       );
     }
 
+    const guest = await prisma.guest.findUnique({
+      where: { guestSessionId },
+      select: { displayName: true },
+    });
     const displayName = guest?.displayName ?? "ゲスト";
     const now = new Date();
 
@@ -42,37 +44,32 @@ export async function POST(request: Request, { params }: RouteParams) {
       data: { leftAt: now },
     });
 
-    const response = new NextResponse(null, { status: 204 });
-    after(async () => {
-      const leaveMsg = await prisma.chatMessage.create({
-        data: { roomId, content: `${displayName}さんが退室しました`, isSystem: true },
-      });
-      await Promise.all([
-        emitToRoom("chat:message", roomId, {
-          id: leaveMsg.id,
-          roomId,
-          user: null,
-          content: leaveMsg.content,
-          isSystem: true,
-          createdAt: leaveMsg.createdAt,
-        }),
-        emitToRoom("room:user_left", roomId, {
-          userId: guestSessionId,
-          username: displayName,
-          leftAt: now,
-        }),
-      ]);
+    const leaveMsg = await prisma.chatMessage.create({
+      data: { roomId, content: `${displayName}さんが退室しました`, isSystem: true },
     });
-    return response;
+    await emitToRoom("chat:message", roomId, {
+      id: leaveMsg.id,
+      roomId,
+      user: null,
+      content: leaveMsg.content,
+      isSystem: true,
+      createdAt: leaveMsg.createdAt,
+    });
+    await emitToRoom("room:user_left", roomId, {
+      userId: guestSessionId,
+      username: displayName,
+      leftAt: now,
+    });
+
+    return new NextResponse(null, { status: 204 });
   }
 
   const userId = session.user.id;
 
-  const [room, participant, leavingUser] = await Promise.all([
-    prisma.room.findUnique({ where: { id: roomId }, select: { id: true, status: true } }),
-    prisma.roomParticipant.findFirst({ where: { roomId, userId, leftAt: null } }),
-    prisma.user.findUnique({ where: { id: userId }, select: { username: true } }),
-  ]);
+  const room = await prisma.room.findUnique({
+    where: { id: roomId },
+    select: { id: true, status: true },
+  });
 
   if (!room) {
     return NextResponse.json(
@@ -81,6 +78,10 @@ export async function POST(request: Request, { params }: RouteParams) {
     );
   }
 
+  const participant = await prisma.roomParticipant.findFirst({
+    where: { roomId, userId, leftAt: null },
+  });
+
   if (!participant) {
     return NextResponse.json(
       { error: { code: "NOT_IN_ROOM", message: "この部屋に参加していません" } },
@@ -88,8 +89,13 @@ export async function POST(request: Request, { params }: RouteParams) {
     );
   }
 
-  const leavingUsername = leavingUser?.username ?? "ユーザー";
   const now = new Date();
+
+  const leavingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { username: true },
+  });
+  const leavingUsername = leavingUser?.username ?? "ユーザー";
 
   const result = await prisma.$transaction((tx) =>
     leaveRoomInTx(tx, {
@@ -102,9 +108,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     })
   );
 
-  const response = new NextResponse(null, { status: 204 });
-  after(async () => {
-    await emitLeaveRoomEvents(roomId, userId, leavingUsername, result);
-  });
-  return response;
+  await emitLeaveRoomEvents(roomId, userId, leavingUsername, result);
+
+  return new NextResponse(null, { status: 204 });
 }
