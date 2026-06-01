@@ -348,6 +348,8 @@ POST /rooms/{roomId}/invite
 
 ## 11. SNS シェア投稿
 
+> **⚠️ 未実装（設計のみ）。** `POST /rooms/{roomId}/share` エンドポイントは現状コードに存在しない。招待リンクの発行は `POST /rooms/{roomId}/invite`（招待トークン付きリンクを返す）を使用する。
+
 部屋の参加リンクを X または Discord に投稿する。1部屋・1時間あたり3回まで。
 
 ```

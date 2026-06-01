@@ -34,7 +34,7 @@
 | `username` | `VARCHAR(50)` | NOT NULL | - | 表示名 |
 | `icon_url` | `TEXT` | NULL | - | プロフィール画像URL |
 | `bio` | `TEXT` | NULL | - | 自己紹介文 |
-| `discord_webhook_url` | `TEXT` | NULL | - | Discord Webhook URL（SNSシェア用・1サーバーまで） |
+| `discord_webhook_url` | `TEXT` | NULL | - | Discord Webhook URL（SNSシェア用・1サーバーまで）。**列のみ実装**：読み書き API・投稿機能は未実装 |
 | `avg_rating` | `NUMERIC(3,2)` | NOT NULL | `0.00` | 平均評価スコア |
 | `rating_count` | `INTEGER` | NOT NULL | `0` | 評価受取累計数 |
 | `created_at` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | - |

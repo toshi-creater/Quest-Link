@@ -56,7 +56,7 @@ GET /users/me
 
 | フィールド | 型 | 説明 |
 |-----------|-----|------|
-| `discordWebhookUrl` | string \| null | Discord Webhook URL（SNSシェアに使用） |
+| `discordWebhookUrl` | string \| null | Discord Webhook URL（SNSシェアに使用）**※未実装**：DB 列は存在するが現状 API レスポンスには含まれない |
 | `games` | array | プレイしているゲーム一覧（最大20件） |
 | `linkedProviders` | string[] | 連携済みプロバイダ一覧（`google` / `x` / `discord`） |
 
@@ -80,8 +80,9 @@ PATCH /users/me
 | `username` | string | 1〜50文字 | 表示名 |
 | `iconUrl` | string \| null | URL形式 | アイコン画像 URL |
 | `bio` | string \| null | 500文字以内 | 自己紹介文 |
-| `discordWebhookUrl` | string \| null | Discord Webhook URL形式 | Discord Webhook URL（null で削除） |
+| `discordWebhookUrl` | string \| null | Discord Webhook URL形式 | Discord Webhook URL（null で削除）**※未実装**：現状 PATCH では受け付けない |
 | `gameIds` | string[] | `games.id`、最大20件 | プレイしているゲーム（全件置換） |
+| `playStyleTagIds` | string[] | `play-style-tags.id` | プレイスタイルタグ（全件置換） |
 
 ### レスポンス `200 OK`
 
@@ -93,7 +94,7 @@ PATCH /users/me
 |------|------------|------|
 | 400 | `INVALID_GAME` | 存在しないゲーム ID |
 | 400 | `TOO_MANY_GAMES` | ゲームが上限（20件）超過 |
-| 400 | `INVALID_WEBHOOK_URL` | Discord Webhook URL の形式が無効 |
+| 400 | `INVALID_WEBHOOK_URL` | Discord Webhook URL の形式が無効 **※未実装** |
 | 409 | `USERNAME_TAKEN` | ユーザー名が既に使用中 |
 
 ---

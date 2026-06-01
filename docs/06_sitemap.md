@@ -81,7 +81,7 @@
 | パス | 画面名 | 主な機能 | 使用 API |
 |------|--------|---------|---------|
 | `/users/me` | 自分のプロフィール | ユーザー名・アイコン・自己紹介・平均評価・プレイゲーム一覧・受け取った評価一覧を表示。未評価セッションがある場合はバナー通知 | `GET /users/me`、`GET /users/{userId}/ratings`、`GET /rooms/{roomId}/pending-ratings`（未評価バナー用） |
-| `/users/me/edit` | プロフィール編集 | ユーザー名・アイコン URL・自己紹介・プレイゲームを編集（ゲームは IGDB 連携検索で選択、最大20件）。Discord Webhook URL の登録、連携済みプロバイダ（Google / X / Discord）の確認・追加・解除も行う | `GET /games/search`、`GET /games/{gameId}`、`PATCH /users/me`、`POST /auth/{provider}/link`、`DELETE /auth/{provider}/unlink` |
+| `/users/me/edit` | プロフィール編集 | ユーザー名・アイコン URL・自己紹介・プレイスタイルタグ・プレイゲームを編集（ゲームは IGDB 連携検索で選択、最大20件）。連携済みプロバイダ（Google / X / Discord）の確認・追加・解除も行う（Discord Webhook URL の登録は**未実装**） | `GET /games/search`、`GET /games/{gameId}`、`PATCH /users/me`、`POST /auth/{provider}/link`、`DELETE /auth/{provider}/unlink` |
 | `/users/me/history` | 参加履歴 | 過去に参加した部屋の一覧をページネーション付きで表示 | `GET /users/me/rooms` |
 | `/users/me/delete` | アカウント削除 | 退会の確認・実行（MVP対象） | （退会 API：未定義、要追加） |
 | `/users/[userId]` | 他ユーザープロフィール | 他ユーザーのユーザー名・アイコン・自己紹介・平均評価・プレイゲーム一覧・受け取った評価一覧を表示。評価は完全匿名（評価者非表示） | `GET /users/{userId}`、`GET /users/{userId}/ratings` |
