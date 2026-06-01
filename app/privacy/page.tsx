@@ -6,6 +6,7 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPage() {
+  const contactEmail = process.env.CONTACT_EMAIL ?? "support@questlink.app";
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 pb-24 md:pb-10">
       <h1 className="mb-8 text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
@@ -87,11 +88,11 @@ export default function PrivacyPage() {
           <p>
             お問い合わせ先：
             <a
-              href="mailto:support@questlink.app"
+              href={`mailto:${contactEmail}`}
               className="ml-1 underline transition-colors hover:text-white"
               style={{ color: "var(--accent-light)" }}
             >
-              support@questlink.app
+              {contactEmail}
             </a>
           </p>
         </section>

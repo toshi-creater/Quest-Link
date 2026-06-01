@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 export default function ContactPage() {
+  const contactEmail = process.env.CONTACT_EMAIL ?? "7021time.is.money@gmail.com";
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 pb-28 sm:px-6 sm:pb-10">
       <Link
@@ -46,11 +47,11 @@ export default function ContactPage() {
               </dt>
               <dd>
                 <a
-                  href="mailto:7021time.is.money@gmail.com"
+                  href={`mailto:${contactEmail}`}
                   className="transition-opacity hover:opacity-70 hover:underline"
                   style={{ color: "var(--accent-light)" }}
                 >
-                  7021time.is.money@gmail.com
+                  {contactEmail}
                 </a>
               </dd>
             </div>
@@ -134,11 +135,11 @@ export default function ContactPage() {
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
             報告先:{" "}
             <a
-              href="mailto:7021time.is.money@gmail.com"
+              href={`mailto:${contactEmail}`}
               className="transition-opacity hover:opacity-70 hover:underline"
               style={{ color: "var(--accent-light)" }}
             >
-              7021time.is.money@gmail.com
+              {contactEmail}
             </a>
             （件名に「コンテンツ報告」とご記入ください）
           </p>
