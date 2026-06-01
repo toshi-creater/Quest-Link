@@ -68,7 +68,7 @@
 | `/rooms/current` | 参加中の部屋リダイレクト | サーバーサイドで参加中の roomId を取得し `/rooms/{roomId}` へリダイレクト。参加中の部屋がない場合は「参加中の部屋がありません」メッセージと「部屋を探す」リンクを表示 | Prisma 直接アクセス |
 | `/rooms/current/chat` | 参加中の部屋チャット | サーバーサイドで参加中の roomId を取得し `/rooms/{roomId}/chat` へリダイレクト。参加中の部屋がない場合は「参加中の部屋がありません」メッセージと「部屋を探す」リンクを表示 | Prisma 直接アクセス（リダイレクト後は `GET /rooms/{roomId}/messages`、WebSocket `chat:send` / `chat:message`） |
 | `/rooms/new` | 部屋作成 | 2ステップウィザード形式。Step1: `GamesGrid` コンポーネントでゲームをグリッド選択（選択と同時に Step2 へ自動遷移）。Step2: タイトル・最大人数・プレイスタイルタグ・説明を入力して部屋を作成。ステップインジケーター表示あり | `GET /games`、`GET /play-style-tags`、`POST /rooms` |
-| `/rooms/[roomId]` | 部屋詳細 | 部屋情報・参加者一覧表示、参加 / 退室 / 解散、ホストによる部屋情報編集、SNS シェア、リアルタイム参加者更新（WebSocket）。ログイン済みで自分が参加中の場合は `/rooms/current` へリダイレクト。**未ログインでも `inviteToken` パラメータ付き招待リンク経由またはゲストセッション保持時はアクセス可**（Modal A 表示） | `GET /rooms/{roomId}`、`POST /rooms/{roomId}/join`、`POST /rooms/{roomId}/leave`、`POST /rooms/{roomId}/close`、`PATCH /rooms/{roomId}`、`POST /rooms/{roomId}/share`、`GET /play-style-tags`（ホスト編集用）、`GET /rooms/current`（自分の参加中部屋かの判定用） |
+| `/rooms/[roomId]` | 部屋詳細 | 部屋情報・参加者一覧表示、参加 / 退室 / 解散、ホストによる部屋情報編集、参加リンク共有、リアルタイム参加者更新（WebSocket）。ログイン済みで自分が参加中の場合は `/rooms/current` へリダイレクト。**未ログインでも `inviteToken` パラメータ付き招待リンク経由またはゲストセッション保持時はアクセス可**（Modal A 表示） | `GET /rooms/{roomId}`、`POST /rooms/{roomId}/join`、`POST /rooms/{roomId}/leave`、`POST /rooms/{roomId}/close`、`PATCH /rooms/{roomId}`、`POST /rooms/{roomId}/invite`（参加リンク発行）、`GET /play-style-tags`（ホスト編集用）、`GET /rooms/current`（自分の参加中部屋かの判定用） |
 | `/rooms/[roomId]?inviteToken=xxx` | 部屋詳細（招待URL経由） | 招待トークン付きURLで部屋詳細にアクセスした場合の追加モーダル表示。**Modal A（認証誘導）**：未ログイン＋guestFlowなし → 「ログインして参加」「ゲストで参加」ボタン。**Modal A（新規ユーザーエラー）**：OAuth後に新規ユーザーと判定 → 「招待リンクでの新規登録はできません」メッセージ＋「ゲストで参加」「プロフィール設定」ボタン。**Modal B（表示名入力）**：guestFlow=true＋未ログイン → 表示名入力でゲスト参加・チャットへ遷移 | `POST /invite/{inviteToken}/join` |
 | `/rooms/[roomId]/guest` | ゲスト参加フロー（旧） | 募集リンク経由でアクセスした未ログインユーザー向け。表示名（任意）を入力してゲストセッションを発行し、そのまま部屋に参加。ログインを促すボタンも併設 | `POST /auth/guest`、`POST /rooms/{roomId}/join` |
 | `/rooms/[roomId]/chat` | チャット | リアルタイムチャット送受信（WebSocket、ゲスト参加者も利用可）、過去ログのスクロール読み込み（カーソルページネーション）。**ゲストセッション保持時は未ログインでもアクセス可** | `GET /rooms/{roomId}/messages`、WebSocket `chat:send` / `chat:message` |
@@ -81,7 +81,7 @@
 | パス | 画面名 | 主な機能 | 使用 API |
 |------|--------|---------|---------|
 | `/users/me` | 自分のプロフィール | ユーザー名・アイコン・自己紹介・平均評価・プレイゲーム一覧・受け取った評価一覧を表示。未評価セッションがある場合はバナー通知 | `GET /users/me`、`GET /users/{userId}/ratings`、`GET /rooms/{roomId}/pending-ratings`（未評価バナー用） |
-| `/users/me/edit` | プロフィール編集 | ユーザー名・アイコン URL・自己紹介・プレイスタイルタグ・プレイゲームを編集（ゲームは IGDB 連携検索で選択、最大20件）。連携済みプロバイダ（Google / X / Discord）の確認・追加・解除も行う（Discord Webhook URL の登録は**未実装**） | `GET /games/search`、`GET /games/{gameId}`、`PATCH /users/me`、`POST /auth/{provider}/link`、`DELETE /auth/{provider}/unlink` |
+| `/users/me/edit` | プロフィール編集 | ユーザー名・アイコン URL・自己紹介・プレイスタイルタグ・プレイゲームを編集（ゲームは IGDB 連携検索で選択、最大20件）。連携済みプロバイダ（Google / X / Discord）の確認・追加・解除も行う | `GET /games/search`、`GET /games/{gameId}`、`PATCH /users/me`、`POST /auth/{provider}/link`、`DELETE /auth/{provider}/unlink` |
 | `/users/me/history` | 参加履歴 | 過去に参加した部屋の一覧をページネーション付きで表示 | `GET /users/me/rooms` |
 | `/users/me/delete` | アカウント削除 | 退会の確認・実行（MVP対象） | （退会 API：未定義、要追加） |
 | `/users/[userId]` | 他ユーザープロフィール | 他ユーザーのユーザー名・アイコン・自己紹介・平均評価・プレイゲーム一覧・受け取った評価一覧を表示。評価は完全匿名（評価者非表示） | `GET /users/{userId}`、`GET /users/{userId}/ratings` |
@@ -182,7 +182,7 @@
 |-----------|------|---------|
 | ver 1.0 | 2026年2月 | 初版作成 |
 | ver 2.0 | 2026年2月 | ゲーム API 追加に伴う部屋作成・プロフィール編集の更新、初回オンボーディング画面・アカウント削除画面の追加、未評価バナー遷移の追加 |
-| ver 3.0 | 2026年2月 | `GET /rooms/current` 追加に伴う `/rooms/current` 画面・ヘッダー動線の追加、`/rooms/[roomId]` での参加中部屋判定ロジックの追加、`GET /rooms`・`GET /rooms/{roomId}` 認証不要化への対応、部屋ステータスを `waiting` / `full` / `closed` に更新、SNS シェア機能（`POST /rooms/{roomId}/share`）の追加 |
+| ver 3.0 | 2026年2月 | `GET /rooms/current` 追加に伴う `/rooms/current` 画面・ヘッダー動線の追加、`/rooms/[roomId]` での参加中部屋判定ロジックの追加、`GET /rooms`・`GET /rooms/{roomId}` 認証不要化への対応、部屋ステータスを `waiting` / `full` / `closed` に更新 |
 | ver 4.0 | 2026年2月 | ゲスト参加フロー（`/rooms/[roomId]/guest`）の追加、退室後のゲスト向けログイン促進モーダルの追加、認証プロバイダを Google / X / Discord の3種対応に更新、`isNewUser` フラグ対応による初回ログイン判定の明確化、プロバイダ連携管理を `/users/me/edit` に追加、`GET /users/{userId}/ratings`・`GET /play-style-tags` の認証不要化への対応、`/users/[userId]` の認証不要化 |
 | ver 5.0 | 2026年2月 | ゲーム選択画面（`/`）を新設しトップ画面に設定、部屋一覧フィルターを `status` 廃止・`vacant`/`q` 追加・タグOR検索に更新、`DELETE /users/me` 追加によるアカウント削除対応、OAuth `state` 経由の遷移元リダイレクト対応 |
 | ver 5.1 | 2026年2月 | ヘッダーナビゲーションを整理：ゲーム選択・部屋作成・参加中の部屋チャット・プロフィールの4項目に統一。部屋一覧へのリンクを削除 |
@@ -205,7 +205,6 @@
 | ゲストセッションの有効期限 | ゲストセッションは24時間有効。期限切れ後は再発行が必要になるが、同一部屋への再参加フローは未定義のため要検討 |
 | プロバイダ連携解除の制約 | 最後の1プロバイダは解除不可（`LAST_PROVIDER` エラー）。`/users/me/edit` の UI では解除ボタンの活性制御が必要 |
 | 未評価バナー | `/users/me` での表示に使用する「未評価セッション有無」の取得方法について、全 closed 部屋の `pending-ratings` を個別に呼ぶのか、専用エンドポイントを設けるのかを要検討 |
-| SNS シェア（Discord） | ~~`PATCH /users/me` に `discordWebhookUrl` フィールドの追加が必要~~ → `discordWebhookUrl` フィールドが追加されたため解決済み。Discord 投稿はプロフィール登録済みの Webhook URL を使用（1サーバーまで） |
 | `/rooms/[roomId]` の参加中判定 | 部屋詳細表示時に `GET /rooms/current` を追加で呼び出すことになる。未ログイン時はスキップし、ログイン済みの場合のみ実行する設計とすること |
 
 ---

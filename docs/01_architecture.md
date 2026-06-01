@@ -52,7 +52,7 @@
 | Discord OAuth 2.0 | ソーシャルログイン | OAuth 2.0 |
 | IGDB API（Twitch 認証） | ゲームマスタの取得・同期 | REST API（バッチ） |
 
-> 部屋への招待は、サーバーで発行する招待トークン付きリンク（`/api/v1/rooms/:id/invite`）を共有する方式。外部 SNS への自動投稿（X Share API / Discord Webhook）は現時点では未実装。
+> 部屋への招待は、サーバーで発行する招待トークン付きリンク（`/api/v1/rooms/:id/invite`）を任意の外部媒体へ手動共有する方式。
 
 ---
 

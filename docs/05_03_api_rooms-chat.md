@@ -21,7 +21,6 @@
 | POST | `/rooms/{roomId}/close` | 必要（ホストのみ） | 部屋を解散 |
 | POST | `/rooms/{roomId}/kick` | 必要（ホストのみ） | 参加者をキック |
 | POST | `/rooms/{roomId}/invite` | 必要（ホストのみ） | 招待トークンを取得（冪等。部屋作成時に自動生成済み） |
-| POST | `/rooms/{roomId}/share` | 必要 | SNS シェア投稿 |
 | GET | `/rooms/{roomId}/messages` | 必要 | チャット履歴取得 |
 | GET | `/rooms/{roomId}/pending-ratings` | 必要 | 未評価の相手一覧（`04_ratings-tags.md` 参照） |
 
@@ -346,50 +345,7 @@ POST /rooms/{roomId}/invite
 
 ---
 
-## 11. SNS シェア投稿
-
-> **⚠️ 未実装（設計のみ）。** `POST /rooms/{roomId}/share` エンドポイントは現状コードに存在しない。招待リンクの発行は `POST /rooms/{roomId}/invite`（招待トークン付きリンクを返す）を使用する。
-
-部屋の参加リンクを X または Discord に投稿する。1部屋・1時間あたり3回まで。
-
-```
-POST /rooms/{roomId}/share
-```
-
-**認証**: 必要
-
-### リクエストボディ
-
-| フィールド | 型 | 必須 | 説明 |
-|-----------|-----|------|------|
-| `platforms` | string[] | ○ | 投稿先（`x` / `discord` のいずれか、または両方） |
-| `message` | string | - | 投稿本文（省略時は部屋の `description` を使用） |
-
-投稿テンプレート（サーバー側で生成）:
-```
-【{ゲームタイトル} / {プレイスタイル}】
-{message}
-残り {残り枠数} 枠 👉 https://questlink.gg/rooms/{roomId}
-#QuestLink
-```
-
-Discord 投稿はプロフィールに登録済みの `discordWebhookUrl` を使用する。
-
-### レスポンス `204 No Content`
-
-### エラー
-
-| HTTP | エラーコード | 説明 |
-|------|------------|------|
-| 400 | `ROOM_CLOSED` | 終了済みの部屋はシェア不可 |
-| 400 | `INVALID_WEBHOOK_URL` | Discord Webhook URL が未登録または形式が無効 |
-| 403 | `FORBIDDEN` | 部屋の参加者ではない |
-| 404 | `ROOM_NOT_FOUND` | 部屋が存在しない |
-| 429 | `SHARE_RATE_LIMIT` | 投稿制限超過（1部屋・1時間あたり3回まで） |
-
----
-
-## 12. チャット履歴取得
+## 11. チャット履歴取得
 
 リアルタイム送受信は WebSocket で行い、REST は履歴参照専用。カーソルページネーション方式（`before` パラメータ）を採用。
 
@@ -429,7 +385,7 @@ GET /rooms/{roomId}/messages
 
 ---
 
-## 13. WebSocket イベント
+## 12. WebSocket イベント
 
 Socket.IO を使用。ログイン済み参加者およびゲスト参加者が利用可。
 
