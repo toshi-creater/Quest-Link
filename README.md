@@ -183,7 +183,6 @@ DB クエリ・インデックスの改善前後で、同じシナリオを比�
 
 | ファイル | 内容 |
 |---------|------|
-| `docs/08_architecture_overview.md` | **アーキテクチャ解説（図中心・コードを読まずに技術構成を把握できる）** |
 | `docs/00_requirements.md` | 機能要件・ビジネス仕様 |
 | `docs/01_architecture.md` | 技術スタック、システム図、技術選定理由 |
 | `docs/02_database-design.md` | 完全スキーマ、Prisma モデル、インデックス設計 |
