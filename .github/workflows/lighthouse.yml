@@ -8,7 +8,7 @@ on:
         required: false
         default: ''
   schedule:
-    - cron: '0 2 * * 1'  # 毎週月曜 11:00 JST
+    - cron: '0 2 * * *'  # 毎日 11:00 JST
   push:
     branches: [staging, main]
     paths:
