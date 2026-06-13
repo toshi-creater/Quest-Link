@@ -82,7 +82,7 @@ export default function TermsPage() {
           className="inline-flex items-center gap-1 text-sm transition-colors hover:opacity-80"
           style={{ color: "var(--accent-light)" }}
         >
-          ← ログインに戻る
+          ← 戻る
         </Link>
       </div>
     </div>
