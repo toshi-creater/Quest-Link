@@ -73,7 +73,7 @@ beforeEach(() => {
 
 describe("POST /api/v1/rooms/[roomId]/leave", () => {
   it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
 
     const res = await POST(makeRequest(), makeParams());
     const body = await res.json();
@@ -190,7 +190,7 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
 
   describe("ゲスト退室", () => {
     it("クッキーなしの場合 401 UNAUTHORIZED を返す", async () => {
-      mockAuth.mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null as never);
 
       const res = await POST(makeRequest(), makeParams());
       const body = await res.json();
@@ -200,7 +200,7 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
     });
 
     it("ゲストが部屋に参加していない場合 400 NOT_IN_ROOM を返す", async () => {
-      mockAuth.mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null as never);
       mockFindFirst.mockResolvedValue(null);
 
       const res = await POST(makeRequest("quest_link_guest_session=guest_abc"), makeParams());
@@ -211,7 +211,7 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
     });
 
     it("ゲストが正常退室した場合 204 を返し leftAt が更新される", async () => {
-      mockAuth.mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null as never);
       mockFindFirst.mockResolvedValue({ id: "participant-g1" } as never);
       mockGuestFindUnique.mockResolvedValue({ displayName: "ゲストA" } as never);
 
@@ -227,7 +227,7 @@ describe("POST /api/v1/rooms/[roomId]/leave", () => {
     });
 
     it("ゲスト退室時に chat:message と room:user_left が emit される", async () => {
-      mockAuth.mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null as never);
       mockFindFirst.mockResolvedValue({ id: "participant-g1" } as never);
       mockGuestFindUnique.mockResolvedValue({ displayName: "ゲストA" } as never);
 

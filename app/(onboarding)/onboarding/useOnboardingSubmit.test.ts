@@ -191,7 +191,7 @@ describe("useOnboardingSubmit", () => {
 
   describe("saving フラグ", () => {
     it("送信中は saving が true になり、完了後に false に戻る", async () => {
-      let resolveFetch!: (value: unknown) => void;
+      let resolveFetch!: (value: Response | PromiseLike<Response>) => void;
       vi.mocked(fetch).mockReturnValueOnce(
         new Promise((resolve) => {
           resolveFetch = resolve;

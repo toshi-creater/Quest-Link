@@ -31,7 +31,7 @@ function makeSearchParams(q?: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockAuth.mockResolvedValue(null);
+  mockAuth.mockResolvedValue(null as never);
 });
 
 describe("SearchPage", () => {

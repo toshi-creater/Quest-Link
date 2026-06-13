@@ -36,7 +36,7 @@ const mockRoom: RoomSummary = {
   maxPlayers: 3,
   currentPlayers: 2,
   status: "waiting",
-  playStyleTags: [{ id: "t1", name: "ガチ", slug: "serious" }],
+  playStyleTags: [{ id: "t1", name: "ガチ", slug: "serious", category: null }],
   host: { id: "u1", username: "testuser", iconUrl: null, avgRating: 4.5 },
   createdAt: "2026-03-11T00:00:00Z",
 };

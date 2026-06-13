@@ -32,7 +32,7 @@ beforeEach(() => {
 
 describe("GET /api/v1/games/search", () => {
   it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
 
     const res = await GET(makeRequest({ q: "apex" }));
     const body = await res.json();

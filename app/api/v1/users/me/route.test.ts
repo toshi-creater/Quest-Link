@@ -81,7 +81,7 @@ beforeEach(() => {
 
 describe("GET /api/v1/users/me", () => {
   it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
 
     const res = await GET();
     const body = await res.json();
@@ -171,7 +171,7 @@ const makePatchRequest = (body: Record<string, unknown>) =>
 
 describe("PATCH /api/v1/users/me", () => {
   it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
 
     const res = await PATCH(makePatchRequest({ username: "newname" }));
     const body = await res.json();
@@ -230,7 +230,7 @@ describe("PATCH /api/v1/users/me", () => {
 
 describe("DELETE /api/v1/users/me", () => {
   it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
 
     const res = await DELETE();
     const body = await res.json();

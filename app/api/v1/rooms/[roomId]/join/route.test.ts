@@ -44,8 +44,8 @@ const makeRequest = () => new Request("http://localhost/api/v1/rooms/room-1/join
 const makeParams = () => ({ params: Promise.resolve({ roomId: "room-1" }) });
 
 const now = new Date();
-const successRow = [{ max_players: 4n, cnt: 1n, ins_id: "participant-uuid", ins_joined_at: now }];
-const fullRow = [{ max_players: 4n, cnt: 4n, ins_id: null, ins_joined_at: null }];
+const successRow = [{ max_players: BigInt(4), cnt: BigInt(1), ins_id: "participant-uuid", ins_joined_at: now }];
+const fullRow = [{ max_players: BigInt(4), cnt: BigInt(4), ins_id: null, ins_joined_at: null }];
 const makeAlreadyJoinedError = () =>
   Object.assign(new Error("Raw query failed"), {
     code: "P2010",

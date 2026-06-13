@@ -68,7 +68,7 @@ beforeEach(() => {
 
 describe("GET /api/v1/rooms/[roomId]", () => {
   it("未認証でも部屋情報を取得できる（isCurrentGuestParticipant: false）", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
     mockFindUnique.mockResolvedValue(makeRoom() as never);
 
     const res = await GET(makeRequest(), makeParams());
