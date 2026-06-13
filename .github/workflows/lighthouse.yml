@@ -4,14 +4,22 @@ on:
   workflow_dispatch:
     inputs:
       base_url:
-        description: '計測対象のベースURL (例: https://staging.example.com)。空欄の場合はローカルビルドを起動して計測'
+        description: '計測対象のベースURL。空欄の場合は STAGING_URL シークレットを使用'
         required: false
         default: ''
+  schedule:
+    - cron: '0 2 * * 1'  # 毎週月曜 11:00 JST
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'public/**'
 
 jobs:
   lighthouse:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -27,35 +35,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build Next.js app
-        if: ${{ inputs.base_url == '' }}
-        run: pnpm build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: http://localhost:3000
-          LHCI_TEST_ENABLED: 'true'
-
-      - name: Start server
-        if: ${{ inputs.base_url == '' }}
-        run: pnpm start &
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          AUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          AUTH_URL: http://localhost:3000
-          LHCI_TEST_ENABLED: 'true'
-          LHCI_TEST_EMAIL: ${{ secrets.LHCI_TEST_EMAIL }}
-          LHCI_TEST_PASSWORD: ${{ secrets.LHCI_TEST_PASSWORD }}
-
-      - name: Wait for server
-        if: ${{ inputs.base_url == '' }}
-        run: npx wait-on http://localhost:3000 --timeout 60000
-
       - name: Run Lighthouse CI (collect)
         run: pnpm exec lhci collect
         env:
-          LHCI_COLLECT_URL: ${{ inputs.base_url || 'http://localhost:3000' }}
+          LHCI_COLLECT_URL: ${{ inputs.base_url != '' && inputs.base_url || secrets.STAGING_URL }}
           LHCI_TEST_EMAIL: ${{ secrets.LHCI_TEST_EMAIL }}
           LHCI_TEST_PASSWORD: ${{ secrets.LHCI_TEST_PASSWORD }}
           LHCI_ROOM_ID: ${{ secrets.LHCI_ROOM_ID }}
@@ -77,6 +60,6 @@ jobs:
         run: |
           echo "## Lighthouse CI Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "計測対象URL: ${{ inputs.base_url || 'http://localhost:3000' }}" >> $GITHUB_STEP_SUMMARY
+          echo "計測対象URL: ${{ inputs.base_url != '' && inputs.base_url || secrets.STAGING_URL }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "レポートは Artifacts タブからダウンロードできます。" >> $GITHUB_STEP_SUMMARY
