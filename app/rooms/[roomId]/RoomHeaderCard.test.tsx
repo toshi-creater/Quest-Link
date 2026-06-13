@@ -63,8 +63,8 @@ describe("RoomHeaderCard", () => {
 
   it("playStyleTags がある場合はタグが表示される", () => {
     const tags = [
-      { id: "t1", name: "カジュアル", slug: "casual" },
-      { id: "t2", name: "初心者OK", slug: "beginner-ok" },
+      { id: "t1", name: "カジュアル", slug: "casual", category: null },
+      { id: "t2", name: "初心者OK", slug: "beginner-ok", category: null },
     ];
     render(<RoomHeaderCard room={{ ...baseRoom, playStyleTags: tags }} />);
     const tagElements = screen.getAllByTestId("play-style-tag");

@@ -52,7 +52,7 @@ beforeEach(() => {
 
 describe("POST /api/v1/users/me/avatar", () => {
   it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
 
     const res = await POST(makeRequest(makeFile()));
     const body = await res.json();

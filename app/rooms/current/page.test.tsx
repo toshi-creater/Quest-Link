@@ -31,7 +31,7 @@ function setupCookies(guestSessionId: string | null) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockAuth.mockResolvedValue(null);
+  mockAuth.mockResolvedValue(null as never);
   setupCookies(null);
 });
 

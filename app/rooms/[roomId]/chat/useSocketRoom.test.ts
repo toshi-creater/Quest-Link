@@ -22,8 +22,8 @@ import { useSocketRoom } from "./useSocketRoom";
 
 const defaultOptions = {
   roomId: "room-1",
-  initialMessages: [],
-  initialParticipants: [],
+  initialMessages: [] as Parameters<typeof useSocketRoom>[0]["initialMessages"],
+  initialParticipants: [] as Parameters<typeof useSocketRoom>[0]["initialParticipants"],
 };
 
 function getSocketHandler(event: string): ((...args: unknown[]) => void) | undefined {

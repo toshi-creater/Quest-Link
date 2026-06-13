@@ -72,7 +72,7 @@ beforeEach(() => {
 
 describe("POST /api/v1/rooms/[roomId]/kick", () => {
   it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
 
     const res = await POST(makeRequest({ userId: "user-2" }), makeParams());
     const body = await res.json();

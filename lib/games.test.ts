@@ -26,7 +26,7 @@ beforeEach(() => {
 
 describe("searchGames", () => {
   it("正常系: Prisma呼び出し引数と戻り値形状を検証する", async () => {
-    mockFindMany.mockResolvedValueOnce(sampleGames);
+    mockFindMany.mockResolvedValueOnce(sampleGames as never);
 
     const result = await searchGames("apex", 5);
 
@@ -68,7 +68,7 @@ describe("searchGames", () => {
 
 describe("getPopularGames", () => {
   it("デフォルト引数で take: 10 が渡る", async () => {
-    mockFindMany.mockResolvedValueOnce(sampleGames);
+    mockFindMany.mockResolvedValueOnce(sampleGames as never);
 
     await getPopularGames();
 
@@ -102,7 +102,7 @@ describe("getPopularGames", () => {
 
 describe("getPopularGamesExcluding", () => {
   it("excludeIds が空のとき notIn フィルターなしで呼ばれる", async () => {
-    mockFindMany.mockResolvedValueOnce(sampleGames);
+    mockFindMany.mockResolvedValueOnce(sampleGames as never);
 
     const result = await getPopularGamesExcluding([], 6);
 
@@ -116,7 +116,7 @@ describe("getPopularGamesExcluding", () => {
   });
 
   it("excludeIds に値があるとき id: { notIn } フィルターが付く", async () => {
-    mockFindMany.mockResolvedValueOnce([sampleGames[1]]);
+    mockFindMany.mockResolvedValueOnce([sampleGames[1]] as never);
 
     const result = await getPopularGamesExcluding(["1"], 5);
 
@@ -151,7 +151,7 @@ describe("getPopularGamesExcluding", () => {
 describe("getGameById", () => {
   it("存在するIDで findUnique({ where: { id } }) が呼ばれる", async () => {
     const game = sampleGames[0];
-    mockFindUnique.mockResolvedValueOnce(game);
+    mockFindUnique.mockResolvedValueOnce(game as never);
 
     const result = await getGameById("1");
 

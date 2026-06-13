@@ -109,7 +109,7 @@ beforeEach(() => {
 
 describe("GET /api/v1/rooms", () => {
   it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
-    mockAuth.mockResolvedValueOnce(null);
+    mockAuth.mockResolvedValueOnce(null as never);
 
     const res = await GET(makeGetRequest());
     const json = await res.json();
@@ -119,7 +119,7 @@ describe("GET /api/v1/rooms", () => {
   });
 
   it("正常系: data配列とmetaを返す", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindMany.mockResolvedValueOnce([SAMPLE_RAW_ROOM_LIST] as never);
     mockRoomCount.mockResolvedValueOnce(1);
 
@@ -132,7 +132,7 @@ describe("GET /api/v1/rooms", () => {
   });
 
   it("gameId クエリパラメータが where 句に含まれる", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindMany.mockResolvedValueOnce([]);
     mockRoomCount.mockResolvedValueOnce(0);
 
@@ -146,7 +146,7 @@ describe("GET /api/v1/rooms", () => {
   });
 
   it("正常系: q が title に一致する部屋を 200 で返す", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindMany.mockResolvedValueOnce([SAMPLE_RAW_ROOM_LIST] as never);
     mockRoomCount.mockResolvedValueOnce(1);
 
@@ -160,7 +160,7 @@ describe("GET /api/v1/rooms", () => {
   });
 
   it("正常系: q が description に一致する部屋を 200 で返す", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindMany.mockResolvedValueOnce([SAMPLE_RAW_ROOM_WITH_DESC_LIST] as never);
     mockRoomCount.mockResolvedValueOnce(1);
 
@@ -174,7 +174,7 @@ describe("GET /api/v1/rooms", () => {
   });
 
   it("q クエリパラメータが where 句の OR 条件に含まれる", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindMany.mockResolvedValueOnce([]);
     mockRoomCount.mockResolvedValueOnce(0);
 
@@ -193,7 +193,7 @@ describe("GET /api/v1/rooms", () => {
   });
 
   it("q が 101 文字以上のとき 400 BAD_REQUEST を返す", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
 
     const res = await GET(makeGetRequest({ q: "a".repeat(101) }));
     const json = await res.json();
@@ -203,7 +203,7 @@ describe("GET /api/v1/rooms", () => {
   });
 
   it("q 未指定時は where 句に OR 条件が含まれない", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindMany.mockResolvedValueOnce([]);
     mockRoomCount.mockResolvedValueOnce(0);
 
@@ -217,7 +217,7 @@ describe("GET /api/v1/rooms", () => {
   });
 
   it("複数タグ指定時: AND 条件が where 句に展開される", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindMany.mockResolvedValueOnce([]);
     mockRoomCount.mockResolvedValueOnce(0);
 
@@ -236,7 +236,7 @@ describe("GET /api/v1/rooms", () => {
   });
 
   it("単一タグ指定時: AND 配列が1要素で展開される", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindMany.mockResolvedValueOnce([]);
     mockRoomCount.mockResolvedValueOnce(0);
 
@@ -252,7 +252,7 @@ describe("GET /api/v1/rooms", () => {
   });
 
   it("タグ未指定時は where 句に AND 条件が含まれない", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindMany.mockResolvedValueOnce([]);
     mockRoomCount.mockResolvedValueOnce(0);
 
@@ -266,7 +266,7 @@ describe("GET /api/v1/rooms", () => {
   });
 
   it("ブロックフィルター: NOT サブクエリが where 句に常に含まれる", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindMany.mockResolvedValueOnce([]);
     mockRoomCount.mockResolvedValueOnce(0);
 
@@ -289,7 +289,7 @@ describe("GET /api/v1/rooms", () => {
 
 describe("POST /api/v1/rooms", () => {
   it("未認証の場合 401 UNAUTHORIZED を返す", async () => {
-    mockAuth.mockResolvedValueOnce(null);
+    mockAuth.mockResolvedValueOnce(null as never);
 
     const res = await POST(makePostRequest({ title: "ルーム", gameId: VALID_GAME_ID, maxPlayers: 4 }));
     const json = await res.json();
@@ -299,7 +299,7 @@ describe("POST /api/v1/rooms", () => {
   });
 
   it("title が空文字の場合 400 BAD_REQUEST を返す", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
 
     const res = await POST(makePostRequest({ title: "", gameId: VALID_GAME_ID, maxPlayers: 4 }));
     const json = await res.json();
@@ -309,7 +309,7 @@ describe("POST /api/v1/rooms", () => {
   });
 
   it("既に部屋を持つユーザーの場合 409 ROOM_ALREADY_EXISTS を返す", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindFirst.mockResolvedValueOnce({ id: "existing-room", status: "waiting" } as never);
 
     const res = await POST(makePostRequest({ title: "ルーム", gameId: VALID_GAME_ID, maxPlayers: 4 }));
@@ -320,7 +320,7 @@ describe("POST /api/v1/rooms", () => {
   });
 
   it("解散済みの部屋のホストは新しい部屋を作成できる", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindFirst.mockResolvedValueOnce(null); // closed room は除外されるため null
     mockRoomParticipantFindFirst.mockResolvedValueOnce(null);
     mockGameFindUnique.mockResolvedValueOnce({ id: VALID_GAME_ID } as never);
@@ -344,7 +344,7 @@ describe("POST /api/v1/rooms", () => {
   });
 
   it("他の部屋に参加中のユーザーの場合 409 ALREADY_IN_ROOM を返す", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindFirst.mockResolvedValueOnce(null);
     mockRoomParticipantFindFirst.mockResolvedValueOnce({ id: "p-1" } as never);
 
@@ -356,7 +356,7 @@ describe("POST /api/v1/rooms", () => {
   });
 
   it("存在しない gameId の場合 400 INVALID_GAME を返す", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindFirst.mockResolvedValueOnce(null);
     mockRoomParticipantFindFirst.mockResolvedValueOnce(null);
     mockGameFindUnique.mockResolvedValueOnce(null);
@@ -369,7 +369,7 @@ describe("POST /api/v1/rooms", () => {
   });
 
   it("正常系: 201 と data.id を返す", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindFirst.mockResolvedValueOnce(null);
     mockRoomParticipantFindFirst.mockResolvedValueOnce(null);
     mockGameFindUnique.mockResolvedValueOnce({ id: VALID_GAME_ID } as never);
@@ -394,7 +394,7 @@ describe("POST /api/v1/rooms", () => {
   });
 
   it("正常系: 部屋作成時に inviteToken が自動生成される", async () => {
-    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION);
+    mockAuth.mockResolvedValueOnce(AUTHENTICATED_SESSION as never);
     mockRoomFindFirst.mockResolvedValueOnce(null);
     mockRoomParticipantFindFirst.mockResolvedValueOnce(null);
     mockGameFindUnique.mockResolvedValueOnce({ id: VALID_GAME_ID } as never);
