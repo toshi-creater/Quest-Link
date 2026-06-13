@@ -10,7 +10,7 @@ on:
   schedule:
     - cron: '0 2 * * 1'  # 毎週月曜 11:00 JST
   push:
-    branches: [main]
+    branches: [staging]
     paths:
       - 'app/**'
       - 'components/**'
