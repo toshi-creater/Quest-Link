@@ -67,6 +67,13 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/questlink_e2e
 
+      - name: Sync games from IGDB
+        run: pnpm batch:games
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/questlink_e2e
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+
       - name: Seed database
         run: pnpm db:seed
         env:
