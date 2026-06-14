@@ -67,6 +67,9 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/questlink_e2e
 
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
       - name: Sync games from IGDB
         run: pnpm batch:games
         env:
