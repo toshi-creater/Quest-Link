@@ -13,9 +13,8 @@ test.describe("認証リダイレクト", () => {
     await expect(page.getByRole("button", { name: "Googleでログイン" })).toBeVisible();
   });
 
-  test("未認証で /rooms にアクセスできる（リダイレクトなし）", async ({ page }) => {
+  test("未認証で /rooms にアクセスすると /login にリダイレクトされる", async ({ page }) => {
     await page.goto("/rooms");
-    await expect(page).toHaveURL(/\/rooms/);
-    await expect(page).not.toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/login/);
   });
 });
