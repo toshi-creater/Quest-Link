@@ -4,6 +4,7 @@ import { useState } from "react";
 import { PaperPlaneTilt } from "@phosphor-icons/react";
 import { getSocket } from "@/lib/socket";
 import { useChatStore } from "@/lib/stores/chatStore";
+import { toast } from "@/lib/toast";
 
 const MAX_LENGTH = 1000;
 
@@ -21,8 +22,13 @@ export function ChatInput({ roomId }: Props) {
 
   const handleSend = () => {
     if (!canSend) return;
-    getSocket().emit("chat:send", { roomId, content: message.trim() });
+    const content = message.trim();
     setMessage("");
+    getSocket().emit("chat:send", { roomId, content }, (ack?: { error?: string }) => {
+      if (ack?.error) {
+        toast.error("メッセージの送信に失敗しました");
+      }
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
