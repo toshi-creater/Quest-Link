@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { toast } from "@/lib/toast";
 import NewRoomPage from "./page";
 
 // ─── vi.mock ファクトリ内で参照できるようにホイスト ────────────────────────────
@@ -162,14 +163,14 @@ describe("NewRoomPage", () => {
     expect(mockPush).toHaveBeenCalledWith("/rooms/room-123");
   });
 
-  it("createRoom 失敗時にエラーメッセージが表示される", async () => {
+  it("createRoom 失敗時に toast.error が呼ばれる", async () => {
     render(<NewRoomPage />);
     selectGame();
     act(() => {
       mutationCallbacks.onError?.(new Error("作成に失敗しました"));
     });
     await waitFor(() => {
-      expect(screen.getByText("作成に失敗しました")).toBeInTheDocument();
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("作成に失敗しました");
     });
   });
 });

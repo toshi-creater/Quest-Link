@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { toast } from "@/lib/toast";
 
 vi.mock("@phosphor-icons/react", () => ({
   LinkSimple: () => <span data-testid="icon-link" />,
   Copy: () => <span data-testid="icon-copy" />,
   CircleNotch: () => <span data-testid="icon-spinner" />,
-  Check: () => <span data-testid="icon-check" />,
 }));
 
 vi.mock("@/lib/api/rooms", () => ({
@@ -70,7 +70,7 @@ describe("InvitePanel", () => {
     );
   });
 
-  it("コピー後に「コピーしました」に変わる", async () => {
+  it("コピー後に toast.success が呼ばれる", async () => {
     mockGenerateInviteToken.mockResolvedValue({ data: { inviteToken: "token-xyz" } });
     render(<InvitePanel roomId="room-1" />);
 
@@ -78,7 +78,7 @@ describe("InvitePanel", () => {
     fireEvent.click(screen.getByText("リンクをコピー"));
 
     await waitFor(() => {
-      expect(screen.getByText("コピーしました")).toBeInTheDocument();
+      expect(vi.mocked(toast.success)).toHaveBeenCalledWith("リンクをコピーしました");
     });
   });
 });

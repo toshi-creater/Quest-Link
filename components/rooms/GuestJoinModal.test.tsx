@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { toast } from "@/lib/toast";
 
 const mockInvalidateQueries = vi.fn();
 const mockPush = vi.fn();
@@ -46,7 +47,7 @@ describe("GuestJoinModal — mode=invite", () => {
     expect(screen.getByText("Discordでログイン")).toBeInTheDocument();
   });
 
-  it("51文字入力時は fetch を呼ばずバリデーションエラーを表示する", async () => {
+  it("51文字入力時は fetch を呼ばず toast.error でバリデーションエラーを表示する", async () => {
     render(<GuestJoinModal {...inviteProps} />);
 
     fireEvent.change(screen.getByRole("textbox"), {
@@ -55,7 +56,7 @@ describe("GuestJoinModal — mode=invite", () => {
     fireEvent.click(screen.getByRole("button", { name: "ゲストとして参加" }));
 
     await waitFor(() => {
-      expect(screen.getByText("表示名は50文字以内で入力してください")).toBeInTheDocument();
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("表示名は50文字以内で入力してください");
     });
     expect(fetch).not.toHaveBeenCalled();
   });
@@ -78,7 +79,7 @@ describe("GuestJoinModal — mode=invite", () => {
     });
   });
 
-  it("ROOM_CLOSED エラーコードで正しいメッセージを表示する", async () => {
+  it("ROOM_CLOSED エラーコードで toast.error に正しいメッセージが渡される", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: false,
       json: async () => ({ error: { code: "ROOM_CLOSED" } }),
@@ -88,11 +89,11 @@ describe("GuestJoinModal — mode=invite", () => {
     fireEvent.click(screen.getByRole("button", { name: "ゲストとして参加" }));
 
     await waitFor(() => {
-      expect(screen.getByText("この部屋はすでに終了しています")).toBeInTheDocument();
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("この部屋はすでに終了しています");
     });
   });
 
-  it("ROOM_FULL エラーコードで正しいメッセージを表示する", async () => {
+  it("ROOM_FULL エラーコードで toast.error に正しいメッセージが渡される", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: false,
       json: async () => ({ error: { code: "ROOM_FULL" } }),
@@ -102,11 +103,11 @@ describe("GuestJoinModal — mode=invite", () => {
     fireEvent.click(screen.getByRole("button", { name: "ゲストとして参加" }));
 
     await waitFor(() => {
-      expect(screen.getByText("この部屋は満員です")).toBeInTheDocument();
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("この部屋は満員です");
     });
   });
 
-  it("INVITE_NOT_FOUND エラーコードで正しいメッセージを表示する", async () => {
+  it("INVITE_NOT_FOUND エラーコードで toast.error に正しいメッセージが渡される", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: false,
       json: async () => ({ error: { code: "INVITE_NOT_FOUND" } }),
@@ -116,11 +117,11 @@ describe("GuestJoinModal — mode=invite", () => {
     fireEvent.click(screen.getByRole("button", { name: "ゲストとして参加" }));
 
     await waitFor(() => {
-      expect(screen.getByText("招待リンクが無効です")).toBeInTheDocument();
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("招待リンクが無効です");
     });
   });
 
-  it("ALREADY_JOINED エラーコードで正しいメッセージを表示する", async () => {
+  it("ALREADY_JOINED エラーコードで toast.error に正しいメッセージが渡される", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: false,
       json: async () => ({ error: { code: "ALREADY_JOINED" } }),
@@ -130,7 +131,7 @@ describe("GuestJoinModal — mode=invite", () => {
     fireEvent.click(screen.getByRole("button", { name: "ゲストとして参加" }));
 
     await waitFor(() => {
-      expect(screen.getByText("すでにこの部屋に参加しています")).toBeInTheDocument();
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("すでにこの部屋に参加しています");
     });
   });
 
