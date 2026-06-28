@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DoorOpen, SignOut, CircleNotch, Trash } from "@phosphor-icons/react";
 import { joinRoom, leaveRoom, closeRoom } from "@/lib/api/rooms";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { toast } from "@/lib/toast";
 
 type Props = {
   roomId: string;
@@ -24,8 +25,12 @@ export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, on
   const joinMutation = useMutation({
     mutationFn: () => joinRoom(roomId),
     onSuccess: async () => {
+      toast.success("部屋に参加しました");
       await queryClient.invalidateQueries({ queryKey: ["room", roomId] });
       await queryClient.invalidateQueries({ queryKey: ["rooms"] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
     },
   });
 
@@ -38,6 +43,9 @@ export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, on
         router.push(`/rooms/${roomId}/ratings`);
       }
     },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
   });
 
   const closeMutation = useMutation({
@@ -46,6 +54,9 @@ export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, on
       await queryClient.invalidateQueries({ queryKey: ["room", roomId] });
       await queryClient.invalidateQueries({ queryKey: ["rooms"] });
       router.push("/rooms");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
     },
   });
 
@@ -79,11 +90,6 @@ export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, on
           )}
           {status === "playing" ? "満員" : "参加する"}
         </button>
-        {joinMutation.isError && (
-          <p className="text-center text-xs animate-slide-in-bottom" style={{ color: "#f87171" }}>
-            {joinMutation.error.message}
-          </p>
-        )}
       </div>
     );
   }
@@ -123,16 +129,6 @@ export function RoomActions({ roomId, isParticipant, isHost, isGuest, status, on
           </button>
         )}
       </div>
-      {leaveMutation.isError && (
-        <p className="text-center text-xs animate-slide-in-bottom" style={{ color: "#f87171" }}>
-          {leaveMutation.error.message}
-        </p>
-      )}
-      {closeMutation.isError && (
-        <p className="text-center text-xs animate-slide-in-bottom" style={{ color: "#f87171" }}>
-          {closeMutation.error.message}
-        </p>
-      )}
       {isConfirmOpen && (
         <ConfirmModal
           title="部屋を解散しますか？"

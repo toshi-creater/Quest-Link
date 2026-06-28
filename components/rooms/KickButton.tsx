@@ -5,6 +5,7 @@ import { HandWaving } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { kickParticipant, type KickTarget } from "@/lib/api/rooms";
+import { toast } from "@/lib/toast";
 
 type Props = {
   roomId: string;
@@ -19,8 +20,12 @@ export function KickButton({ roomId, target, targetName, onSuccess }: Props) {
   const kickMutation = useMutation({
     mutationFn: () => kickParticipant(roomId, target),
     onSuccess: () => {
+      toast.success("退室させました");
       setIsOpen(false);
       onSuccess?.();
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
     },
   });
 
