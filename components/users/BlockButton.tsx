@@ -5,6 +5,7 @@ import { CircleNotch } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { blockUser, unblockUser } from "@/lib/api/users";
+import { toast } from "@/lib/toast";
 
 type Props = {
   userId: string;
@@ -19,8 +20,12 @@ export function BlockButton({ userId, isBlocked, username }: Props) {
   const mutation = useMutation({
     mutationFn: () => (isBlocked ? unblockUser(userId) : blockUser(userId)),
     onSuccess: () => {
+      toast.success(isBlocked ? "ブロックを解除しました" : "ブロックしました");
       setShowConfirm(false);
       void queryClient.invalidateQueries({ queryKey: ["users", userId] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
     },
   });
 

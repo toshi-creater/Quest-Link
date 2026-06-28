@@ -10,6 +10,7 @@ import { type Game } from "@/lib/mock-data";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { MultiGamePicker } from "@/components/ui/GamePicker";
 import { BackButton } from "@/components/ui/BackButton";
+import { toast } from "@/lib/toast";
 
 type UserProfile = {
   username: string;
@@ -43,7 +44,6 @@ export default function EditProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [selectedGames, setSelectedGames] = useState<Game[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -72,7 +72,6 @@ export default function EditProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
     setSaving(true);
 
     try {
@@ -97,7 +96,7 @@ export default function EditProfilePage() {
             INVALID_FILE_TYPE: "JPEG / PNG / WebP / GIF のみアップロード可能です",
             UPLOAD_FAILED: "画像のアップロードに失敗しました",
           };
-          setError(msgMap[uploadJson.error ?? ""] ?? "画像のアップロードに失敗しました");
+          toast.error(msgMap[uploadJson.error ?? ""] ?? "画像のアップロードに失敗しました");
           return;
         }
 
@@ -120,15 +119,16 @@ export default function EditProfilePage() {
       const json = (await res.json()) as { error?: string };
 
       if (!res.ok) {
-        setError(json.error ?? "エラーが発生しました");
+        toast.error(json.error ?? "エラーが発生しました");
         return;
       }
 
       await update({ username: username.trim() });
       queryClient.invalidateQueries({ queryKey: ["users", "me"] });
+      toast.success("プロフィールを保存しました");
       router.push("/users/me");
     } catch {
-      setError("通信エラーが発生しました。再度お試しください");
+      toast.error("通信エラーが発生しました。再度お試しください");
     } finally {
       setSaving(false);
     }
@@ -227,13 +227,6 @@ export default function EditProfilePage() {
           </label>
           <MultiGamePicker value={selectedGames} onChange={setSelectedGames} max={20} />
         </div>
-
-        {/* Error */}
-        {error && (
-          <p className="mb-4 rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {error}
-          </p>
-        )}
 
         {/* Sticky buttons */}
         <div

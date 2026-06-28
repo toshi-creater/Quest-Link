@@ -51,7 +51,7 @@ function OnboardingContent() {
     setAvatarFile(file);
   };
 
-  const { handleSubmit, saving, error } = useOnboardingSubmit({
+  const { handleSubmit, saving } = useOnboardingSubmit({
     avatarFile,
     username,
     bio,
@@ -102,7 +102,6 @@ function OnboardingContent() {
             onBack={() => setCurrentStep(4)}
             onSubmit={() => void handleSubmit()}
             saving={saving}
-            error={error}
             status={status}
           />
         )}

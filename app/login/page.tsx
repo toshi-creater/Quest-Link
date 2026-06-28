@@ -2,13 +2,14 @@ import { signIn } from "@/auth";
 import { Logo } from "@/components/ui/Logo";
 import { OAuthButton } from "@/components/ui/OAuthButton";
 import Link from "next/link";
+import { LoginErrorToast } from "./LoginErrorToast";
 
 type Props = {
-  searchParams: Promise<{ callbackUrl?: string }>;
+  searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: Props) {
-  const { callbackUrl } = await searchParams;
+  const { callbackUrl, error } = await searchParams;
   const redirectTo = callbackUrl?.startsWith("/") ? callbackUrl : "/rooms";
   const hasInviteToken = callbackUrl?.includes("inviteToken=") ?? false;
 
@@ -17,6 +18,7 @@ export default async function LoginPage({ searchParams }: Props) {
       className="flex min-h-screen flex-col items-center justify-center px-4"
       style={{ backgroundColor: "var(--bg-base)" }}
     >
+      {error && <LoginErrorToast error={error} />}
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center animate-fade-in-up">

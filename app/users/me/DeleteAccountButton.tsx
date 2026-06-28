@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { Trash } from "@phosphor-icons/react";
+import { toast } from "@/lib/toast";
 
 export function DeleteAccountButton() {
   const [confirming, setConfirming] = useState(false);
@@ -15,10 +16,12 @@ export function DeleteAccountButton() {
       if (res.ok) {
         await signOut({ callbackUrl: "/login" });
       } else {
+        toast.error("アカウントの削除に失敗しました");
         setDeleting(false);
         setConfirming(false);
       }
     } catch {
+      toast.error("アカウントの削除に失敗しました");
       setDeleting(false);
       setConfirming(false);
     }
