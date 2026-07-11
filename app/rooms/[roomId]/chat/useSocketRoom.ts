@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { getSocket, connectSocket, disconnectSocket } from "@/lib/socket";
 import { useChatStore, type ChatMessage, type Participant } from "@/lib/stores/chatStore";
+import { toast } from "@/lib/toast";
 
 type UseSocketRoomOptions = {
   roomId: string;
@@ -92,6 +93,9 @@ export function useSocketRoom({
     );
 
     socket.on("room:host_changed", ({ newHostId }: { newHostId: string }) => {
+      if (currentUserId != null && currentUserId === newHostId) {
+        toast.info("あなたがホストになりました");
+      }
       useChatStore.setState((state) => ({
         participants: state.participants.map((p) => ({
           ...p,

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { toast } from "@/lib/toast";
 
 const mockInvalidateQueries = vi.fn();
 const mockPush = vi.fn();
@@ -101,7 +102,7 @@ describe("EditProfilePage", () => {
     });
   });
 
-  it("PATCH API 失敗時は invalidateQueries と router.push が呼ばれない", async () => {
+  it("PATCH API 失敗時は toast.error が呼ばれ invalidateQueries と router.push が呼ばれない", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: false,
       json: async () => ({ error: "ユーザー名が重複しています" }),
@@ -111,7 +112,7 @@ describe("EditProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "保存する" }));
 
     await waitFor(() => {
-      expect(screen.getByText("ユーザー名が重複しています")).toBeInTheDocument();
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("ユーザー名が重複しています");
     });
 
     expect(mockInvalidateQueries).not.toHaveBeenCalled();

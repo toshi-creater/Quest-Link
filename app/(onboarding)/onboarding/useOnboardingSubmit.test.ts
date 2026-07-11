@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import { toast } from "@/lib/toast";
 
 const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -58,8 +59,8 @@ describe("useOnboardingSubmit", () => {
         })
       );
       expect(mockUpdate).toHaveBeenCalledWith({ username: "testuser" });
+      expect(vi.mocked(toast.success)).toHaveBeenCalledWith("プロフィールを設定しました");
       expect(mockPush).toHaveBeenCalledWith("/rooms");
-      expect(result.current.error).toBeNull();
       expect(result.current.saving).toBe(false);
     });
 
@@ -139,7 +140,7 @@ describe("useOnboardingSubmit", () => {
         await result.current.handleSubmit();
       });
 
-      expect(result.current.error).toBe("画像のアップロードに失敗しました");
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("画像のアップロードに失敗しました");
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(mockPush).not.toHaveBeenCalled();
     });
@@ -156,7 +157,7 @@ describe("useOnboardingSubmit", () => {
         await result.current.handleSubmit();
       });
 
-      expect(result.current.error).toBe("ユーザー名が重複しています");
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("ユーザー名が重複しています");
       expect(mockPush).not.toHaveBeenCalled();
     });
 
@@ -172,7 +173,7 @@ describe("useOnboardingSubmit", () => {
         await result.current.handleSubmit();
       });
 
-      expect(result.current.error).toBe("エラーが発生しました");
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("エラーが発生しました");
     });
 
     it("通信エラー時にデフォルトエラーメッセージをセットする", async () => {
@@ -184,7 +185,7 @@ describe("useOnboardingSubmit", () => {
         await result.current.handleSubmit();
       });
 
-      expect(result.current.error).toBe("通信エラーが発生しました。再度お試しください");
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("通信エラーが発生しました。再度お試しください");
       expect(mockPush).not.toHaveBeenCalled();
     });
   });

@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { CircleNotch } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createReport } from "@/lib/api/users";
+import { toast } from "@/lib/toast";
 
 const REASON_OPTIONS = [
   { value: "harassment", label: "ハラスメント・嫌がらせ" },
@@ -24,7 +25,6 @@ type Props = {
 export function ReportModal({ targetUserId, targetMessageId, targetName, onClose }: Props) {
   const [reason, setReason] = useState<string>("");
   const [detail, setDetail] = useState("");
-  const [succeeded, setSucceeded] = useState(false);
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -32,7 +32,11 @@ export function ReportModal({ targetUserId, targetMessageId, targetName, onClose
       createReport({ targetUserId, targetMessageId, reason, detail: detail.trim() || undefined }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["my-blocks"] });
-      setSucceeded(true);
+      toast.success("通報を受け付けました");
+      onClose();
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
     },
   });
 
@@ -46,26 +50,7 @@ export function ReportModal({ targetUserId, targetMessageId, targetName, onClose
         style={{ backgroundColor: "var(--bg-card)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {succeeded ? (
-          <>
-            <div className="space-y-1">
-              <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
-                通報を受け付けました
-              </h2>
-              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                {targetName} さんを通報しました。ご協力ありがとうございます。
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition-all hover:opacity-80 active:scale-[0.97]"
-              style={{ backgroundColor: "var(--bg-card-hover)", color: "var(--text-secondary)" }}
-            >
-              閉じる
-            </button>
-          </>
-        ) : (
-          <>
+        <>
             <div className="space-y-1">
               <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
                 通報する
@@ -112,10 +97,6 @@ export function ReportModal({ targetUserId, targetMessageId, targetName, onClose
               />
             )}
 
-            {mutation.isError && (
-              <p className="text-sm text-red-400">{(mutation.error as Error).message}</p>
-            )}
-
             <div className="flex gap-3">
               <button
                 onClick={onClose}
@@ -136,7 +117,6 @@ export function ReportModal({ targetUserId, targetMessageId, targetName, onClose
               </button>
             </div>
           </>
-        )}
       </div>
     </div>,
     document.body

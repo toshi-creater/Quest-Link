@@ -11,6 +11,7 @@ import { TagFilterToggle } from "@/components/ui/TagFilterToggle";
 import { TagFilterPanel } from "@/components/ui/TagFilterPanel";
 import { ActiveFilterBar } from "@/components/ui/ActiveFilterBar";
 import { createRoom } from "@/lib/api/rooms";
+import { toast } from "@/lib/toast";
 
 type Tag = {
   id: string;
@@ -40,7 +41,6 @@ export default function NewRoomPage() {
   const [selectedSlugs, setSelectedSlugs] = useState<string[]>([]);
   const [pendingSlugs, setPendingSlugs] = useState<string[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const toggleRef = useRef<HTMLDivElement>(null);
 
   const { data: tags = [] } = useQuery({
@@ -57,17 +57,17 @@ export default function NewRoomPage() {
     setSelectedSlugs([]);
     setPendingSlugs([]);
     setPanelOpen(false);
-    setErrorMessage(null);
   };
 
   const mutation = useMutation({
     mutationFn: createRoom,
     onSuccess: (res) => {
+      toast.success("部屋を作成しました");
       resetForm();
       router.push(`/rooms/${res.data.id}`);
     },
     onError: (err: Error) => {
-      setErrorMessage(err.message);
+      toast.error(err.message);
     },
   });
 
@@ -92,7 +92,6 @@ export default function NewRoomPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGame) return;
-    setErrorMessage(null);
     const playStyleTagIds = tags
       .filter((t) => selectedSlugs.includes(t.slug))
       .map((t) => t.id);
@@ -168,15 +167,6 @@ export default function NewRoomPage() {
           })}
         </div>
       </div>
-
-      {errorMessage && (
-        <div
-          className="mb-4 rounded-xl px-4 py-3 text-sm"
-          style={{ backgroundColor: "rgba(239,68,68,0.1)", color: "#f87171" }}
-        >
-          {errorMessage}
-        </div>
-      )}
 
       {/* ステップ1: ゲーム選択 */}
       {step === 1 && (

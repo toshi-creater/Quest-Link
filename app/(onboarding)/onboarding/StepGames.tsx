@@ -10,7 +10,6 @@ interface StepGamesProps {
   onBack: () => void;
   onSubmit: () => void;
   saving: boolean;
-  error: string | null;
   status: "loading" | "authenticated" | "unauthenticated";
 }
 
@@ -20,7 +19,6 @@ export function StepGames({
   onBack,
   onSubmit,
   saving,
-  error,
   status,
 }: StepGamesProps) {
   return (
@@ -36,12 +34,6 @@ export function StepGames({
         </div>
 
         <GridGamePicker value={selectedGames} onChange={onGamesChange} max={20} />
-
-        {error && (
-          <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {error}
-          </p>
-        )}
       </div>
 
       <OnboardingNavButtons

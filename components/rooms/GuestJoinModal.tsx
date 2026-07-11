@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { OAuthButtonGroup } from "@/components/ui/OAuthButtonGroup";
+import { toast } from "@/lib/toast";
 
 const ERROR_MESSAGES: Record<string, string> = {
   ROOM_CLOSED: "この部屋はすでに終了しています",
@@ -22,7 +23,6 @@ export function GuestJoinModal(props: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [displayName, setDisplayName] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
   const callbackUrl = `/rooms/${props.roomId}?inviteToken=${props.inviteToken}`;
@@ -30,11 +30,10 @@ export function GuestJoinModal(props: Props) {
   const handleGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (displayName.length > 50) {
-      setError("表示名は50文字以内で入力してください");
+      toast.error("表示名は50文字以内で入力してください");
       return;
     }
     setIsPending(true);
-    setError(null);
     try {
       const res = await fetch(`/api/v1/invite/${props.inviteToken}/join`, {
         method: "POST",
@@ -44,13 +43,13 @@ export function GuestJoinModal(props: Props) {
       });
       if (!res.ok) {
         const body = (await res.json()) as { error?: { code: string } };
-        setError(ERROR_MESSAGES[body.error?.code ?? ""] ?? "参加に失敗しました");
+        toast.error(ERROR_MESSAGES[body.error?.code ?? ""] ?? "参加に失敗しました");
         return;
       }
       await queryClient.invalidateQueries({ queryKey: ["room", props.roomId] });
       router.push(`/rooms/${props.roomId}/chat`);
     } catch {
-      setError("ネットワークエラーが発生しました");
+      toast.error("ネットワークエラーが発生しました");
     } finally {
       setIsPending(false);
     }
@@ -110,7 +109,6 @@ export function GuestJoinModal(props: Props) {
                   color: "var(--text-primary)",
                 }}
               />
-              {error && <p className="text-sm text-red-400">{error}</p>}
               <button
                 type="submit"
                 disabled={isPending}

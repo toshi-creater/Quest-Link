@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { ArrowLeft, Chat } from "@phosphor-icons/react";
 import { fetchRoom, joinRoom } from "@/lib/api/rooms";
+import { toast } from "@/lib/toast";
 import { GuestJoinModal } from "@/components/rooms/GuestJoinModal";
 import { RoomActions } from "./RoomActions";
 import { InvitePanel } from "./InvitePanel";
@@ -50,8 +51,9 @@ export function RoomDetailView({ roomId }: Props) {
       .then(async () => {
         await queryClient.invalidateQueries({ queryKey: ["room", roomId] });
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         autoJoinAttempted.current = false;
+        toast.error(err instanceof Error ? err.message : "参加に失敗しました");
       });
   }, [inviteToken, currentUserId, data, roomId, queryClient]);
 

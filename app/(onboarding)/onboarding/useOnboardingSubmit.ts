@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { type Game } from "@/lib/mock-data";
+import { toast } from "@/lib/toast";
 
 interface UseOnboardingSubmitParams {
   avatarFile: File | null;
@@ -21,13 +22,11 @@ export function useOnboardingSubmit({
   callbackUrl,
 }: UseOnboardingSubmitParams) {
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { update } = useSession();
 
   const handleSubmit = async () => {
     setSaving(true);
-    setError(null);
 
     try {
       if (avatarFile) {
@@ -38,7 +37,7 @@ export function useOnboardingSubmit({
           body: formData,
         });
         if (!uploadRes.ok) {
-          setError("画像のアップロードに失敗しました");
+          toast.error("画像のアップロードに失敗しました");
           return;
         }
       }
@@ -56,19 +55,20 @@ export function useOnboardingSubmit({
       const json = (await res.json()) as { error?: string };
 
       if (!res.ok) {
-        setError(json.error ?? "エラーが発生しました");
+        toast.error(json.error ?? "エラーが発生しました");
         return;
       }
 
       await update({ username: username.trim() });
+      toast.success("プロフィールを設定しました");
       const dest = callbackUrl?.startsWith("/") ? callbackUrl : "/rooms";
       router.push(dest);
     } catch {
-      setError("通信エラーが発生しました。再度お試しください");
+      toast.error("通信エラーが発生しました。再度お試しください");
     } finally {
       setSaving(false);
     }
   };
 
-  return { handleSubmit, saving, error };
+  return { handleSubmit, saving };
 }

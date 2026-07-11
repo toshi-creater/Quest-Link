@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { CheckCircle } from "@phosphor-icons/react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StarRating, RatingDisplay } from "@/components/ui/StarRating";
+import { toast } from "@/lib/toast";
 import clsx from "clsx";
 
 type User = {
@@ -47,6 +47,12 @@ export function RatingForm({ user, roomId }: Props) {
 
   const mutation = useMutation({
     mutationFn: (payload: RatingPayload) => postRating(roomId, payload),
+    onSuccess: () => {
+      toast.success("評価を送信しました");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
   });
 
   const handleSubmit = () => {
@@ -57,24 +63,6 @@ export function RatingForm({ user, roomId }: Props) {
       comment: comment || undefined,
     });
   };
-
-  if (mutation.isSuccess) {
-    return (
-      <div
-        className="flex items-center gap-4 rounded-2xl p-5 opacity-60 animate-scale-in"
-        style={{ backgroundColor: "var(--bg-card)" }}
-      >
-        <UserAvatar username={user.username} iconUrl={user.iconUrl} size="md" />
-        <div className="flex-1">
-          <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-            {user.username}
-          </p>
-          <p className="text-xs" style={{ color: "#22c55e" }}>評価を送信しました</p>
-        </div>
-        <CheckCircle className="h-5 w-5 animate-scale-in" style={{ color: "#22c55e", animationDelay: "150ms" }} />
-      </div>
-    );
-  }
 
   return (
     <div
@@ -123,22 +111,16 @@ export function RatingForm({ user, roomId }: Props) {
         />
       </div>
 
-      {mutation.isError && (
-        <p className="mb-3 text-xs text-red-400 animate-slide-in-bottom">
-          {mutation.error instanceof Error ? mutation.error.message : "評価の送信に失敗しました"}
-        </p>
-      )}
-
       <button
         onClick={handleSubmit}
-        disabled={!score || mutation.isPending}
+        disabled={!score || mutation.isPending || mutation.isSuccess}
         className={clsx(
           "w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-all",
-          score && !mutation.isPending ? "hover:opacity-90 active:scale-[0.97]" : "opacity-40 cursor-not-allowed"
+          score && !mutation.isPending && !mutation.isSuccess ? "hover:opacity-90 active:scale-[0.97]" : "opacity-40 cursor-not-allowed"
         )}
         style={{
           background:
-            score && !mutation.isPending
+            score && !mutation.isPending && !mutation.isSuccess
               ? "linear-gradient(135deg, var(--accent), #6d28d9)"
               : "var(--border)",
         }}
